@@ -8,6 +8,7 @@ import FoodCard from '../components/FoodCard';
 import CategorySection from '../components/CategorySection';
 import TopBuys from '../components/TopBuys';
 import FoodCategories from '../components/FoodCategories';
+import AllFoods from '../components/AllFoods';
 
 const Home = () => {
   const categories = [
@@ -121,11 +122,15 @@ const Home = () => {
           </div>
         </div>
 
+         {/* All Foods Section */}
+         <AllFoods />
+
         {/* Categories Section */}
         <CategorySection />
 
         {/* Top Buys Section */}
         <TopBuys />
+
       </div>
     </main>
   );
