@@ -1,4 +1,5 @@
 import React from 'react';
+import { FaCheckCircle, FaTimesCircle, FaTag } from 'react-icons/fa';
 
 const FoodCard = ({ food }) => {
   return (
@@ -11,12 +12,20 @@ const FoodCard = ({ food }) => {
           className="w-full h-full object-cover transition-transform duration-300 hover:scale-110"
         />
         {/* Availability Badge */}
-        <div className={`absolute top-2 right-2 px-3 py-1 rounded-full text-sm font-medium ${
+        <div className={`absolute top-2 right-2 px-3 py-1 rounded-full text-sm font-medium flex items-center gap-1 ${
           food.isAvailable 
             ? 'bg-green-300 text-black font-bold' 
             : 'bg-red-300 text-black font-bold'
         }`}>
-          {food.isAvailable ? 'Available' : 'Not Available'}
+          {food.isAvailable ? (
+            <>
+              <FaCheckCircle className="text-green-600" /> Available
+            </>
+          ) : (
+            <>
+              <FaTimesCircle className="text-red-600" /> Not Available
+            </>
+          )}
         </div>
       </div>
 
@@ -28,8 +37,8 @@ const FoodCard = ({ food }) => {
         </div>
         
         {/* Category Badge */}
-        <div className="inline-block bg-orange-100 text-orange-800 px-3 py-1 rounded-full text-sm font-medium">
-          {food.category}
+        <div className="inline-block bg-orange-100 text-orange-800 px-3 py-1 rounded-full text-sm font-medium flex items-center gap-1">
+          <FaTag className="text-orange-600" /> {food.category}
         </div>
       </div>
     </div>
