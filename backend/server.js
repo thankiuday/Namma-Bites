@@ -1,0 +1,60 @@
+import express from 'express';
+import cors from 'cors';
+import path from 'path';
+import mongoose from 'mongoose';
+import helmet from 'helmet';
+import rateLimit from 'express-rate-limit';
+import { RedisStore } from 'rate-limit-redis';
+import cookieParser from 'cookie-parser';
+import dotenv from 'dotenv';
+dotenv.config();
+
+import redisClient from './config/redis.js';
+
+const app = express();
+
+// Security middleware
+app.use(helmet());
+app.use(cors({
+  origin: process.env.CLIENT_URL || 'http://localhost:5173',
+  credentials: true
+}));
+app.use(express.json());
+app.use(cookieParser());
+
+// Rate limiting with Redis
+const limiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 100, // limit each IP to 100 requests per windowMs
+  standardHeaders: true,
+  legacyHeaders: false,
+  store: new RedisStore({
+    sendCommand: (command, ...args) => redisClient.send_command(command, ...args),
+  }),
+});
+app.use('/api/', limiter);
+
+// Database connection
+mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/namma_bites')
+  .then(() => console.log('Connected to MongoDB'))
+  .catch(err => console.error('MongoDB connection error:', err));
+
+// Redis connection is handled by import
+
+// API Routes
+import authRoutes from './routes/auth.js';
+app.use('/api/auth', authRoutes);
+
+// Serve static files from the React frontend app
+app.use(express.static(path.join(path.resolve(), '../frontend/dist')));
+
+// Handle React routing, return all requests to React app
+app.get('*', (req, res) => {
+  res.sendFile(path.join(path.resolve(), '../frontend/dist', 'index.html'));
+});
+
+const PORT = process.env.PORT || 5000;
+
+app.listen(PORT, () => {
+  console.log(`Server is running on port ${PORT}`);
+}); 
