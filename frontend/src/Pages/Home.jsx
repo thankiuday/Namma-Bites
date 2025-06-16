@@ -86,7 +86,7 @@ const Home = () => {
 
   return (
     <div className="flex flex-col items-center justify-center">
-      <h1 className="text-5xl font-bold text-orange-600 mb-12">Namma Bites</h1>
+      <h1 className="text-5xl font-bold text-orange-600 mb-12 italic">Namma Bites</h1>
       
       {/* Search Section - Mobile First */}
       <div className="w-full max-w-6xl px-4 mb-8 md:hidden">
@@ -105,21 +105,48 @@ const Home = () => {
       {/* Categories Section */}
       <div className="w-full max-w-6xl px-4">
         <h2 className="text-2xl font-semibold text-gray-800 mb-8 text-center">Food Categories</h2>
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-8">
-          {categories.map((category, index) => (
-            <div key={index} className="flex flex-col items-center group cursor-pointer">
-              <div className="w-32 h-32 rounded-full overflow-hidden border-4 border-orange-600 group-hover:border-orange-500 transition-all duration-300">
-                <img
-                  src={category.image}
-                  alt={category.name}
-                  className="w-full h-full object-cover"
-                />
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+          {/* Veg Category */}
+          <div className="bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition-all duration-300 transform hover:scale-105">
+            <div className="relative h-64">
+              <img 
+                src="https://images.unsplash.com/photo-1585937421612-70a008356fbe?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Mnx8dmVnZXRhcmlhbiUyMGZvb2R8ZW58MHx8MHx8fDA%3D"
+                alt="Vegetarian Food"
+                className="w-full h-full object-cover transform transition-transform duration-300 hover:scale-110"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent"></div>
+              <div className="absolute bottom-0 left-0 right-0 p-6">
+                <div className="flex items-center gap-3 mb-2">
+                  <div className="w-8 h-8 rounded-full bg-green-500 flex items-center justify-center">
+                    <span className="text-white font-bold">V</span>
+                  </div>
+                  <h3 className="text-2xl font-bold text-white">Vegetarian</h3>
+                </div>
+                <p className="text-gray-200">Explore our wide range of delicious vegetarian dishes</p>
               </div>
-              <h3 className="mt-4 text-lg font-medium text-gray-800 group-hover:text-orange-600 transition-colors duration-300">
-                {category.name}
-              </h3>
             </div>
-          ))}
+          </div>
+
+          {/* Non-Veg Category */}
+          <div className="bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition-all duration-300 transform hover:scale-105">
+            <div className="relative h-64">
+              <img
+                src="https://images.unsplash.com/photo-1603894584373-5ac82b2ae398?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Mnx8Y2hpY2tlbiUyMGZvb2R8ZW58MHx8MHx8fDA%3D"
+                alt="Non-Vegetarian Food"
+                className="w-full h-full object-cover transform transition-transform duration-300 hover:scale-110"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent"></div>
+              <div className="absolute bottom-0 left-0 right-0 p-6">
+                <div className="flex items-center gap-3 mb-2">
+                  <div className="w-8 h-8 rounded-full bg-red-500 flex items-center justify-center">
+                    <span className="text-white font-bold">NV</span>
+                  </div>
+                  <h3 className="text-2xl font-bold text-white">Non-Vegetarian</h3>
+                </div>
+                <p className="text-gray-200">Discover our selection of premium non-vegetarian delicacies</p>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
 
