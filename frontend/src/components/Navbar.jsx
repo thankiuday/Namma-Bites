@@ -1,13 +1,34 @@
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
-import { FaHome, FaUser, FaShoppingCart, FaClipboardList, FaCreditCard } from 'react-icons/fa';
+import { Link, useNavigate } from 'react-router-dom';
+import { FaHome, FaUser, FaShoppingCart, FaClipboardList, FaCreditCard, FaSignOutAlt } from 'react-icons/fa';
+import { useAuth } from '../context/AuthContext';
 import logo from '../../public/logo.png';
 
 const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const { user, logout } = useAuth();
+  const navigate = useNavigate();
 
   const toggleMenu = () => {
     setIsMenuOpen(!isMenuOpen);
+  };
+
+  const handleLogout = async () => {
+    try {
+      const response = await fetch('http://localhost:5000/api/auth/logout', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
+        }
+      });
+
+      if (response.ok) {
+        logout();
+        navigate('/');
+      }
+    } catch (error) {
+      console.error('Logout failed:', error);
+    }
   };
 
   return (
@@ -42,6 +63,14 @@ const Navbar = () => {
             <Link to="/orders" className="text-black hover:text-orange-600 px-3 py-2 rounded-md text-sm font-medium flex items-center gap-2">
               <FaClipboardList className="text-lg" /> Orders
             </Link>
+            {user && (
+              <button
+                onClick={handleLogout}
+                className="text-black hover:text-orange-600 px-3 py-2 rounded-md text-sm font-medium flex items-center gap-2"
+              >
+                <FaSignOutAlt className="text-lg" /> Logout
+              </button>
+            )}
           </div>
 
           {/* Mobile menu button */}
@@ -109,6 +138,14 @@ const Navbar = () => {
           >
             <FaClipboardList className="text-lg" /> Orders
           </Link>
+          {user && (
+            <button
+              onClick={handleLogout}
+              className="w-full text-left block px-3 py-2 rounded-md text-base font-medium text-black hover:text-orange-600 hover:bg-gray-800 flex items-center gap-2"
+            >
+              <FaSignOutAlt className="text-lg" /> Logout
+            </button>
+          )}
         </div>
       </div>
     </nav>

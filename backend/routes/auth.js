@@ -185,4 +185,81 @@ router.get('/me', auth, async (req, res) => {
   }
 });
 
+// Update profile route
+router.put('/update-profile', auth, [
+  body('username').optional().trim().isLength({ min: 3 }).withMessage('Username must be at least 3 characters long'),
+  body('email').optional().isEmail().withMessage('Please enter a valid email'),
+  body('name').optional().notEmpty().withMessage('Name is required'),
+  body('mobileNumber').optional().matches(/^[0-9]{10}$/).withMessage('Please enter a valid 10-digit mobile number')
+], async (req, res) => {
+  try {
+    // Check for validation errors
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ errors: errors.array() });
+    }
+
+    const { username, email, name, mobileNumber } = req.body;
+    const user = req.user;
+
+    // Check if username or email is already taken
+    if (username && username !== user.username) {
+      const existingUser = await User.findOne({ username });
+      if (existingUser) {
+        return res.status(400).json({ error: 'Username is already taken' });
+      }
+    }
+
+    if (email && email !== user.email) {
+      const existingUser = await User.findOne({ email });
+      if (existingUser) {
+        return res.status(400).json({ error: 'Email is already taken' });
+      }
+    }
+
+    // Update user fields
+    if (username) user.username = username;
+    if (email) user.email = email;
+    if (name) user.name = name;
+    if (mobileNumber) user.mobileNumber = mobileNumber;
+
+    await user.save();
+
+    res.json(user.getPublicProfile());
+  } catch (error) {
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+// Change password route
+router.put('/change-password', auth, [
+  body('currentPassword').notEmpty().withMessage('Current password is required'),
+  body('newPassword').isLength({ min: 6 }).withMessage('New password must be at least 6 characters long')
+], async (req, res) => {
+  try {
+    // Check for validation errors
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ errors: errors.array() });
+    }
+
+    const { currentPassword, newPassword } = req.body;
+    const user = req.user;
+
+    // Verify current password
+    const isMatch = await user.comparePassword(currentPassword);
+    if (!isMatch) {
+      return res.status(400).json({ error: 'Current password is incorrect' });
+    }
+
+    // Update password
+    user.password = newPassword;
+    await user.save();
+
+    res.json({ message: 'Password changed successfully' });
+  } catch (error) {
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
 export default router; 
