@@ -3,6 +3,8 @@ import './App.css'
 import Home from './Pages/Home';
 import AboutUs from './Pages/AboutUs';
 import ContactUs from './Pages/ContactUs';
+import Signup from './Pages/Signup';
+import Login from './Pages/Login';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
 
@@ -16,6 +18,8 @@ function App() {
             <Route path="/" element={<Home />} />
             <Route path="/about" element={<AboutUs />} />
             <Route path="/contact" element={<ContactUs />} />
+            <Route path="/signup" element={<Signup />} />
+            <Route path="/login" element={<Login />} />
             {/* Add new routes as needed */}
           </Routes>
         </main>
