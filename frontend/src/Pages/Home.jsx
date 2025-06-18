@@ -4,6 +4,7 @@ import tindi from '../../public/tindi.jpg';
 import south from '../../public/south.jpg';
 import north from '../../public/north.jpg';
 import chinese from '../../public/chinese.jpg';
+import logo from '../../public/logo.png';
 import FoodCard from '../components/FoodCard';
 import CategorySection from '../components/CategorySection';
 import TopBuys from '../components/TopBuys';
@@ -89,7 +90,13 @@ const Home = () => {
   return (
     <main className="flex-grow">
       <div className="flex flex-col items-center justify-center">
-        <h1 className="text-5xl font-bold text-orange-600 mb-12 italic">Namma Bites</h1>
+        <div className="w-full max-w-6xl px-4 mb-12 flex justify-center">
+          <img 
+            src={logo} 
+            alt="Namma Bites Logo" 
+            className="h-24 md:h-32 object-contain"
+          />
+        </div>
         
         {/* Food Categories */}
         <FoodCategories />
