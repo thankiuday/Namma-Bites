@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { FaSignInAlt, FaUserPlus } from 'react-icons/fa';
 import axios from '../api/config';
+import logo from '../../public/logo.png';
 
 const AdminRegister = () => {
   const navigate = useNavigate();
@@ -54,29 +55,29 @@ const AdminRegister = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 flex flex-col">
       {/* Admin Navbar */}
       <nav className="bg-white shadow-lg">
         <div className="container mx-auto px-4">
           <div className="flex justify-between items-center h-16">
             {/* Logo */}
             <Link to="/" className="flex items-center space-x-2">
-              <img src="/logo.png" alt="Namma Bites" className="h-8 w-auto" />
-              <span className="text-xl font-bold text-gray-900">Admin Portal</span>
+              <img src={logo} alt="Namma Bites" className="h-8 w-auto" />
+              <span className="text-xl font-bold text-gray-800">Admin Portal</span>
             </Link>
 
             {/* Navigation Links */}
             <div className="flex items-center space-x-6">
               <Link
                 to="/admin/login"
-                className="flex items-center space-x-2 text-gray-700 hover:text-gray-900 transition-colors duration-200"
+                className="flex items-center space-x-2 text-gray-600 hover:text-orange-600 transition-colors duration-200"
               >
                 <FaSignInAlt className="w-5 h-5" />
                 <span>Login</span>
               </Link>
               <Link
                 to="/admin/register"
-                className="flex items-center space-x-2 text-blue-600 hover:text-blue-700 transition-colors duration-200"
+                className="flex items-center space-x-2 text-orange-600 hover:text-orange-700 transition-colors duration-200"
               >
                 <FaUserPlus className="w-5 h-5" />
                 <span>Register</span>
@@ -87,12 +88,15 @@ const AdminRegister = () => {
       </nav>
 
       {/* Main Content */}
-      <main className="container mx-auto px-4 py-8">
-        <div className="max-w-md mx-auto bg-white rounded-lg shadow-md p-8">
-          <h1 className="text-2xl font-bold text-center text-gray-900 mb-8">Admin Registration</h1>
+      <main className="flex-1 flex items-center justify-center px-4 py-8">
+        <div className="max-w-md w-full bg-white rounded-lg shadow-md p-8">
+          <div className="text-center mb-8">
+            <h1 className="text-2xl font-bold text-gray-800">Admin Registration</h1>
+            <p className="text-gray-600 mt-2">Create your admin account to manage the platform</p>
+          </div>
 
           {error && (
-            <div className="bg-red-50 text-red-500 p-4 rounded-lg mb-6">
+            <div className="bg-red-50 text-red-600 p-4 rounded-lg mb-6 font-medium">
               {error}
             </div>
           )}
@@ -109,7 +113,8 @@ const AdminRegister = () => {
                 value={formData.name}
                 onChange={handleChange}
                 required
-                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                className="mt-1 block w-full px-3 py-2 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-orange-600 focus:border-transparent text-gray-900"
+                placeholder="Enter your full name"
               />
             </div>
 
@@ -124,7 +129,8 @@ const AdminRegister = () => {
                 value={formData.email}
                 onChange={handleChange}
                 required
-                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                className="mt-1 block w-full px-3 py-2 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-orange-600 focus:border-transparent text-gray-900"
+                placeholder="Enter your email"
               />
             </div>
 
@@ -140,7 +146,8 @@ const AdminRegister = () => {
                 onChange={handleChange}
                 required
                 minLength="6"
-                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                className="mt-1 block w-full px-3 py-2 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-orange-600 focus:border-transparent text-gray-900"
+                placeholder="Enter your password"
               />
             </div>
 
@@ -156,29 +163,46 @@ const AdminRegister = () => {
                 onChange={handleChange}
                 required
                 minLength="6"
-                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                className="mt-1 block w-full px-3 py-2 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-orange-600 focus:border-transparent text-gray-900"
+                placeholder="Confirm your password"
               />
             </div>
 
             <button
               type="submit"
               disabled={loading}
-              className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50"
+              className="w-full flex justify-center py-2 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-orange-600 hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500 disabled:opacity-50 transition-colors duration-200"
             >
-              {loading ? 'Registering...' : 'Register'}
+              {loading ? (
+                <div className="flex items-center">
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                  Registering...
+                </div>
+              ) : (
+                'Register'
+              )}
             </button>
           </form>
 
           <div className="mt-6 text-center">
             <p className="text-sm text-gray-600">
               Already have an admin account?{' '}
-              <Link to="/admin/login" className="font-medium text-blue-600 hover:text-blue-500">
+              <Link to="/admin/login" className="font-medium text-orange-600 hover:text-orange-700">
                 Login here
               </Link>
             </p>
           </div>
         </div>
       </main>
+
+      {/* Footer */}
+      <footer className="bg-white shadow-lg mt-auto">
+        <div className="container mx-auto px-4 py-4">
+          <p className="text-center text-gray-600 text-sm">
+            © {new Date().getFullYear()} Namma Bites. All rights reserved.
+          </p>
+        </div>
+      </footer>
     </div>
   );
 };

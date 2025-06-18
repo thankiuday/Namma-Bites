@@ -13,6 +13,23 @@ export const createVendor = async (req, res) => {
       });
     }
 
+    // Validate password
+    if (!req.body.password || req.body.password.length < 6) {
+      return res.status(400).json({
+        success: false,
+        message: 'Password is required and must be at least 6 characters long'
+      });
+    }
+
+    // Check if vendor with email already exists
+    const existingVendor = await Vendor.findOne({ email: req.body.email });
+    if (existingVendor) {
+      return res.status(400).json({
+        success: false,
+        message: 'A vendor with this email already exists'
+      });
+    }
+
     const vendorData = {
       ...req.body,
       image: req.file.path, // Store the file path
@@ -24,10 +41,14 @@ export const createVendor = async (req, res) => {
     const vendor = new Vendor(vendorData);
     await vendor.save();
 
+    // Remove password from response
+    const vendorResponse = vendor.toObject();
+    delete vendorResponse.password;
+
     res.status(201).json({
       success: true,
       message: 'Vendor created successfully',
-      data: vendor
+      data: vendorResponse
     });
   } catch (error) {
     console.error('Error creating vendor:', error);
@@ -46,6 +67,7 @@ export const getAllVendors = async (req, res) => {
     console.log('Admin from request:', req.admin);
     
     const vendors = await Vendor.find()
+      .select('-password') // Exclude password from response
       .populate('createdBy', 'name email')
       .sort({ createdAt: -1 });
 
@@ -70,6 +92,7 @@ export const getAllVendors = async (req, res) => {
 export const getVendorById = async (req, res) => {
   try {
     const vendor = await Vendor.findById(req.params.id)
+      .select('-password') // Exclude password from response
       .populate('createdBy', 'name email');
 
     if (!vendor) {
@@ -95,11 +118,23 @@ export const getVendorById = async (req, res) => {
 // Update vendor
 export const updateVendor = async (req, res) => {
   try {
+    const updateData = { ...req.body };
+    
+    // If password is being updated, it will be hashed by the pre-save middleware
+    if (updateData.password) {
+      if (updateData.password.length < 6) {
+        return res.status(400).json({
+          success: false,
+          message: 'Password must be at least 6 characters long'
+        });
+      }
+    }
+
     const vendor = await Vendor.findByIdAndUpdate(
       req.params.id,
-      { ...req.body, updatedBy: req.admin._id },
+      { ...updateData, updatedBy: req.admin._id },
       { new: true, runValidators: true }
-    );
+    ).select('-password'); // Exclude password from response
 
     if (!vendor) {
       return res.status(404).json({

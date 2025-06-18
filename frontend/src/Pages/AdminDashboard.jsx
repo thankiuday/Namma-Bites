@@ -1,100 +1,188 @@
-import React from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { FaHome, FaStore, FaUsers, FaSignOutAlt } from 'react-icons/fa';
+import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { FaUsers, FaStore, FaPlus, FaUserFriends, FaStoreAlt, FaCheckCircle, FaClock } from 'react-icons/fa';
+import axios from '../api/config';
+import AdminLayout from '../components/AdminLayout';
 
 const AdminDashboard = () => {
   const navigate = useNavigate();
+  const [stats, setStats] = useState({
+    totalUsers: 0,
+    totalVendors: 0,
+    activeVendors: 0,
+    pendingApprovals: 0
+  });
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
 
-  const handleLogout = () => {
-    localStorage.removeItem('adminToken');
-    navigate('/admin/login');
+  useEffect(() => {
+    const token = localStorage.getItem('adminToken');
+    if (!token) {
+      navigate('/admin/login');
+      return;
+    }
+    fetchStats();
+  }, [navigate]);
+
+  const fetchStats = async () => {
+    try {
+      setLoading(true);
+      setError('');
+      const token = localStorage.getItem('adminToken');
+      
+      if (!token) {
+        navigate('/admin/login');
+        return;
+      }
+
+      const [usersResponse, vendorsResponse] = await Promise.all([
+        axios.get('/users'),
+        axios.get('/vendors')
+      ]);
+
+      if (usersResponse.data.success && vendorsResponse.data.success) {
+        const users = usersResponse.data.data;
+        const vendors = vendorsResponse.data.data;
+        
+        setStats({
+          totalUsers: users.length,
+          totalVendors: vendors.length,
+          activeVendors: vendors.filter(v => v.isApproved).length,
+          pendingApprovals: vendors.filter(v => !v.isApproved).length
+        });
+      } else {
+        setError('Failed to fetch dashboard data');
+      }
+    } catch (err) {
+      setError(err.response?.data?.message || 'Failed to fetch dashboard data. Please try again.');
+      if (err.response?.status === 401 || err.response?.status === 403) {
+        localStorage.removeItem('adminToken');
+        navigate('/admin/login');
+      }
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Admin Navbar */}
-      <nav className="bg-white shadow-lg">
-        <div className="container mx-auto px-4">
-          <div className="flex justify-between items-center h-16">
-            {/* Logo */}
-            <Link to="/admin/dashboard" className="flex items-center space-x-2">
-              <img src="/logo.png" alt="Namma Bites" className="h-8 w-auto" />
-              <span className="text-xl font-bold text-gray-900">Admin Portal</span>
-            </Link>
+    <AdminLayout>
+      <div className="bg-white rounded-lg shadow-md p-6">
+        {/* Header */}
+        <div className="mb-8">
+          <h1 className="text-2xl font-bold text-gray-800">Admin Dashboard</h1>
+          <p className="text-gray-600 mt-2">Welcome to your admin dashboard. Manage your users and vendors here.</p>
+        </div>
 
-            {/* Navigation Links */}
-            <div className="flex items-center space-x-6">
-              <Link
-                to="/admin/dashboard"
-                className="flex items-center space-x-2 text-gray-700 hover:text-gray-900 transition-colors duration-200"
-              >
-                <FaHome className="w-5 h-5" />
-                <span>Home</span>
-              </Link>
-              <Link
-                to="/admin/create-vendor"
-                className="flex items-center space-x-2 text-gray-700 hover:text-gray-900 transition-colors duration-200"
-              >
-                <FaStore className="w-5 h-5" />
-                <span>Create Vendor</span>
-              </Link>
-              <Link
-                to="/admin/users"
-                className="flex items-center space-x-2 text-gray-700 hover:text-gray-900 transition-colors duration-200"
-              >
-                <FaUsers className="w-5 h-5" />
-                <span>See Users</span>
-              </Link>
-              <Link
-                to="/admin/vendors"
-                className="flex items-center space-x-2 text-gray-700 hover:text-gray-900 transition-colors duration-200"
-              >
-                <FaStore className="w-5 h-5" />
-                <span>See Vendors</span>
-              </Link>
+        {/* Error Message */}
+        {error && (
+          <div className="bg-red-50 text-red-600 p-4 rounded-lg mb-6 font-medium">
+            {error}
+          </div>
+        )}
+
+        {/* Loading State */}
+        {loading ? (
+          <div className="flex justify-center items-center h-64">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-600"></div>
+          </div>
+        ) : (
+          <>
+            {/* Quick Actions */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
               <button
-                onClick={handleLogout}
-                className="flex items-center space-x-2 text-red-600 hover:text-red-700 transition-colors duration-200"
+                onClick={() => navigate('/admin/users')}
+                className="flex items-center p-6 bg-white border-2 border-gray-200 rounded-lg hover:border-orange-600 hover:shadow-md transition-all duration-200"
               >
-                <FaSignOutAlt className="w-5 h-5" />
-                <span>Logout</span>
+                <div className="p-3 bg-orange-100 rounded-lg mr-4">
+                  <FaUsers className="w-6 h-6 text-orange-600" />
+                </div>
+                <div className="text-left">
+                  <h3 className="text-lg font-semibold text-gray-800">Manage Users</h3>
+                  <p className="text-gray-600">View and manage user accounts</p>
+                </div>
+              </button>
+
+              <button
+                onClick={() => navigate('/admin/vendors')}
+                className="flex items-center p-6 bg-white border-2 border-gray-200 rounded-lg hover:border-orange-600 hover:shadow-md transition-all duration-200"
+              >
+                <div className="p-3 bg-orange-100 rounded-lg mr-4">
+                  <FaStore className="w-6 h-6 text-orange-600" />
+                </div>
+                <div className="text-left">
+                  <h3 className="text-lg font-semibold text-gray-800">Manage Vendors</h3>
+                  <p className="text-gray-600">View and manage vendor accounts</p>
+                </div>
+              </button>
+
+              <button
+                onClick={() => navigate('/admin/create-vendor')}
+                className="flex items-center p-6 bg-white border-2 border-gray-200 rounded-lg hover:border-orange-600 hover:shadow-md transition-all duration-200"
+              >
+                <div className="p-3 bg-orange-100 rounded-lg mr-4">
+                  <FaPlus className="w-6 h-6 text-orange-600" />
+                </div>
+                <div className="text-left">
+                  <h3 className="text-lg font-semibold text-gray-800">Create Vendor</h3>
+                  <p className="text-gray-600">Add a new vendor to the platform</p>
+                </div>
               </button>
             </div>
-          </div>
-        </div>
-      </nav>
 
-      {/* Dashboard Content */}
-      <main className="container mx-auto px-4 py-8">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          {/* Stats Cards */}
-          <div className="bg-white rounded-lg shadow-md p-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">Total Users</h3>
-            <p className="text-3xl font-bold text-blue-600">0</p>
-          </div>
-          <div className="bg-white rounded-lg shadow-md p-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">Total Vendors</h3>
-            <p className="text-3xl font-bold text-green-600">0</p>
-          </div>
-          <div className="bg-white rounded-lg shadow-md p-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">Total Orders</h3>
-            <p className="text-3xl font-bold text-purple-600">0</p>
-          </div>
-          <div className="bg-white rounded-lg shadow-md p-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">Total Revenue</h3>
-            <p className="text-3xl font-bold text-orange-600">₹0</p>
-          </div>
-        </div>
+            {/* Stats */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+              <div className="bg-white border-2 border-gray-200 rounded-lg p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-gray-600">Total Users</p>
+                    <p className="text-2xl font-bold text-gray-800 mt-1">{stats.totalUsers}</p>
+                  </div>
+                  <div className="p-3 bg-orange-100 rounded-lg">
+                    <FaUserFriends className="w-6 h-6 text-orange-600" />
+                  </div>
+                </div>
+              </div>
 
-        {/* Recent Activity */}
-        <div className="mt-8">
-          <h2 className="text-2xl font-bold text-gray-900 mb-4">Recent Activity</h2>
-          <div className="bg-white rounded-lg shadow-md p-6">
-            <p className="text-gray-600">No recent activity to display.</p>
-          </div>
-        </div>
-      </main>
-    </div>
+              <div className="bg-white border-2 border-gray-200 rounded-lg p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-gray-600">Total Vendors</p>
+                    <p className="text-2xl font-bold text-gray-800 mt-1">{stats.totalVendors}</p>
+                  </div>
+                  <div className="p-3 bg-orange-100 rounded-lg">
+                    <FaStoreAlt className="w-6 h-6 text-orange-600" />
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-white border-2 border-gray-200 rounded-lg p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-gray-600">Active Vendors</p>
+                    <p className="text-2xl font-bold text-gray-800 mt-1">{stats.activeVendors}</p>
+                  </div>
+                  <div className="p-3 bg-orange-100 rounded-lg">
+                    <FaCheckCircle className="w-6 h-6 text-orange-600" />
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-white border-2 border-gray-200 rounded-lg p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-gray-600">Pending Approvals</p>
+                    <p className="text-2xl font-bold text-gray-800 mt-1">{stats.pendingApprovals}</p>
+                  </div>
+                  <div className="p-3 bg-orange-100 rounded-lg">
+                    <FaClock className="w-6 h-6 text-orange-600" />
+                  </div>
+                </div>
+              </div>
+            </div>
+          </>
+        )}
+      </div>
+    </AdminLayout>
   );
 };
 

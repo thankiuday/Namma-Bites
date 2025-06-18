@@ -1,4 +1,5 @@
 import mongoose from 'mongoose';
+import bcrypt from 'bcryptjs';
 
 const vendorSchema = new mongoose.Schema({
     name: {
@@ -17,6 +18,11 @@ const vendorSchema = new mongoose.Schema({
         trim: true,
         lowercase: true
     },
+    password: {
+        type: String,
+        required: true,
+        minlength: [6, 'Password must be at least 6 characters long']
+    },
     phone: {
         type: String,
         required: true,
@@ -24,12 +30,10 @@ const vendorSchema = new mongoose.Schema({
     },
     address: {
         type: String,
-        required: true,
         trim: true
     },
     cuisine: {
         type: String,
-        required: true,
         trim: true
     },
     isApproved: {
@@ -60,10 +64,32 @@ const vendorSchema = new mongoose.Schema({
     }
 });
 
+// Hash password before saving
+vendorSchema.pre('save', async function(next) {
+    if (!this.isModified('password')) return next();
+    
+    try {
+        const salt = await bcrypt.genSalt(10);
+        this.password = await bcrypt.hash(this.password, salt);
+        next();
+    } catch (error) {
+        next(error);
+    }
+});
+
 // Update the updatedAt field before saving
 vendorSchema.pre('save', function(next) {
     this.updatedAt = Date.now();
     next();
 });
+
+// Method to compare password
+vendorSchema.methods.comparePassword = async function(candidatePassword) {
+    try {
+        return await bcrypt.compare(candidatePassword, this.password);
+    } catch (error) {
+        throw error;
+    }
+};
 
 export default mongoose.model('Vendor', vendorSchema); 

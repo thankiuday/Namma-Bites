@@ -14,96 +14,76 @@ export const AuthProvider = ({ children }) => {
   }, []);
 
   const checkAuth = async () => {
-    const token = localStorage.getItem('accessToken');
-    console.log('Checking auth - Token:', token ? 'exists' : 'missing');
+    const adminToken = localStorage.getItem('adminToken');
+    const userToken = localStorage.getItem('accessToken');
     
-    if (!token) {
-      console.log('No token found in checkAuth');
+    if (!adminToken && !userToken) {
       setLoading(false);
       return;
     }
 
     try {
-      console.log('Fetching admin profile...');
-      const response = await api.get('/admin/profile');
-      console.log('Profile response:', response.data);
-
-      if (response.data.success) {
-        setUser(response.data.data);
-      } else {
-        console.log('Profile fetch failed, attempting token refresh');
-        await refreshToken();
+      if (adminToken) {
+        // Check admin authentication
+        const response = await api.get('/admin/profile');
+        if (response.data.success) {
+          setUser({ ...response.data.data, isAdmin: true });
+        } else {
+          localStorage.removeItem('adminToken');
+        }
+      } else if (userToken) {
+        // Check user authentication
+        const response = await api.get('/users/profile');
+        if (response.data.success) {
+          setUser({ ...response.data.data, isAdmin: false });
+        } else {
+          localStorage.removeItem('accessToken');
+          localStorage.removeItem('refreshToken');
+        }
       }
     } catch (error) {
       console.error('Auth check failed:', error);
       if (error.response?.status === 401) {
-        console.log('401 error in checkAuth, attempting token refresh');
-        await refreshToken();
-      } else {
-        logout();
+        if (adminToken) {
+          localStorage.removeItem('adminToken');
+          navigate('/admin/login');
+        } else {
+          localStorage.removeItem('accessToken');
+          localStorage.removeItem('refreshToken');
+          navigate('/login');
+        }
       }
     } finally {
       setLoading(false);
     }
   };
 
-  const refreshToken = async () => {
-    try {
-      const refreshToken = localStorage.getItem('refreshToken');
-      if (!refreshToken) {
-        console.log('No refresh token available');
-        logout();
-        return;
-      }
-
-      console.log('Attempting to refresh token...');
-      const response = await api.post('/admin/refresh-token', {
-        refreshToken
-      });
-      console.log('Refresh token response:', response.data);
-
-      if (response.data.success) {
-        const { accessToken } = response.data.data;
-        localStorage.setItem('accessToken', accessToken);
-        
-        // Retry getting user data with new token
-        const userResponse = await api.get('/admin/profile');
-        if (userResponse.data.success) {
-          setUser(userResponse.data.data);
-        } else {
-          throw new Error('Failed to get user data after token refresh');
-        }
-      } else {
-        throw new Error('Token refresh failed');
-      }
-    } catch (error) {
-      console.error('Token refresh failed:', error);
-      logout();
+  const login = (userData, tokens, isAdmin = false) => {
+    setUser({ ...userData, isAdmin });
+    if (isAdmin) {
+      localStorage.setItem('adminToken', tokens.accessToken);
+    } else {
+      localStorage.setItem('accessToken', tokens.accessToken);
+      localStorage.setItem('refreshToken', tokens.refreshToken);
     }
   };
 
-  const login = (userData, tokens) => {
-    console.log('Login called with user data:', userData);
-    console.log('Storing tokens...');
-    setUser(userData);
-    localStorage.setItem('accessToken', tokens.accessToken);
-    localStorage.setItem('refreshToken', tokens.refreshToken);
-  };
-
   const logout = async () => {
-    console.log('Logout called');
     try {
-      const token = localStorage.getItem('accessToken');
-      if (token) {
+      if (user?.isAdmin) {
         await api.post('/admin/logout');
+        localStorage.removeItem('adminToken');
+        navigate('/admin/login');
+      } else {
+        await api.post('/auth/logout');
+        localStorage.removeItem('accessToken');
+        localStorage.removeItem('refreshToken');
+        navigate('/login');
       }
     } catch (error) {
       console.error('Logout failed:', error);
     } finally {
       setUser(null);
-      localStorage.removeItem('accessToken');
-      localStorage.removeItem('refreshToken');
-      navigate('/admin/login');
     }
   };
 
@@ -112,8 +92,7 @@ export const AuthProvider = ({ children }) => {
     loading,
     login,
     logout,
-    checkAuth,
-    refreshToken
+    checkAuth
   };
 
   return (

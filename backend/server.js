@@ -32,7 +32,7 @@ app.use(express.json());
 app.use(cookieParser());
 
 // Rate limiting with Redis
-const limiter = rateLimit({
+const generalLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
   max: 100, // limit each IP to 100 requests per windowMs
   standardHeaders: true,
@@ -40,8 +40,47 @@ const limiter = rateLimit({
   store: new RedisStore({
     sendCommand: (command, ...args) => redisClient.send_command(command, ...args),
   }),
+  message: 'Too many requests from this IP, please try again after 15 minutes',
+  skip: (req) => {
+    // Skip rate limiting for development environment
+    return process.env.NODE_ENV === 'development';
+  }
 });
-app.use('/api/', limiter);
+
+const loginLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 10, // limit each IP to 10 login attempts per windowMs
+  standardHeaders: true,
+  legacyHeaders: false,
+  store: new RedisStore({
+    sendCommand: (command, ...args) => redisClient.send_command(command, ...args),
+  }),
+  message: 'Too many login attempts, please try again after 15 minutes',
+  skip: (req) => {
+    // Skip rate limiting for development environment
+    return process.env.NODE_ENV === 'development';
+  }
+});
+
+// Apply rate limiters
+app.use('/api/admin/login', loginLimiter);
+app.use('/api/', generalLimiter);
+
+// Add a route to reset rate limits (for development only)
+if (process.env.NODE_ENV === 'development') {
+  app.post('/api/reset-rate-limit', async (req, res) => {
+    try {
+      const keys = await redisClient.keys('rl:*');
+      if (keys.length > 0) {
+        await redisClient.del(keys);
+      }
+      res.json({ message: 'Rate limits reset successfully' });
+    } catch (error) {
+      console.error('Error resetting rate limits:', error);
+      res.status(500).json({ message: 'Failed to reset rate limits' });
+    }
+  });
+}
 
 // Logging middleware
 app.use((req, res, next) => {

@@ -62,6 +62,14 @@ api.interceptors.response.use(
     // Check if this is an admin route
     const isAdminRoute = originalRequest.url.startsWith('/admin') || originalRequest.url.includes('/users');
     
+    // Handle rate limiting
+    if (error.response?.status === 429) {
+      const retryAfter = error.response.headers['retry-after'] || 15;
+      const message = `Too many requests. Please try again after ${retryAfter} minutes.`;
+      return Promise.reject({ message });
+    }
+
+    // Handle unauthorized errors
     if (error.response?.status === 401 && !originalRequest._retry) {
       originalRequest._retry = true;
       
@@ -102,13 +110,9 @@ api.interceptors.response.use(
       }
     }
 
-    console.error('API Error:', {
-      status: error.response?.status,
-      data: error.response?.data,
-      message: error.message
-    });
-
-    return Promise.reject(error.response?.data || error);
+    // Handle other errors
+    const errorMessage = error.response?.data?.message || error.message || 'An error occurred';
+    return Promise.reject({ message: errorMessage });
   }
 );
 
@@ -116,7 +120,13 @@ api.interceptors.response.use(
 export const adminAPI = {
   login: (credentials) => api.post('/admin/login', credentials),
   register: (adminData) => api.post('/admin/register/first', adminData),
-  getProfile: () => api.get('/admin/profile')
+  getProfile: () => api.get('/admin/profile'),
+  resetRateLimit: () => {
+    if (process.env.NODE_ENV === 'development') {
+      return api.post('/reset-rate-limit');
+    }
+    return Promise.reject(new Error('Rate limit reset is only available in development mode'));
+  }
 };
 
 export default api; 
