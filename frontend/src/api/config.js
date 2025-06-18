@@ -11,13 +11,29 @@ const api = axios.create({
   }
 });
 
+let isRefreshing = false;
+let failedQueue = [];
+
+const processQueue = (error, token = null) => {
+  failedQueue.forEach(prom => {
+    if (error) {
+      prom.reject(error);
+    } else {
+      prom.resolve(token);
+    }
+  });
+  failedQueue = [];
+};
+
 // Request interceptor
 api.interceptors.request.use(
   (config) => {
-    const token = localStorage.getItem('adminToken');
+    const token = localStorage.getItem('accessToken');
     console.log('Making request with token:', token ? 'Token exists' : 'No token');
     if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
+      // Ensure token is properly formatted
+      const formattedToken = token.startsWith('Bearer ') ? token : `Bearer ${token}`;
+      config.headers.Authorization = formattedToken;
     }
     return config;
   },
@@ -33,31 +49,70 @@ api.interceptors.response.use(
     console.log('API Response:', response.status, response.data);
     return response;
   },
-  (error) => {
+  async (error) => {
+    const originalRequest = error.config;
+    
+    if (error.response?.status === 401 && !originalRequest._retry) {
+      if (isRefreshing) {
+        return new Promise((resolve, reject) => {
+          failedQueue.push({ resolve, reject });
+        })
+          .then(token => {
+            originalRequest.headers.Authorization = `Bearer ${token}`;
+            return api(originalRequest);
+          })
+          .catch(err => Promise.reject(err));
+      }
+
+      originalRequest._retry = true;
+      isRefreshing = true;
+
+      try {
+        const refreshToken = localStorage.getItem('refreshToken');
+        if (!refreshToken) {
+          throw new Error('No refresh token available');
+        }
+
+        console.log('Attempting to refresh token...');
+        const response = await axios.post(`${API_URL}/admin/refresh-token`, {
+          refreshToken
+        });
+
+        console.log('Refresh token response:', response.data);
+
+        if (response.data.success) {
+          const { accessToken } = response.data.data;
+          // Store token without 'Bearer ' prefix
+          localStorage.setItem('accessToken', accessToken);
+          
+          // Add 'Bearer ' prefix when setting header
+          api.defaults.headers.common['Authorization'] = `Bearer ${accessToken}`;
+          originalRequest.headers.Authorization = `Bearer ${accessToken}`;
+          
+          processQueue(null, accessToken);
+          return api(originalRequest);
+        } else {
+          throw new Error(response.data.message || 'Failed to refresh token');
+        }
+      } catch (refreshError) {
+        console.error('Token refresh error:', refreshError);
+        processQueue(refreshError, null);
+        localStorage.removeItem('accessToken');
+        localStorage.removeItem('refreshToken');
+        window.location.href = '/admin/login';
+        return Promise.reject(refreshError);
+      } finally {
+        isRefreshing = false;
+      }
+    }
+
     console.error('API Error:', {
       status: error.response?.status,
       data: error.response?.data,
       message: error.message
     });
-    
-    if (error.response) {
-      // The request was made and the server responded with a status code
-      // that falls out of the range of 2xx
-      if (error.response.status === 401) {
-        console.log('Unauthorized - removing token and redirecting to login');
-        localStorage.removeItem('adminToken');
-        window.location.href = '/admin/login';
-      }
-      return Promise.reject(error.response.data);
-    } else if (error.request) {
-      // The request was made but no response was received
-      console.error('No response received from server');
-      return Promise.reject({ message: 'No response from server' });
-    } else {
-      // Something happened in setting up the request that triggered an Error
-      console.error('Request setup error:', error.message);
-      return Promise.reject({ message: error.message });
-    }
+
+    return Promise.reject(error.response?.data || error);
   }
 );
 

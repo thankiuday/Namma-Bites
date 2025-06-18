@@ -1,6 +1,5 @@
 import jwt from 'jsonwebtoken';
 import User from '../models/User.js';
-import { getRefreshToken } from '../utils/redis.js';
 
 const auth = async (req, res, next) => {
   try {
@@ -15,12 +14,6 @@ const auth = async (req, res, next) => {
 
     if (!user) {
       return res.status(401).json({ error: 'User not found or inactive' });
-    }
-
-    // Check if refresh token exists in Redis
-    const refreshToken = await getRefreshToken(user._id.toString());
-    if (!refreshToken) {
-      return res.status(401).json({ error: 'Session expired' });
     }
 
     req.user = user;
@@ -43,4 +36,13 @@ const checkRole = (roles) => {
   };
 };
 
-export { auth, checkRole }; 
+// Middleware to check if user is admin
+const isAdmin = (req, res, next) => {
+  if (req.user && req.user.role === 'admin') {
+    next();
+  } else {
+    res.status(403).json({ error: 'Access denied. Admin privileges required.' });
+  }
+};
+
+export { auth, checkRole, isAdmin }; 

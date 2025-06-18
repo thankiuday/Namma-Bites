@@ -10,9 +10,15 @@ import dotenv from 'dotenv';
 import userRoutes from './routes/userRoutes.js';
 import adminRoutes from './routes/adminRoutes.js';
 import authRoutes from './routes/auth.js';
+import vendorRoutes from './routes/vendorRoutes.js';
+import { fileURLToPath } from 'url';
+import fs from 'fs';
 dotenv.config();
 
 import redisClient from './config/redis.js';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const app = express();
 
@@ -50,10 +56,20 @@ mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/namma_bit
 
 // Redis connection is handled by import
 
+// Create vendorPicture directory if it doesn't exist
+const vendorPictureDir = path.join(__dirname, '../frontend/vendorPicture');
+if (!fs.existsSync(vendorPictureDir)) {
+    fs.mkdirSync(vendorPictureDir, { recursive: true });
+}
+
+// Serve vendor pictures
+app.use('/vendorPicture', express.static(path.join(__dirname, '../frontend/vendorPicture')));
+
 // API Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/api/vendor', vendorRoutes);
 
 // Serve static files from the React frontend app
 app.use(express.static(path.join(path.resolve(), '../frontend/dist')));

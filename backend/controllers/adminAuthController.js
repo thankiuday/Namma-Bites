@@ -4,7 +4,14 @@ import jwt from 'jsonwebtoken';
 // Generate JWT Token
 const generateToken = (id) => {
   return jwt.sign({ id }, process.env.JWT_SECRET, {
-    expiresIn: '30d'
+    expiresIn: '1h' // Short-lived access token
+  });
+};
+
+// Generate Refresh Token
+const generateRefreshToken = (id) => {
+  return jwt.sign({ id }, process.env.JWT_REFRESH_SECRET, {
+    expiresIn: '7d' // Long-lived refresh token
   });
 };
 
@@ -33,6 +40,10 @@ export const registerFirstAdmin = async (req, res) => {
     });
 
     if (admin) {
+      // Generate tokens
+      const accessToken = generateToken(admin._id);
+      const refreshToken = generateRefreshToken(admin._id);
+
       res.status(201).json({
         success: true,
         message: 'Super admin registered successfully',
@@ -40,11 +51,14 @@ export const registerFirstAdmin = async (req, res) => {
           _id: admin._id,
           name: admin.name,
           email: admin.email,
-          role: admin.role
+          role: admin.role,
+          accessToken,
+          refreshToken
         }
       });
     }
   } catch (error) {
+    console.error('Register first admin error:', error);
     res.status(500).json({
       success: false,
       message: 'Error registering super admin',
@@ -77,6 +91,10 @@ export const registerAdmin = async (req, res) => {
     });
 
     if (admin) {
+      // Generate tokens
+      const accessToken = generateToken(admin._id);
+      const refreshToken = generateRefreshToken(admin._id);
+
       res.status(201).json({
         success: true,
         message: 'Admin registered successfully',
@@ -84,11 +102,14 @@ export const registerAdmin = async (req, res) => {
           _id: admin._id,
           name: admin.name,
           email: admin.email,
-          role: admin.role
+          role: admin.role,
+          accessToken,
+          refreshToken
         }
       });
     }
   } catch (error) {
+    console.error('Register admin error:', error);
     res.status(500).json({
       success: false,
       message: 'Error registering admin',
@@ -122,8 +143,9 @@ export const loginAdmin = async (req, res) => {
       });
     }
 
-    // Generate token
-    const token = generateToken(admin._id);
+    // Generate tokens
+    const accessToken = generateToken(admin._id);
+    const refreshToken = generateRefreshToken(admin._id);
 
     res.status(200).json({
       success: true,
@@ -133,14 +155,60 @@ export const loginAdmin = async (req, res) => {
         name: admin.name,
         email: admin.email,
         role: admin.role,
-        token
+        accessToken,
+        refreshToken
       }
     });
   } catch (error) {
+    console.error('Login error:', error);
     res.status(500).json({
       success: false,
       message: 'Error logging in',
       error: error.message
+    });
+  }
+};
+
+// @desc    Refresh token
+// @route   POST /api/admin/refresh-token
+// @access  Public
+export const refreshToken = async (req, res) => {
+  try {
+    const { refreshToken } = req.body;
+
+    if (!refreshToken) {
+      return res.status(401).json({
+        success: false,
+        message: 'Refresh token is required'
+      });
+    }
+
+    // Verify refresh token
+    const decoded = jwt.verify(refreshToken, process.env.JWT_REFRESH_SECRET);
+    
+    // Check if admin exists
+    const admin = await Admin.findById(decoded.id);
+    if (!admin) {
+      return res.status(401).json({
+        success: false,
+        message: 'Invalid refresh token'
+      });
+    }
+
+    // Generate new access token
+    const accessToken = generateToken(admin._id);
+
+    res.status(200).json({
+      success: true,
+      data: {
+        accessToken
+      }
+    });
+  } catch (error) {
+    console.error('Refresh token error:', error);
+    res.status(401).json({
+      success: false,
+      message: 'Invalid refresh token'
     });
   }
 };
@@ -163,6 +231,7 @@ export const getAdminProfile = async (req, res) => {
       data: admin
     });
   } catch (error) {
+    console.error('Get profile error:', error);
     res.status(500).json({
       success: false,
       message: 'Error fetching admin profile',

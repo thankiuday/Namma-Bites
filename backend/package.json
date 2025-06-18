@@ -20,6 +20,7 @@
     "ioredis": "^5.6.1",
     "jsonwebtoken": "^9.0.2",
     "mongoose": "^7.5.0",
+    "multer": "^2.0.1",
     "rate-limit-redis": "^4.2.1",
     "redis": "^4.7.1"
   },

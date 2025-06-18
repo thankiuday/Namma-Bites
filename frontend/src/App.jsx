@@ -20,6 +20,7 @@ import AdminLogin from './Pages/AdminLogin';
 import AdminRegister from './Pages/AdminRegister';
 import AdminDashboard from './Pages/AdminDashboard';
 import AdminUsers from './Pages/AdminUsers';
+import CreateVendor from './pages/admin/CreateVendor';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
@@ -82,8 +83,30 @@ const AppContent = () => {
           <Route path="/register" element={<Register />} />
           <Route path="/admin/login" element={<AdminLogin />} />
           <Route path="/admin/register" element={<AdminRegister />} />
-          <Route path="/admin/dashboard" element={<AdminDashboard />} />
-          <Route path="/admin/users" element={<AdminUsers />} />
+          <Route 
+            path="/admin/dashboard" 
+            element={
+              <ProtectedRoute>
+                <AdminDashboard />
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="/admin/users" 
+            element={
+              <ProtectedRoute>
+                <AdminUsers />
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="/admin/create-vendor" 
+            element={
+              <ProtectedRoute>
+                <CreateVendor />
+              </ProtectedRoute>
+            } 
+          />
           {/* Add new routes as needed */}
         </Routes>
       </main>
