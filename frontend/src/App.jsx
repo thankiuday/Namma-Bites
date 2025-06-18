@@ -11,6 +11,10 @@ import Navbar from './components/Navbar';
 import Footer from './components/Footer';
 import { AuthProvider } from './context/AuthContext';
 import ProtectedRoute from './components/ProtectedRoute';
+import Subscription from './Pages/Subscription';
+import Cart from './Pages/Cart';
+import Orders from './Pages/Orders';
+import FoodDetails from './Pages/FoodDetails';
 
 function App() {
   return (
@@ -25,6 +29,7 @@ function App() {
               <Route path="/contact" element={<ContactUs />} />
               <Route path="/signup" element={<Signup />} />
               <Route path="/login" element={<Login />} />
+              <Route path="/food/:id" element={<FoodDetails />} />
               <Route 
                 path="/user" 
                 element={
@@ -38,6 +43,30 @@ function App() {
                 element={
                   <ProtectedRoute>
                     <ChangePassword />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route 
+                path="/subscription" 
+                element={
+                  <ProtectedRoute>
+                    <Subscription />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route 
+                path="/cart" 
+                element={
+                  <ProtectedRoute>
+                    <Cart />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route 
+                path="/orders" 
+                element={
+                  <ProtectedRoute>
+                    <Orders />
                   </ProtectedRoute>
                 } 
               />

@@ -1,9 +1,19 @@
 import React from 'react';
-import { FaCheckCircle, FaTimesCircle, FaTag } from 'react-icons/fa';
+import { useNavigate } from 'react-router-dom';
+import { FaCheckCircle, FaTimesCircle, FaTag, FaLeaf, FaDrumstickBite } from 'react-icons/fa';
 
 const FoodCard = ({ food }) => {
+  const navigate = useNavigate();
+
+  const handleClick = () => {
+    navigate(`/food/${food.id}`);
+  };
+
   return (
-    <div className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-all duration-300 transform hover:scale-105">
+    <div 
+      className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-all duration-300 transform hover:scale-105 cursor-pointer"
+      onClick={handleClick}
+    >
       {/* Food Image */}
       <div className="relative h-48 w-full overflow-hidden">
         <img
@@ -25,6 +35,18 @@ const FoodCard = ({ food }) => {
             <>
               <FaTimesCircle className="text-red-600" /> Not Available
             </>
+          )}
+        </div>
+        {/* Veg/Non-Veg Badge */}
+        <div className="absolute top-2 left-2">
+          {food.isVeg ? (
+            <div className="bg-green-500 text-white px-3 py-1 rounded-full flex items-center gap-1">
+              <FaLeaf /> Veg
+            </div>
+          ) : (
+            <div className="bg-red-500 text-white px-3 py-1 rounded-full flex items-center gap-1">
+              <FaDrumstickBite /> Non-Veg
+            </div>
           )}
         </div>
       </div>
