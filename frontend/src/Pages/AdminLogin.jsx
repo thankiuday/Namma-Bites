@@ -27,39 +27,25 @@ const AdminLogin = () => {
     setLoading(true);
 
     try {
-      console.log('Attempting login...');
+      console.log('Attempting admin login...');
       const response = await api.post('/admin/login', formData);
-      console.log('Login response:', response.data);
+      console.log('Admin login response:', response.data);
       
       if (response.data.success) {
-        // Store admin flag in user data
-        const userData = {
-          ...response.data.data,
-          role: response.data.data.role || 'admin'  // Use role from response or default to admin
-        };
-        
-        console.log('User data to store:', userData);
-        console.log('Tokens to store:', {
-          accessToken: response.data.data.accessToken,
-          refreshToken: response.data.data.refreshToken
-        });
-        
-        // Use the auth context's login function
-        login(userData, {
-          accessToken: response.data.data.accessToken,
-          refreshToken: response.data.data.refreshToken
-        });
+        // Store admin token
+        const adminToken = response.data.data.accessToken;
+        localStorage.setItem('adminToken', adminToken);
         
         // Verify token was stored
-        const storedToken = localStorage.getItem('accessToken');
-        console.log('Stored token:', storedToken ? 'exists' : 'missing');
+        const storedToken = localStorage.getItem('adminToken');
+        console.log('Stored admin token:', storedToken ? 'exists' : 'missing');
         
         navigate('/admin/dashboard');
       } else {
         setError(response.data.message || 'Login failed');
       }
     } catch (err) {
-      console.error('Login error:', err);
+      console.error('Admin login error:', err);
       setError(err.response?.data?.message || err.message || 'Login failed. Please try again.');
     } finally {
       setLoading(false);

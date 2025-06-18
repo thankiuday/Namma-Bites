@@ -1,41 +1,43 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { FaHome, FaStore, FaUsers, FaSignOutAlt, FaSearch, FaEdit, FaTrash } from 'react-icons/fa';
+import { FaHome, FaStore, FaUsers, FaSignOutAlt, FaSearch, FaEdit, FaTrash, FaCheck, FaTimes } from 'react-icons/fa';
 import axios from '../api/config';
 
-const AdminUsers = () => {
+const AdminVendors = () => {
   const navigate = useNavigate();
-  const [users, setUsers] = useState([]);
+  const [vendors, setVendors] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
-  const [editingUser, setEditingUser] = useState(null);
+  const [editingVendor, setEditingVendor] = useState(null);
   const [editForm, setEditForm] = useState({
     name: '',
     email: '',
     phone: '',
-    address: ''
+    address: '',
+    cuisine: '',
+    isApproved: false
   });
 
   useEffect(() => {
     // Check if admin is logged in
     const token = localStorage.getItem('adminToken');
-    console.log('AdminUsers mounted, token status:', token ? 'Token exists' : 'No token');
+    console.log('AdminVendors mounted, token status:', token ? 'Token exists' : 'No token');
     
     if (!token) {
       console.log('No admin token found, redirecting to login');
       navigate('/admin/login');
       return;
     }
-    fetchUsers();
+    fetchVendors();
   }, [navigate]);
 
-  const fetchUsers = async () => {
+  const fetchVendors = async () => {
     try {
       setLoading(true);
       setError('');
       const token = localStorage.getItem('adminToken');
-      console.log('Fetching users with token:', token ? 'Token exists' : 'No token');
+      console.log('Fetching vendors with token:', token ? 'Token exists' : 'No token');
       
       if (!token) {
         console.log('No token found during fetch, redirecting to login');
@@ -43,24 +45,24 @@ const AdminUsers = () => {
         return;
       }
 
-      console.log('Making API request to /users');
-      const response = await axios.get('/users');
+      console.log('Making API request to /vendors');
+      const response = await axios.get('/vendors');
       console.log('API Response:', response.data);
 
       if (response.data.success) {
-        setUsers(response.data.data);
+        setVendors(response.data.data);
       } else {
         console.error('API returned error:', response.data.message);
-        setError(response.data.message || 'Failed to fetch users');
+        setError(response.data.message || 'Failed to fetch vendors');
       }
     } catch (err) {
-      console.error('Error in fetchUsers:', {
+      console.error('Error in fetchVendors:', {
         status: err.response?.status,
         data: err.response?.data,
         message: err.message
       });
       
-      setError(err.response?.data?.message || 'Failed to fetch users. Please try again.');
+      setError(err.response?.data?.message || 'Failed to fetch vendors. Please try again.');
       if (err.response?.status === 401 || err.response?.status === 403) {
         console.log('Authentication error, removing token and redirecting to login');
         localStorage.removeItem('adminToken');
@@ -76,13 +78,15 @@ const AdminUsers = () => {
     navigate('/admin/login');
   };
 
-  const handleEdit = (user) => {
-    setEditingUser(user);
+  const handleEdit = (vendor) => {
+    setEditingVendor(vendor);
     setEditForm({
-      name: user.name || '',
-      email: user.email || '',
-      phone: user.phone || '',
-      address: user.address || ''
+      name: vendor.name || '',
+      email: vendor.email || '',
+      phone: vendor.phone || '',
+      address: vendor.address || '',
+      cuisine: vendor.cuisine || '',
+      isApproved: vendor.isApproved || false
     });
   };
 
@@ -90,42 +94,63 @@ const AdminUsers = () => {
     e.preventDefault();
     try {
       setLoading(true);
-      const response = await axios.put(`/users/${editingUser._id}`, editForm);
+      const response = await axios.put(`/vendors/${editingVendor._id}`, editForm);
       if (response.data.success) {
-        setUsers(users.map(user => 
-          user._id === editingUser._id ? { ...user, ...editForm } : user
+        setVendors(vendors.map(vendor => 
+          vendor._id === editingVendor._id ? { ...vendor, ...editForm } : vendor
         ));
-        setEditingUser(null);
+        setEditingVendor(null);
       }
     } catch (err) {
-      setError(err.response?.data?.message || 'Failed to update user');
+      setError(err.response?.data?.message || 'Failed to update vendor');
     } finally {
       setLoading(false);
     }
   };
 
-  const handleDelete = async (userId) => {
-    if (!window.confirm('Are you sure you want to delete this user?')) {
+  const handleDelete = async (vendorId) => {
+    if (!window.confirm('Are you sure you want to delete this vendor?')) {
       return;
     }
     
     try {
       setLoading(true);
-      const response = await axios.delete(`/users/${userId}`);
+      const response = await axios.delete(`/vendors/${vendorId}`);
       if (response.data.success) {
-        setUsers(users.filter(user => user._id !== userId));
+        setVendors(vendors.filter(vendor => vendor._id !== vendorId));
       }
     } catch (err) {
-      setError(err.response?.data?.message || 'Failed to delete user');
+      setError(err.response?.data?.message || 'Failed to delete vendor');
     } finally {
       setLoading(false);
     }
   };
 
-  const filteredUsers = users.filter(user =>
-    user.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    user.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    user.phone?.includes(searchTerm)
+  const handleApprove = async (vendorId, currentStatus) => {
+    try {
+      setLoading(true);
+      const response = await axios.put(`/vendors/${vendorId}/approve`, {
+        isApproved: !currentStatus
+      });
+      if (response.data.success) {
+        setVendors(vendors.map(vendor => 
+          vendor._id === vendorId 
+            ? { ...vendor, isApproved: !currentStatus }
+            : vendor
+        ));
+      }
+    } catch (err) {
+      setError(err.response?.data?.message || 'Failed to update vendor approval status');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const filteredVendors = vendors.filter(vendor =>
+    vendor.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    vendor.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    vendor.phone?.includes(searchTerm) ||
+    vendor.cuisine?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   return (
@@ -158,14 +183,14 @@ const AdminUsers = () => {
               </Link>
               <Link
                 to="/admin/users"
-                className="flex items-center space-x-2 text-blue-600 hover:text-blue-700 transition-colors duration-200"
+                className="flex items-center space-x-2 text-gray-800 hover:text-blue-600 transition-colors duration-200"
               >
                 <FaUsers className="w-5 h-5" />
                 <span className="font-medium">See Users</span>
               </Link>
               <Link
                 to="/admin/vendors"
-                className="flex items-center space-x-2 text-gray-800 hover:text-blue-600 transition-colors duration-200"
+                className="flex items-center space-x-2 text-blue-600 hover:text-blue-700 transition-colors duration-200"
               >
                 <FaStore className="w-5 h-5" />
                 <span className="font-medium">See Vendors</span>
@@ -187,11 +212,11 @@ const AdminUsers = () => {
         <div className="bg-white rounded-lg shadow-md p-6">
           {/* Header */}
           <div className="flex flex-col md:flex-row justify-between items-center mb-6">
-            <h1 className="text-2xl font-bold text-gray-800 mb-4 md:mb-0">User Management</h1>
+            <h1 className="text-2xl font-bold text-gray-800 mb-4 md:mb-0">Vendor Management</h1>
             <div className="relative w-full md:w-64">
               <input
                 type="text"
-                placeholder="Search users..."
+                placeholder="Search vendors..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-800 placeholder-gray-500"
@@ -213,16 +238,19 @@ const AdminUsers = () => {
               <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
             </div>
           ) : (
-            /* Users List */
+            /* Vendors List */
             <div className="overflow-x-auto">
               <table className="min-w-full divide-y divide-gray-200">
                 <thead className="bg-gray-50">
                   <tr>
                     <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
-                      User
+                      Vendor
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
                       Contact
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                      Cuisine
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
                       Status
@@ -233,41 +261,58 @@ const AdminUsers = () => {
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
-                  {filteredUsers.map((user) => (
-                    <tr key={user._id} className="hover:bg-gray-50">
+                  {filteredVendors.map((vendor) => (
+                    <tr key={vendor._id} className="hover:bg-gray-50">
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="flex items-center">
                           <div className="flex-shrink-0 h-10 w-10">
                             <div className="h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center">
                               <span className="text-blue-600 font-semibold">
-                                {user.name?.charAt(0).toUpperCase()}
+                                {vendor.name?.charAt(0).toUpperCase()}
                               </span>
                             </div>
                           </div>
                           <div className="ml-4">
-                            <div className="text-sm font-semibold text-gray-800">{user.name}</div>
-                            <div className="text-sm text-gray-600">{user.email}</div>
+                            <div className="text-sm font-semibold text-gray-800">{vendor.name}</div>
+                            <div className="text-sm text-gray-600">{vendor.email}</div>
                           </div>
                         </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="text-sm font-medium text-gray-800">{user.phone}</div>
-                        <div className="text-sm text-gray-600">{user.address}</div>
+                        <div className="text-sm font-medium text-gray-800">{vendor.phone}</div>
+                        <div className="text-sm text-gray-600">{vendor.address}</div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <span className="px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
-                          Active
+                        <div className="text-sm text-gray-800">{vendor.cuisine}</div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <span className={`px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${
+                          vendor.isApproved 
+                            ? 'bg-green-100 text-green-800' 
+                            : 'bg-yellow-100 text-yellow-800'
+                        }`}>
+                          {vendor.isApproved ? 'Approved' : 'Pending'}
                         </span>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                         <button 
-                          onClick={() => handleEdit(user)}
+                          onClick={() => handleApprove(vendor._id, vendor.isApproved)}
+                          className={`mr-4 transition-colors duration-200 ${
+                            vendor.isApproved 
+                              ? 'text-yellow-600 hover:text-yellow-800' 
+                              : 'text-green-600 hover:text-green-800'
+                          }`}
+                        >
+                          {vendor.isApproved ? <FaTimes className="w-5 h-5" /> : <FaCheck className="w-5 h-5" />}
+                        </button>
+                        <button 
+                          onClick={() => handleEdit(vendor)}
                           className="text-blue-600 hover:text-blue-800 mr-4 transition-colors duration-200"
                         >
                           <FaEdit className="w-5 h-5" />
                         </button>
                         <button 
-                          onClick={() => handleDelete(user._id)}
+                          onClick={() => handleDelete(vendor._id)}
                           className="text-red-600 hover:text-red-800 transition-colors duration-200"
                         >
                           <FaTrash className="w-5 h-5" />
@@ -279,10 +324,10 @@ const AdminUsers = () => {
               </table>
 
               {/* Edit Modal */}
-              {editingUser && (
+              {editingVendor && (
                 <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4">
                   <div className="bg-white rounded-lg p-6 w-full max-w-md">
-                    <h2 className="text-xl font-bold text-gray-800 mb-4">Edit User</h2>
+                    <h2 className="text-xl font-bold text-gray-800 mb-4">Edit Vendor</h2>
                     <form onSubmit={handleEditSubmit}>
                       <div className="mb-4">
                         <label className="block text-sm font-semibold text-gray-700 mb-1">Name</label>
@@ -323,10 +368,20 @@ const AdminUsers = () => {
                           rows="3"
                         />
                       </div>
+                      <div className="mb-4">
+                        <label className="block text-sm font-semibold text-gray-700 mb-1">Cuisine</label>
+                        <input
+                          type="text"
+                          value={editForm.cuisine}
+                          onChange={(e) => setEditForm({...editForm, cuisine: e.target.value})}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md text-gray-800 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                          required
+                        />
+                      </div>
                       <div className="flex justify-end space-x-3">
                         <button
                           type="button"
-                          onClick={() => setEditingUser(null)}
+                          onClick={() => setEditingVendor(null)}
                           className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-md transition-colors duration-200"
                         >
                           Cancel
@@ -344,9 +399,9 @@ const AdminUsers = () => {
               )}
 
               {/* No Results */}
-              {filteredUsers.length === 0 && (
+              {filteredVendors.length === 0 && (
                 <div className="text-center py-8">
-                  <p className="text-gray-600 font-medium">No users found.</p>
+                  <p className="text-gray-600 font-medium">No vendors found.</p>
                 </div>
               )}
             </div>
@@ -357,4 +412,4 @@ const AdminUsers = () => {
   );
 };
 
-export default AdminUsers; 
+export default AdminVendors; 

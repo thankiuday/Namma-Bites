@@ -10,11 +10,6 @@ const vendorSchema = new mongoose.Schema({
         type: String,
         required: true
     },
-    status: {
-        type: String,
-        enum: ['Open', 'Closed'],
-        default: 'Closed'
-    },
     email: {
         type: String,
         required: true,
@@ -22,19 +17,53 @@ const vendorSchema = new mongoose.Schema({
         trim: true,
         lowercase: true
     },
-    phoneNumber: {
+    phone: {
         type: String,
         required: true,
         trim: true
     },
-    establishedDate: {
-        type: Date,
+    address: {
+        type: String,
+        required: true,
+        trim: true
+    },
+    cuisine: {
+        type: String,
+        required: true,
+        trim: true
+    },
+    isApproved: {
+        type: Boolean,
+        default: false
+    },
+    status: {
+        type: String,
+        enum: ['Open', 'Closed'],
+        default: 'Closed'
+    },
+    createdBy: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Admin',
         required: true
+    },
+    updatedBy: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Admin'
     },
     createdAt: {
         type: Date,
         default: Date.now
+    },
+    updatedAt: {
+        type: Date,
+        default: Date.now
     }
+});
+
+// Update the updatedAt field before saving
+vendorSchema.pre('save', function(next) {
+    this.updatedAt = Date.now();
+    next();
 });
 
 export default mongoose.model('Vendor', vendorSchema); 

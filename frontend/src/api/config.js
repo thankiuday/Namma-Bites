@@ -28,8 +28,15 @@ const processQueue = (error, token = null) => {
 // Request interceptor
 api.interceptors.request.use(
   (config) => {
-    const token = localStorage.getItem('accessToken');
-    console.log('Making request with token:', token ? 'Token exists' : 'No token');
+    // Check if this is an admin route
+    const isAdminRoute = config.url.startsWith('/admin') || 
+                        config.url.includes('/users') || 
+                        config.url.includes('/vendors');
+    const tokenKey = isAdminRoute ? 'adminToken' : 'accessToken';
+    const token = localStorage.getItem(tokenKey);
+    
+    console.log(`Making ${isAdminRoute ? 'admin' : 'user'} request with token:`, token ? 'Token exists' : 'No token');
+    
     if (token) {
       // Ensure token is properly formatted
       const formattedToken = token.startsWith('Bearer ') ? token : `Bearer ${token}`;
@@ -52,21 +59,20 @@ api.interceptors.response.use(
   async (error) => {
     const originalRequest = error.config;
     
+    // Check if this is an admin route
+    const isAdminRoute = originalRequest.url.startsWith('/admin') || originalRequest.url.includes('/users');
+    
     if (error.response?.status === 401 && !originalRequest._retry) {
-      if (isRefreshing) {
-        return new Promise((resolve, reject) => {
-          failedQueue.push({ resolve, reject });
-        })
-          .then(token => {
-            originalRequest.headers.Authorization = `Bearer ${token}`;
-            return api(originalRequest);
-          })
-          .catch(err => Promise.reject(err));
-      }
-
       originalRequest._retry = true;
-      isRefreshing = true;
-
+      
+      // For admin routes, redirect to admin login
+      if (isAdminRoute) {
+        localStorage.removeItem('adminToken');
+        window.location.href = '/admin/login';
+        return Promise.reject(error);
+      }
+      
+      // For user routes, attempt token refresh
       try {
         const refreshToken = localStorage.getItem('refreshToken');
         if (!refreshToken) {
@@ -74,35 +80,25 @@ api.interceptors.response.use(
         }
 
         console.log('Attempting to refresh token...');
-        const response = await axios.post(`${API_URL}/admin/refresh-token`, {
+        const response = await axios.post(`${API_URL}/auth/refresh-token`, {
           refreshToken
         });
 
-        console.log('Refresh token response:', response.data);
-
         if (response.data.success) {
           const { accessToken } = response.data.data;
-          // Store token without 'Bearer ' prefix
           localStorage.setItem('accessToken', accessToken);
-          
-          // Add 'Bearer ' prefix when setting header
           api.defaults.headers.common['Authorization'] = `Bearer ${accessToken}`;
           originalRequest.headers.Authorization = `Bearer ${accessToken}`;
-          
-          processQueue(null, accessToken);
           return api(originalRequest);
         } else {
           throw new Error(response.data.message || 'Failed to refresh token');
         }
       } catch (refreshError) {
         console.error('Token refresh error:', refreshError);
-        processQueue(refreshError, null);
         localStorage.removeItem('accessToken');
         localStorage.removeItem('refreshToken');
-        window.location.href = '/admin/login';
+        window.location.href = '/login';
         return Promise.reject(refreshError);
-      } finally {
-        isRefreshing = false;
       }
     }
 

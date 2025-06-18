@@ -42,15 +42,22 @@ export const createVendor = async (req, res) => {
 // Get all vendors
 export const getAllVendors = async (req, res) => {
   try {
+    console.log('Getting all vendors...');
+    console.log('Admin from request:', req.admin);
+    
     const vendors = await Vendor.find()
       .populate('createdBy', 'name email')
       .sort({ createdAt: -1 });
+
+    console.log('Found vendors:', vendors);
 
     res.status(200).json({
       success: true,
       data: vendors
     });
   } catch (error) {
+    console.error('Error in getAllVendors:', error);
+    console.error('Error stack:', error.stack);
     res.status(500).json({
       success: false,
       message: 'Error fetching vendors',

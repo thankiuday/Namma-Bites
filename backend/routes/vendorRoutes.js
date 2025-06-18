@@ -3,7 +3,13 @@ import multer from 'multer';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import fs from 'fs';
-import { createVendor } from '../controllers/vendorController.js';
+import { 
+  createVendor, 
+  getAllVendors, 
+  getVendorById, 
+  updateVendor, 
+  deleteVendor 
+} from '../controllers/vendorController.js';
 import { authenticateAdmin } from '../middleware/authMiddleware.js';
 
 const router = express.Router();
@@ -44,7 +50,19 @@ const upload = multer({
     }
 });
 
+// Get all vendors (protected, admin only)
+router.get('/', authenticateAdmin, getAllVendors);
+
+// Get vendor by ID (protected, admin only)
+router.get('/:id', authenticateAdmin, getVendorById);
+
 // Create vendor route (protected, admin only)
 router.post('/create', authenticateAdmin, upload.single('image'), createVendor);
+
+// Update vendor route (protected, admin only)
+router.put('/:id', authenticateAdmin, updateVendor);
+
+// Delete vendor route (protected, admin only)
+router.delete('/:id', authenticateAdmin, deleteVendor);
 
 export default router; 

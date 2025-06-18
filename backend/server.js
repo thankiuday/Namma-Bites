@@ -69,7 +69,7 @@ app.use('/vendorPicture', express.static(path.join(__dirname, '../frontend/vendo
 app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/admin', adminRoutes);
-app.use('/api/vendor', vendorRoutes);
+app.use('/api/vendors', vendorRoutes);
 
 // Serve static files from the React frontend app
 app.use(express.static(path.join(path.resolve(), '../frontend/dist')));

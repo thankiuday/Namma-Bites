@@ -20,6 +20,7 @@ import AdminLogin from './Pages/AdminLogin';
 import AdminRegister from './Pages/AdminRegister';
 import AdminDashboard from './Pages/AdminDashboard';
 import AdminUsers from './Pages/AdminUsers';
+import AdminVendors from './Pages/AdminVendors';
 import CreateVendor from './pages/admin/CreateVendor';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
@@ -96,6 +97,14 @@ const AppContent = () => {
             element={
               <ProtectedRoute>
                 <AdminUsers />
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="/admin/vendors" 
+            element={
+              <ProtectedRoute>
+                <AdminVendors />
               </ProtectedRoute>
             } 
           />
