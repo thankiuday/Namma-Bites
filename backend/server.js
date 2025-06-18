@@ -7,6 +7,9 @@ import rateLimit from 'express-rate-limit';
 import { RedisStore } from 'rate-limit-redis';
 import cookieParser from 'cookie-parser';
 import dotenv from 'dotenv';
+import userRoutes from './routes/userRoutes.js';
+import adminRoutes from './routes/adminRoutes.js';
+import authRoutes from './routes/auth.js';
 dotenv.config();
 
 import redisClient from './config/redis.js';
@@ -16,7 +19,7 @@ const app = express();
 // Security middleware
 app.use(helmet());
 app.use(cors({
-  origin: process.env.CLIENT_URL || 'http://localhost:5173',
+  origin: process.env.FRONTEND_URL || 'http://localhost:5173',
   credentials: true
 }));
 app.use(express.json());
@@ -34,6 +37,12 @@ const limiter = rateLimit({
 });
 app.use('/api/', limiter);
 
+// Logging middleware
+app.use((req, res, next) => {
+  console.log(`${req.method} ${req.path}`);
+  next();
+});
+
 // Database connection
 mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/namma_bites')
   .then(() => console.log('Connected to MongoDB'))
@@ -42,8 +51,9 @@ mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/namma_bit
 // Redis connection is handled by import
 
 // API Routes
-import authRoutes from './routes/auth.js';
 app.use('/api/auth', authRoutes);
+app.use('/api/users', userRoutes);
+app.use('/api/admin', adminRoutes);
 
 // Serve static files from the React frontend app
 app.use(express.static(path.join(path.resolve(), '../frontend/dist')));
@@ -51,6 +61,16 @@ app.use(express.static(path.join(path.resolve(), '../frontend/dist')));
 // Handle React routing, return all requests to React app
 app.get('*', (req, res) => {
   res.sendFile(path.join(path.resolve(), '../frontend/dist', 'index.html'));
+});
+
+// Error handling middleware
+app.use((err, req, res, next) => {
+  console.error('Server error:', err);
+  res.status(500).json({
+    success: false,
+    message: 'Something went wrong!',
+    error: process.env.NODE_ENV === 'development' ? err.message : undefined
+  });
 });
 
 const PORT = process.env.PORT || 5000;
