@@ -163,8 +163,8 @@ const AdminVendors = () => {
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-600"></div>
           </div>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-200">
+          <div className="overflow-x-auto w-full">
+            <table className="min-w-full divide-y divide-gray-200 text-sm md:text-base">
               <thead className="bg-gray-50">
                 <tr>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
@@ -217,11 +217,11 @@ const AdminVendors = () => {
 
       {/* Edit Modal */}
       {editingVendor && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-lg p-6 w-full max-w-md">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-2 sm:p-4 z-50">
+          <div className="bg-white rounded-lg p-4 sm:p-6 w-full max-w-xs sm:max-w-md mx-2">
             <h2 className="text-xl font-bold mb-4">Edit Vendor</h2>
-            <form onSubmit={handleEditSubmit}>
-              <div className="mb-4">
+            <form onSubmit={handleEditSubmit} className="space-y-4">
+              <div>
                 <label className="block text-gray-700 text-sm font-bold mb-2">Name</label>
                 <input
                   type="text"
@@ -230,7 +230,7 @@ const AdminVendors = () => {
                   className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-600"
                 />
               </div>
-              <div className="mb-4">
+              <div>
                 <label className="block text-gray-700 text-sm font-bold mb-2">Email</label>
                 <input
                   type="email"
@@ -239,7 +239,7 @@ const AdminVendors = () => {
                   className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-600"
                 />
               </div>
-              <div className="mb-4">
+              <div>
                 <label className="block text-gray-700 text-sm font-bold mb-2">Phone</label>
                 <input
                   type="text"
@@ -248,7 +248,7 @@ const AdminVendors = () => {
                   className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-600"
                 />
               </div>
-              <div className="mb-4">
+              <div>
                 <label className="block text-gray-700 text-sm font-bold mb-2">Address</label>
                 <input
                   type="text"
@@ -257,7 +257,7 @@ const AdminVendors = () => {
                   className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-600"
                 />
               </div>
-              <div className="mb-4">
+              <div>
                 <label className="block text-gray-700 text-sm font-bold mb-2">Cuisine</label>
                 <input
                   type="text"
@@ -277,11 +277,11 @@ const AdminVendors = () => {
                   <span className="text-gray-700 text-sm font-bold">Approved</span>
                 </label>
               </div>
-              <div className="flex justify-end space-x-4">
+              <div className="flex flex-col sm:flex-row justify-end gap-2 sm:gap-4 mt-4">
                 <button
                   type="button"
                   onClick={() => setEditingVendor(null)}
-                  className="px-4 py-2 text-gray-600 hover:text-gray-800"
+                  className="px-4 py-2 text-gray-600 hover:text-gray-800 border border-gray-300 rounded"
                 >
                   Cancel
                 </button>

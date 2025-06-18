@@ -127,7 +127,7 @@ const Navbar = ({ links = defaultStudentLinks, isAdmin = false }) => {
               to={link.to}
               className="block px-3 py-2 rounded-md text-base font-medium text-black hover:text-orange-600 hover:bg-gray-800 flex items-center gap-2"
             >
-              {iconMap[link.icon]?.('text-lg')}
+              {iconMap[link.icon]?.('text-base h-5 w-5')}
               {link.label}
             </Link>
           ))}
@@ -136,7 +136,7 @@ const Navbar = ({ links = defaultStudentLinks, isAdmin = false }) => {
               onClick={handleLogout}
               className="w-full text-left block px-3 py-2 rounded-md text-base font-medium text-black hover:text-orange-600 hover:bg-gray-800 flex items-center gap-2"
             >
-              <FaSignOutAlt className="text-lg" /> Logout
+              <FaSignOutAlt className="text-base h-5 w-5" /> Logout
             </button>
           )}
         </div>

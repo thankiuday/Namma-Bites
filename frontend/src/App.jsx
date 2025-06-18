@@ -24,6 +24,7 @@ import AdminVendors from './Pages/AdminVendors';
 import CreateVendor from './pages/admin/CreateVendor';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import VendorLogin from './Pages/VendorLogin';
 
 // Create a wrapper component to handle conditional rendering
 const AppContent = () => {
@@ -40,6 +41,7 @@ const AppContent = () => {
           <Route path="/contact" element={<ContactUs />} />
           <Route path="/signup" element={<Signup />} />
           <Route path="/login" element={<Login />} />
+          <Route path="/vendor/login" element={<VendorLogin />} />
           <Route path="/food/:id" element={<FoodDetails />} />
           <Route 
             path="/user" 

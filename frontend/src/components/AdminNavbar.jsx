@@ -13,10 +13,10 @@ const AdminNavbar = () => {
   };
 
   const navLinks = [
-    { name: 'Home', path: '/admin/dashboard', icon: <FaHome /> },
-    { name: 'Create Vendor', path: '/admin/create-vendor', icon: <FaStore /> },
-    { name: 'All Users', path: '/admin/users', icon: <FaUsers /> },
-    { name: 'All Vendors', path: '/admin/vendors', icon: <FaStore /> },
+    { name: 'Home', path: '/admin/dashboard', icon: <FaHome className="w-5 h-5" /> },
+    { name: 'Create Vendor', path: '/admin/create-vendor', icon: <FaStore className="w-5 h-5" /> },
+    { name: 'All Users', path: '/admin/users', icon: <FaUsers className="w-5 h-5" /> },
+    { name: 'All Vendors', path: '/admin/vendors', icon: <FaStore className="w-5 h-5" /> },
   ];
 
   return (
@@ -49,7 +49,7 @@ const AdminNavbar = () => {
               onClick={() => setIsProfileOpen(!isProfileOpen)}
               className="flex items-center space-x-2 text-gray-300 hover:text-white transition-colors duration-200"
             >
-              <FaUserCircle className="w-6 h-6" />
+              <FaUserCircle className="w-5 h-5" />
               <span>Profile</span>
             </button>
 
@@ -95,7 +95,7 @@ const AdminNavbar = () => {
               <Link
                 key={link.name}
                 to={link.path}
-                className="flex items-center space-x-2 text-gray-300 hover:text-white transition-colors duration-200 px-4 py-2"
+                className="flex items-center space-x-2 text-gray-300 hover:text-white transition-colors duration-200 px-4 py-2 text-base"
                 onClick={() => setIsMenuOpen(false)}
               >
                 {link.icon}
@@ -105,10 +105,10 @@ const AdminNavbar = () => {
             <div className="border-t border-gray-700 pt-4 mt-4">
               <Link
                 to="/admin/profile"
-                className="flex items-center space-x-2 text-gray-300 hover:text-white transition-colors duration-200 px-4 py-2"
+                className="flex items-center space-x-2 text-gray-300 hover:text-white transition-colors duration-200 px-4 py-2 text-base"
                 onClick={() => setIsMenuOpen(false)}
               >
-                <FaUserCircle />
+                <FaUserCircle className="w-5 h-5" />
                 <span>Profile</span>
               </Link>
               <button
@@ -116,9 +116,9 @@ const AdminNavbar = () => {
                   setIsMenuOpen(false);
                   handleLogout();
                 }}
-                className="w-full flex items-center space-x-2 text-red-500 hover:text-red-400 transition-colors duration-200 px-4 py-2"
+                className="w-full flex items-center space-x-2 text-red-500 hover:text-red-400 transition-colors duration-200 px-4 py-2 text-base"
               >
-                <FaSignOutAlt />
+                <FaSignOutAlt className="w-5 h-5" />
                 <span>Logout</span>
               </button>
             </div>

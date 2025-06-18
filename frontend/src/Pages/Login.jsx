@@ -162,6 +162,14 @@ const Login = () => {
             </Link>
           </div>
         </form>
+        {/* Vendor Login Link */}
+        <div className="text-center mt-4">
+          <span className="text-sm text-gray-600">Are you a vendor?{' '}
+            <Link to="/vendor/login" className="font-medium text-orange-600 hover:text-orange-500">
+              Login here
+            </Link>
+          </span>
+        </div>
       </div>
     </div>
   );

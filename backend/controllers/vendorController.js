@@ -1,4 +1,5 @@
 import Vendor from '../models/Vendor.js';
+import jwt from 'jsonwebtoken';
 
 // Create a new vendor
 export const createVendor = async (req, res) => {
@@ -179,5 +180,39 @@ export const deleteVendor = async (req, res) => {
       message: 'Error deleting vendor',
       error: error.message
     });
+  }
+};
+
+// Vendor login
+export const loginVendor = async (req, res) => {
+  try {
+    const { email, password } = req.body;
+    if (!email || !password) {
+      return res.status(400).json({ success: false, message: 'Email and password are required' });
+    }
+    const vendor = await Vendor.findOne({ email });
+    if (!vendor) {
+      return res.status(401).json({ success: false, message: 'Invalid email or password' });
+    }
+    const isMatch = await vendor.comparePassword(password);
+    if (!isMatch) {
+      return res.status(401).json({ success: false, message: 'Invalid email or password' });
+    }
+    // Generate JWT
+    const token = jwt.sign(
+      { id: vendor._id, email: vendor.email, role: 'vendor' },
+      process.env.JWT_SECRET || 'your_jwt_secret',
+      { expiresIn: '7d' }
+    );
+    const vendorObj = vendor.toObject();
+    delete vendorObj.password;
+    res.status(200).json({
+      success: true,
+      message: 'Login successful',
+      accessToken: token,
+      vendor: vendorObj
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, message: 'Server error', error: error.message });
   }
 }; 

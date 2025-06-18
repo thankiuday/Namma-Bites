@@ -8,7 +8,8 @@ import {
   getAllVendors, 
   getVendorById, 
   updateVendor, 
-  deleteVendor 
+  deleteVendor, 
+  loginVendor 
 } from '../controllers/vendorController.js';
 import { authenticateAdmin } from '../middleware/authMiddleware.js';
 
@@ -64,5 +65,8 @@ router.put('/:id', authenticateAdmin, updateVendor);
 
 // Delete vendor route (protected, admin only)
 router.delete('/:id', authenticateAdmin, deleteVendor);
+
+// Vendor login route (public)
+router.post('/login', loginVendor);
 
 export default router; 
