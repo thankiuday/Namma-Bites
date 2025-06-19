@@ -206,10 +206,15 @@ export const loginVendor = async (req, res) => {
     );
     const vendorObj = vendor.toObject();
     delete vendorObj.password;
+    res.cookie('vendorToken', token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'strict',
+      maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
+    });
     res.status(200).json({
       success: true,
       message: 'Login successful',
-      accessToken: token,
       vendor: vendorObj
     });
   } catch (error) {
@@ -258,5 +263,21 @@ export const changeVendorPassword = async (req, res) => {
     res.status(200).json({ success: true, message: 'Password changed successfully' });
   } catch (error) {
     res.status(500).json({ success: false, message: 'Error changing password', error: error.message });
+  }
+};
+
+
+// Get current vendor details (for vendor dashboard)
+export const getSelfVendor = async (req, res) => {
+  console.log('Cookies received:', req.cookies);
+  try {
+    if (!req.vendor) {
+      return res.status(401).json({ success: false, message: 'Vendor not authenticated' });
+    }
+    const vendor = req.vendor.toObject();
+    delete vendor.password;
+    res.status(200).json({ success: true, data: vendor });
+  } catch (error) {
+    res.status(500).json({ success: false, message: 'Error fetching vendor details', error: error.message });
   }
 }; 

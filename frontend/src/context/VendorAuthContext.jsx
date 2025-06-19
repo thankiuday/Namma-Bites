@@ -25,9 +25,8 @@ export const VendorAuthProvider = ({ children }) => {
     setLoading(false);
   };
 
-  const login = (vendorData, token) => {
+  const login = (vendorData) => {
     setVendor(vendorData);
-    localStorage.setItem('vendorToken', token);
     localStorage.setItem('vendorData', JSON.stringify(vendorData));
   };
 

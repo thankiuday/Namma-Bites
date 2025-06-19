@@ -6,6 +6,7 @@ const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 // Create axios instance
 const api = axios.create({
   baseURL: API_URL,
+  withCredentials: true,
   headers: {
     'Content-Type': 'application/json'
   }
@@ -28,11 +29,21 @@ const processQueue = (error, token = null) => {
 // Request interceptor
 api.interceptors.request.use(
   (config) => {
-    // Attach admin token for all admin, users, and vendors endpoints
+    // Vendor self endpoints (always use vendor token)
+    if (config.url === '/vendors/self' || config.url === '/vendors/me') {
+      const vendorToken = localStorage.getItem('vendorToken');
+      if (vendorToken) {
+        config.headers.Authorization = vendorToken.startsWith('Bearer ')
+          ? vendorToken
+          : `Bearer ${vendorToken}`;
+      }
+      return config;
+    }
+    // Admin endpoints and admin-only user/vendor endpoints
     if (
       config.url.startsWith('/admin') ||
       config.url.startsWith('/users') ||
-      config.url.startsWith('/vendors')
+      (config.url.startsWith('/vendors') && config.url !== '/vendors/self' && config.url !== '/vendors/me')
     ) {
       const adminToken = localStorage.getItem('adminToken');
       if (adminToken) {

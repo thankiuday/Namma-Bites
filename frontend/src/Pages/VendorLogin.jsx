@@ -1,10 +1,12 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import logo from '../../public/logo.png';
-import api from '../api/config';
+import vendorApi from '../api/vendorApi';
+import { useVendorAuth } from '../context/VendorAuthContext';
 
 const VendorLogin = () => {
   const navigate = useNavigate();
+  const { login } = useVendorAuth();
   const [formData, setFormData] = useState({
     email: '',
     password: '',
@@ -23,9 +25,10 @@ const VendorLogin = () => {
     setLoading(true);
     setError('');
     try {
-      const response = await api.post('/vendors/login', formData);
+      const response = await vendorApi.post('/login', formData);
+      console.log('Vendor login response:', response.data);
       if (response.data.success) {
-        localStorage.setItem('vendorToken', response.data.accessToken);
+        login(response.data.vendor);
         navigate('/vendor/dashboard');
       } else {
         setError(response.data.message || 'Invalid credentials');

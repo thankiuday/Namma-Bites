@@ -27,8 +27,9 @@ console.log('Server starting...');
 // Security middleware
 app.use(helmet());
 app.use(cors({
-  origin: process.env.FRONTEND_URL || 'http://localhost:5173',
-  credentials: true
+  origin: 'http://localhost:5173',
+  credentials: true,
+  secure: false // for localhost development
 }));
 app.use(express.json());
 app.use(cookieParser());
@@ -64,9 +65,11 @@ const loginLimiter = rateLimit({
   }
 });
 
-// Apply rate limiters
-app.use('/api/admin/login', loginLimiter);
-app.use('/api/', generalLimiter);
+// Apply rate limiters only in production
+if (process.env.NODE_ENV === 'production') {
+  app.use('/api/admin/login', loginLimiter);
+  app.use('/api/', generalLimiter);
+}
 
 // Add a route to reset rate limits (for development only)
 if (process.env.NODE_ENV === 'development') {
@@ -86,7 +89,7 @@ if (process.env.NODE_ENV === 'development') {
 
 // Logging middleware
 app.use((req, res, next) => {
-  console.log(`${req.method} ${req.path}`);
+  console.log('Request:', req.method, req.path);
   next();
 });
 
@@ -103,6 +106,13 @@ if (!fs.existsSync(vendorPictureDir)) {
     fs.mkdirSync(vendorPictureDir, { recursive: true });
 }
 
+// Handle React routing, return all requests to React app
+app.get('*', (req, res) => {
+  console.log('Catch-all route hit:', req.path);
+  res.sendFile(path.join(path.resolve(), '../frontend/dist', 'index.html'));
+});
+
+
 // Serve vendor pictures
 app.use('/vendorPicture', express.static(path.join(__dirname, '../frontend/vendorPicture')));
 
@@ -115,10 +125,6 @@ app.use('/api/vendors', vendorRoutes);
 // Serve static files from the React frontend app
 app.use(express.static(path.join(path.resolve(), '../frontend/dist')));
 
-// Handle React routing, return all requests to React app
-app.get('*', (req, res) => {
-  res.sendFile(path.join(path.resolve(), '../frontend/dist', 'index.html'));
-});
 
 // Error handling middleware
 app.use((err, req, res, next) => {

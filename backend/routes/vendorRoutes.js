@@ -1,3 +1,4 @@
+console.log('Vendor routes loaded');
 import express from 'express';
 import multer from 'multer';
 import path from 'path';
@@ -11,7 +12,8 @@ import {
   deleteVendor, 
   loginVendor, 
   updateCurrentVendorProfile,
-  changeVendorPassword
+  changeVendorPassword,
+  getSelfVendor
 } from '../controllers/vendorController.js';
 import { authenticateAdmin, authenticateVendor } from '../middleware/authMiddleware.js';
 
@@ -72,11 +74,20 @@ router.delete('/:id', authenticateAdmin, deleteVendor);
 router.post('/login', loginVendor);
 
 // Update current vendor profile (protected, vendor only)
-router.put('/me', authenticateVendor, upload.single('logo'), updateCurrentVendorProfile);
+// router.put('/me', authenticateVendor, upload.single('logo'), updateCurrentVendorProfile);
 
 // Change vendor password (protected, vendor only)
 router.post('/change-password', authenticateVendor, changeVendorPassword);
 
+// Get current vendor details (protected, vendor only)
+router.get('/self', (req, res, next) => {
+  console.log('Route /api/vendors/self hit');
+  next();
+}, authenticateVendor, getSelfVendor);
 
+router.use((req, res, next) => {
+  console.log('Vendor fallback route hit:', req.path);
+  next();
+});
 
 export default router; 

@@ -93,7 +93,7 @@ const AppContent = () => {
           <Route path="/cart" element={<ProtectedRoute><Cart /></ProtectedRoute>} />
           <Route path="/orders" element={<ProtectedRoute><Orders /></ProtectedRoute>} />
           {/* Vendor login and vendor protected routes */}
-          <Route path="/vendor/login" element={<VendorLogin />} />
+          <Route path="/vendor/login" element={<VendorAuthProvider><VendorLogin /></VendorAuthProvider>} />
           <Route path="/vendor/*" element={<VendorRoutes />} />
           {/* Admin login/register and admin protected routes */}
           <Route path="/admin/login" element={<AdminAuthProvider><AdminLogin /></AdminAuthProvider>} />

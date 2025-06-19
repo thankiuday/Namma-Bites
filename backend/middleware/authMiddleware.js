@@ -60,21 +60,19 @@ export const authenticateAdmin = async (req, res, next) => {
 };
 
 export const authenticateVendor = async (req, res, next) => {
+  console.log('Cookies received:', req.cookies);
   try {
+    let token;
     const authHeader = req.header('Authorization');
-    if (!authHeader) {
-      return res.status(401).json({
-        success: false,
-        message: 'No authentication token, access denied'
-      });
+    if (authHeader && authHeader.startsWith('Bearer ')) {
+      token = authHeader.substring(7);
+    } else if (req.cookies && req.cookies.vendorToken) {
+      token = req.cookies.vendorToken;
     }
-    const token = authHeader.startsWith('Bearer ')
-      ? authHeader.substring(7)
-      : authHeader;
     if (!token) {
       return res.status(401).json({
         success: false,
-        message: 'Invalid token format'
+        message: 'No authentication token, access denied'
       });
     }
     try {
