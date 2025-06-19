@@ -28,19 +28,36 @@ const processQueue = (error, token = null) => {
 // Request interceptor
 api.interceptors.request.use(
   (config) => {
-    // Check if this is an admin route
-    const isAdminRoute = config.url.startsWith('/admin') || 
-                        config.url.includes('/users') || 
-                        config.url.includes('/vendors');
-    const tokenKey = isAdminRoute ? 'adminToken' : 'accessToken';
-    const token = localStorage.getItem(tokenKey);
-    
-    console.log(`Making ${isAdminRoute ? 'admin' : 'user'} request with token:`, token ? 'Token exists' : 'No token');
-    
+    // Attach admin token for all admin, users, and vendors endpoints
+    if (
+      config.url.startsWith('/admin') ||
+      config.url.startsWith('/users') ||
+      config.url.startsWith('/vendors')
+    ) {
+      const adminToken = localStorage.getItem('adminToken');
+      if (adminToken) {
+        config.headers.Authorization = adminToken.startsWith('Bearer ')
+          ? adminToken
+          : `Bearer ${adminToken}`;
+      }
+      return config;
+    }
+    // Vendor endpoints for vendor dashboard (if not admin)
+    if (config.url.startsWith('/vendors')) {
+      const vendorToken = localStorage.getItem('vendorToken');
+      if (vendorToken) {
+        config.headers.Authorization = vendorToken.startsWith('Bearer ')
+          ? vendorToken
+          : `Bearer ${vendorToken}`;
+      }
+      return config;
+    }
+    // User endpoints
+    const token = localStorage.getItem('accessToken');
     if (token) {
-      // Ensure token is properly formatted
-      const formattedToken = token.startsWith('Bearer ') ? token : `Bearer ${token}`;
-      config.headers.Authorization = formattedToken;
+      config.headers.Authorization = token.startsWith('Bearer ')
+        ? token
+        : `Bearer ${token}`;
     }
     return config;
   },
@@ -58,56 +75,41 @@ api.interceptors.response.use(
   },
   async (error) => {
     const originalRequest = error.config;
-    
-    // Check if this is an admin route
-    const isAdminRoute = originalRequest.url.startsWith('/admin') || originalRequest.url.includes('/users');
-    
+    const url = originalRequest.url;
+
+    // Handle unauthorized errors
+    if (error.response?.status === 401 && !originalRequest._retry) {
+      originalRequest._retry = true;
+
+      // Get current path
+      const currentPath = window.location.pathname;
+
+      // Admin endpoints or currently on admin route
+      if (url.startsWith('/admin') || currentPath.startsWith('/admin')) {
+        localStorage.removeItem('adminToken');
+        window.location.href = '/admin/login';
+        return Promise.reject(error);
+      }
+
+      // Vendor endpoints or currently on vendor route
+      if (url.startsWith('/vendors') || currentPath.startsWith('/vendor')) {
+        localStorage.removeItem('vendorToken');
+        window.location.href = '/vendor/login';
+        return Promise.reject(error);
+      }
+
+      // User endpoints (default)
+      localStorage.removeItem('accessToken');
+      localStorage.removeItem('refreshToken');
+      window.location.href = '/login';
+      return Promise.reject(error);
+    }
+
     // Handle rate limiting
     if (error.response?.status === 429) {
       const retryAfter = error.response.headers['retry-after'] || 15;
       const message = `Too many requests. Please try again after ${retryAfter} minutes.`;
       return Promise.reject({ message });
-    }
-
-    // Handle unauthorized errors
-    if (error.response?.status === 401 && !originalRequest._retry) {
-      originalRequest._retry = true;
-      
-      // For admin routes, redirect to admin login
-      if (isAdminRoute) {
-        localStorage.removeItem('adminToken');
-        window.location.href = '/admin/login';
-        return Promise.reject(error);
-      }
-      
-      // For user routes, attempt token refresh
-      try {
-        const refreshToken = localStorage.getItem('refreshToken');
-        if (!refreshToken) {
-          throw new Error('No refresh token available');
-        }
-
-        console.log('Attempting to refresh token...');
-        const response = await axios.post(`${API_URL}/auth/refresh-token`, {
-          refreshToken
-        });
-
-        if (response.data.success) {
-          const { accessToken } = response.data.data;
-          localStorage.setItem('accessToken', accessToken);
-          api.defaults.headers.common['Authorization'] = `Bearer ${accessToken}`;
-          originalRequest.headers.Authorization = `Bearer ${accessToken}`;
-          return api(originalRequest);
-        } else {
-          throw new Error(response.data.message || 'Failed to refresh token');
-        }
-      } catch (refreshError) {
-        console.error('Token refresh error:', refreshError);
-        localStorage.removeItem('accessToken');
-        localStorage.removeItem('refreshToken');
-        window.location.href = '/login';
-        return Promise.reject(refreshError);
-      }
     }
 
     // Handle other errors

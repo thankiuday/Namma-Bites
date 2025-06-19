@@ -9,9 +9,11 @@ import {
   getVendorById, 
   updateVendor, 
   deleteVendor, 
-  loginVendor 
+  loginVendor, 
+  updateCurrentVendorProfile,
+  changeVendorPassword
 } from '../controllers/vendorController.js';
-import { authenticateAdmin } from '../middleware/authMiddleware.js';
+import { authenticateAdmin, authenticateVendor } from '../middleware/authMiddleware.js';
 
 const router = express.Router();
 const __filename = fileURLToPath(import.meta.url);
@@ -68,5 +70,13 @@ router.delete('/:id', authenticateAdmin, deleteVendor);
 
 // Vendor login route (public)
 router.post('/login', loginVendor);
+
+// Update current vendor profile (protected, vendor only)
+router.put('/me', authenticateVendor, upload.single('logo'), updateCurrentVendorProfile);
+
+// Change vendor password (protected, vendor only)
+router.post('/change-password', authenticateVendor, changeVendorPassword);
+
+
 
 export default router; 

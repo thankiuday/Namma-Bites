@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import logo from '../../public/logo.png';
+import api from '../api/config';
 
 const VendorLogin = () => {
   const navigate = useNavigate();
@@ -22,19 +23,13 @@ const VendorLogin = () => {
     setLoading(true);
     setError('');
     try {
-      const response = await fetch('http://localhost:5000/api/vendors/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData),
-      });
-      const data = await response.json();
-      if (!response.ok) {
-        setError(data.error || 'Invalid credentials');
-        return;
+      const response = await api.post('/vendors/login', formData);
+      if (response.data.success) {
+        localStorage.setItem('vendorToken', response.data.accessToken);
+        navigate('/vendor/dashboard');
+      } else {
+        setError(response.data.message || 'Invalid credentials');
       }
-      // Store vendor token and redirect
-      localStorage.setItem('vendorToken', data.accessToken);
-      navigate('/vendor/dashboard');
     } catch (err) {
       setError('Failed to connect to the server');
     } finally {

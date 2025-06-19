@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import api from '../api/config';
+import userApi from '../api/userApi';
 
 const AuthContext = createContext(null);
 
@@ -14,74 +14,40 @@ export const AuthProvider = ({ children }) => {
   }, []);
 
   const checkAuth = async () => {
-    const adminToken = localStorage.getItem('adminToken');
-    const userToken = localStorage.getItem('accessToken');
-    
-    if (!adminToken && !userToken) {
+    const token = localStorage.getItem('accessToken');
+    if (!token) {
       setLoading(false);
       return;
     }
-
     try {
-      if (adminToken) {
-        // Check admin authentication
-        const response = await api.get('/admin/profile');
-        if (response.data.success) {
-          setUser({ ...response.data.data, isAdmin: true });
-        } else {
-          localStorage.removeItem('adminToken');
-        }
-      } else if (userToken) {
-        // Check user authentication
-        const response = await api.get('/users/profile');
-        if (response.data.success) {
-          setUser({ ...response.data.data, isAdmin: false });
-        } else {
-          localStorage.removeItem('accessToken');
-          localStorage.removeItem('refreshToken');
-        }
+      const response = await userApi.get('/me');
+      if (response.data.success) {
+        setUser(response.data.data);
+      } else {
+        localStorage.removeItem('accessToken');
       }
     } catch (error) {
-      console.error('Auth check failed:', error);
+      localStorage.removeItem('accessToken');
       if (error.response?.status === 401) {
-        if (adminToken) {
-          localStorage.removeItem('adminToken');
-          navigate('/admin/login');
-        } else {
-          localStorage.removeItem('accessToken');
-          localStorage.removeItem('refreshToken');
-          navigate('/login');
-        }
+        navigate('/login');
       }
     } finally {
       setLoading(false);
     }
   };
 
-  const login = (userData, tokens, isAdmin = false) => {
-    setUser({ ...userData, isAdmin });
-    if (isAdmin) {
-      localStorage.setItem('adminToken', tokens.accessToken);
-    } else {
-      localStorage.setItem('accessToken', tokens.accessToken);
-      localStorage.setItem('refreshToken', tokens.refreshToken);
-    }
+  const login = (userData, token) => {
+    setUser(userData);
+    localStorage.setItem('accessToken', token);
   };
 
   const logout = async () => {
     try {
-      if (user?.isAdmin) {
-        await api.post('/admin/logout');
-        localStorage.removeItem('adminToken');
-        navigate('/admin/login');
-      } else {
-        await api.post('/auth/logout');
-        localStorage.removeItem('accessToken');
-        localStorage.removeItem('refreshToken');
-        navigate('/login');
-      }
+      await userApi.post('/logout');
+      localStorage.removeItem('accessToken');
+      navigate('/login');
     } catch (error) {
-      console.error('Logout failed:', error);
+      // handle error
     } finally {
       setUser(null);
     }

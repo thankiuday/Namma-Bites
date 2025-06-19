@@ -215,4 +215,48 @@ export const loginVendor = async (req, res) => {
   } catch (error) {
     res.status(500).json({ success: false, message: 'Server error', error: error.message });
   }
+};
+
+// Update current vendor profile
+export const updateCurrentVendorProfile = async (req, res) => {
+  try {
+    const vendor = req.vendor;
+    if (!vendor) {
+      return res.status(401).json({ success: false, message: 'Vendor not authenticated' });
+    }
+    if (req.body.name) vendor.name = req.body.name;
+    if (req.file) vendor.logo = `/uploads/vendor-images/${req.file.filename}`;
+    await vendor.save();
+    const vendorObj = vendor.toObject();
+    delete vendorObj.password;
+    res.status(200).json({ success: true, message: 'Profile updated', data: vendorObj });
+  } catch (error) {
+    res.status(500).json({ success: false, message: 'Error updating profile', error: error.message });
+  }
+};
+
+// Change vendor password
+export const changeVendorPassword = async (req, res) => {
+  try {
+    const vendor = req.vendor;
+    const { oldPassword, newPassword } = req.body;
+    if (!vendor) {
+      return res.status(401).json({ success: false, message: 'Vendor not authenticated' });
+    }
+    if (!oldPassword || !newPassword) {
+      return res.status(400).json({ success: false, message: 'Old and new password are required' });
+    }
+    const isMatch = await vendor.comparePassword(oldPassword);
+    if (!isMatch) {
+      return res.status(400).json({ success: false, message: 'Old password is incorrect' });
+    }
+    if (newPassword.length < 6) {
+      return res.status(400).json({ success: false, message: 'New password must be at least 6 characters' });
+    }
+    vendor.password = newPassword;
+    await vendor.save();
+    res.status(200).json({ success: true, message: 'Password changed successfully' });
+  } catch (error) {
+    res.status(500).json({ success: false, message: 'Error changing password', error: error.message });
+  }
 }; 

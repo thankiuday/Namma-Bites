@@ -22,6 +22,8 @@ const __dirname = path.dirname(__filename);
 
 const app = express();
 
+console.log('Server starting...');
+
 // Security middleware
 app.use(helmet());
 app.use(cors({
@@ -129,7 +131,7 @@ app.use((err, req, res, next) => {
 });
 
 const PORT = process.env.PORT || 5000;
-
+console.log('JWT_SECRET:', process.env.JWT_SECRET);
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
 }); 

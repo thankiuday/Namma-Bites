@@ -74,7 +74,7 @@ const Navbar = ({ links = defaultStudentLinks, isAdmin = false }) => {
               >
                 {iconMap[link.icon]?.('text-lg')}
                 {link.label}
-              </Link>
+            </Link>
             ))}
             {isAuthenticated && (
               <button
@@ -122,14 +122,14 @@ const Navbar = ({ links = defaultStudentLinks, isAdmin = false }) => {
       <div className={`${isMenuOpen ? 'block' : 'hidden'} md:hidden`}>
         <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3">
           {links.map((link) => (
-            <Link
+          <Link
               key={link.to}
               to={link.to}
-              className="block px-3 py-2 rounded-md text-base font-medium text-black hover:text-orange-600 hover:bg-gray-800 flex items-center gap-2"
-            >
+            className="block px-3 py-2 rounded-md text-base font-medium text-black hover:text-orange-600 hover:bg-gray-800 flex items-center gap-2"
+          >
               {iconMap[link.icon]?.('text-base h-5 w-5')}
               {link.label}
-            </Link>
+          </Link>
           ))}
           {isAuthenticated && (
             <button
