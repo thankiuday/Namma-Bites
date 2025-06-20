@@ -1,4 +1,4 @@
-import User from '../models/User.js';
+import User from '../../models/User.js';
 
 // Get all users
 export const getAllUsers = async (req, res) => {
@@ -93,5 +93,37 @@ export const updateUser = async (req, res) => {
       message: 'Error updating user',
       error: error.message
     });
+  }
+};
+
+// Get current user's profile
+export const getMe = async (req, res) => {
+  try {
+    if (!req.user) {
+      return res.status(401).json({ success: false, message: 'Not authenticated' });
+    }
+    res.status(200).json({ success: true, data: req.user });
+  } catch (error) {
+    res.status(500).json({ success: false, message: 'Error fetching profile', error: error.message });
+  }
+};
+
+// Update current user's profile
+export const updateProfile = async (req, res) => {
+  try {
+    if (!req.user) {
+      return res.status(401).json({ success: false, message: 'Not authenticated' });
+    }
+    const updateFields = { ...req.body };
+    delete updateFields.password;
+    delete updateFields._id;
+    const user = await User.findByIdAndUpdate(
+      req.user._id,
+      updateFields,
+      { new: true, runValidators: true }
+    ).select('-password');
+    res.status(200).json({ success: true, data: user });
+  } catch (error) {
+    res.status(500).json({ success: false, message: 'Error updating profile', error: error.message });
   }
 }; 

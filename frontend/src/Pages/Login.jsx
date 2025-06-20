@@ -53,10 +53,7 @@ const Login = () => {
       }
 
       // Use the auth context to handle login
-      login(data.user, {
-        accessToken: data.accessToken,
-        refreshToken: data.refreshToken
-      });
+      login(data.user);
 
       // Redirect to home page or dashboard
       navigate('/');

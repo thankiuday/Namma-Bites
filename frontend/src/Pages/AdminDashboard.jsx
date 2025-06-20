@@ -2,7 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { FaUsers, FaStore, FaPlus, FaUserFriends, FaStoreAlt, FaCheckCircle, FaClock } from 'react-icons/fa';
 import api from '../api/config';
-import AdminLayout from '../components/AdminLayout';
+import AdminLayout from '../components/admin/AdminLayout';
+import { useAuth } from '../context/AuthContext';
 
 const AdminDashboard = () => {
   const navigate = useNavigate();

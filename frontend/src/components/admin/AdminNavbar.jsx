@@ -1,14 +1,16 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { FaHome, FaStore, FaUsers, FaUserCircle, FaSignOutAlt, FaBars, FaTimes } from 'react-icons/fa';
+import { useAdminAuth } from '../../context/AdminAuthContext';
 
 const AdminNavbar = () => {
   const navigate = useNavigate();
+  const { logout } = useAdminAuth();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
 
   const handleLogout = () => {
-    navigate('/admin/login');
+    logout();
   };
 
   const navLinks = [

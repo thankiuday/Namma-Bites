@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { FaSearch, FaEdit, FaTrash, FaCheck, FaTimes } from 'react-icons/fa';
 import axios from '../api/config';
-import AdminLayout from '../components/AdminLayout';
+import AdminLayout from '../components/admin/AdminLayout';
 
 const AdminVendors = () => {
   const navigate = useNavigate();

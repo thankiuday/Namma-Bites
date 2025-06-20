@@ -14,8 +14,8 @@ import {
   updateCurrentVendorProfile,
   changeVendorPassword,
   getSelfVendor
-} from '../controllers/vendorController.js';
-import { authenticateAdmin, authenticateVendor } from '../middleware/authMiddleware.js';
+} from '../controllers/vendor/vendorController.js';
+import { authenticateAdmin, authenticateVendor } from '../middleware/user/authMiddleware.js';
 
 const router = express.Router();
 const __filename = fileURLToPath(import.meta.url);

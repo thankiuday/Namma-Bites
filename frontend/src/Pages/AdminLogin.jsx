@@ -59,69 +59,6 @@ const AdminLogin = () => {
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col">
-      {/* Admin Navbar */}
-      <nav className="bg-white shadow-lg">
-        <div className="max-w-4xl mx-auto px-4">
-          <div className="flex justify-between items-center h-16">
-            {/* Logo and Brand */}
-            <Link to="/" className="flex items-center space-x-2 min-w-0">
-              <img src={logo} alt="Namma Bites" className="h-8 w-auto max-w-[40px]" />
-              <span className="text-xl font-bold text-gray-800 truncate">Admin Portal</span>
-            </Link>
-            {/* Desktop Nav Links */}
-            <div className="hidden md:flex items-center space-x-6">
-              <Link
-                to="/admin/login"
-                className="flex items-center space-x-2 text-orange-600 hover:text-orange-700 transition-colors duration-200"
-              >
-                <FaSignInAlt className="w-5 h-5" />
-                <span>Login</span>
-              </Link>
-              <Link
-                to="/admin/register"
-                className="flex items-center space-x-2 text-gray-600 hover:text-orange-600 transition-colors duration-200"
-              >
-                <FaUserPlus className="w-5 h-5" />
-                <span>Register</span>
-              </Link>
-            </div>
-            {/* Hamburger Button */}
-            <button
-              className="md:hidden p-2 rounded focus:outline-none focus:ring-2 focus:ring-orange-500"
-              onClick={() => setIsMenuOpen(!isMenuOpen)}
-              aria-label="Open menu"
-            >
-              {isMenuOpen ? (
-                <FaTimes className="w-6 h-6" />
-              ) : (
-                <FaBars className="w-6 h-6" />
-              )}
-            </button>
-          </div>
-          {/* Mobile Nav Links */}
-          {isMenuOpen && (
-            <div className="md:hidden flex flex-col space-y-2 py-2 animate-fade-in">
-              <Link
-                to="/admin/login"
-                className="flex items-center space-x-2 text-orange-600 hover:text-orange-700 px-2 py-2"
-                onClick={() => setIsMenuOpen(false)}
-              >
-                <FaSignInAlt className="w-5 h-5" />
-                <span>Login</span>
-              </Link>
-              <Link
-                to="/admin/register"
-                className="flex items-center space-x-2 text-gray-600 hover:text-orange-600 px-2 py-2"
-                onClick={() => setIsMenuOpen(false)}
-              >
-                <FaUserPlus className="w-5 h-5" />
-                <span>Register</span>
-              </Link>
-            </div>
-          )}
-        </div>
-      </nav>
-
       {/* Main Content */}
       <main className="flex-1 flex items-center justify-center px-4 py-8">
         <div className="max-w-md w-full bg-white rounded-lg shadow-md p-8">

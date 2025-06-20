@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../../api/config';
 import { toast } from 'react-toastify';
-import AdminLayout from '../../components/AdminLayout';
+import AdminLayout from '../../components/admin/AdminLayout';
 import { FaEye, FaEyeSlash } from 'react-icons/fa';
 
 const CreateVendor = () => {

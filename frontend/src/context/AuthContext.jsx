@@ -14,20 +14,15 @@ export const AuthProvider = ({ children }) => {
   }, []);
 
   const checkAuth = async () => {
-    const token = localStorage.getItem('accessToken');
-    if (!token) {
-      setLoading(false);
-      return;
-    }
     try {
       const response = await userApi.get('/me');
       if (response.data.success) {
         setUser(response.data.data);
       } else {
-        localStorage.removeItem('accessToken');
+        setUser(null);
       }
     } catch (error) {
-      localStorage.removeItem('accessToken');
+      setUser(null);
       if (error.response?.status === 401) {
         navigate('/login');
       }
@@ -36,15 +31,14 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  const login = (userData, token) => {
+  const login = (userData) => {
     setUser(userData);
-    localStorage.setItem('accessToken', token);
+    // No localStorage usage; cookies are set by backend
   };
 
   const logout = async () => {
     try {
       await userApi.post('/logout');
-      localStorage.removeItem('accessToken');
       navigate('/login');
     } catch (error) {
       // handle error

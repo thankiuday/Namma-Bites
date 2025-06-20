@@ -1,6 +1,7 @@
 import jwt from 'jsonwebtoken';
-import Admin from '../models/Admin.js';
-import Vendor from '../models/Vendor.js';
+import Admin from '../../models/Admin.js';
+import Vendor from '../../models/Vendor.js';
+import User from '../../models/User.js';
 
 export const authenticateAdmin = async (req, res, next) => {
   try {
@@ -85,5 +86,39 @@ export const authenticateVendor = async (req, res, next) => {
       success: false,
       message: 'Authentication failed'
     });
+  }
+};
+
+export const authenticateUser = async (req, res, next) => {
+  console.log('authenticateUser called for', req.method, req.originalUrl);
+  try {
+    let token = req.cookies.accessToken;
+    if (!token) {
+      const authHeader = req.header('Authorization');
+      if (authHeader && authHeader.startsWith('Bearer ')) {
+        token = authHeader.substring(7);
+      }
+    }
+    if (!token) {
+      console.log('No token found');
+      return res.status(401).json({ success: false, message: 'No authentication token, access denied' });
+    }
+    try {
+      const decoded = jwt.verify(token, process.env.JWT_SECRET);
+      console.log('Decoded JWT:', decoded);
+      const user = await User.findById(decoded.userId).select('-password');
+      if (!user) {
+        console.log('User not found for id:', decoded.userId);
+        return res.status(401).json({ success: false, message: 'User not found' });
+      }
+      req.user = user;
+      next();
+    } catch (jwtError) {
+      console.log('JWT verification error:', jwtError);
+      return res.status(401).json({ success: false, message: 'Invalid or expired token' });
+    }
+  } catch (error) {
+    console.log('Auth middleware error:', error);
+    res.status(401).json({ success: false, message: 'Authentication failed' });
   }
 }; 

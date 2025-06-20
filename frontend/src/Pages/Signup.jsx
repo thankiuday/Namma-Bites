@@ -52,10 +52,6 @@ const Signup = () => {
         return;
       }
 
-      // Store tokens in localStorage
-      localStorage.setItem('accessToken', data.accessToken);
-      localStorage.setItem('refreshToken', data.refreshToken);
-
       // Redirect to home page or dashboard
       navigate('/');
     } catch (err) {

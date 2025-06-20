@@ -5,10 +5,10 @@ import {
   getAdminProfile,
   registerFirstAdmin,
   refreshToken
-} from '../controllers/adminAuthController.js';
-import { protect, superAdmin } from '../middleware/adminAuthMiddleware.js';
-import { login, register } from '../controllers/adminController.js';
-import { authenticateAdmin } from '../middleware/authMiddleware.js';
+} from '../controllers/admin/adminAuthController.js';
+import { protect, superAdmin } from '../middleware/admin/adminAuthMiddleware.js';
+import { login, register } from '../controllers/admin/adminController.js';
+import { authenticateAdmin } from '../middleware/user/authMiddleware.js';
 
 const router = express.Router();
 

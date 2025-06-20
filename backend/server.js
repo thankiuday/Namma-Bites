@@ -107,10 +107,16 @@ if (!fs.existsSync(vendorPictureDir)) {
 }
 
 // API Routes
-app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
+app.use('/api/auth', authRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/vendors', vendorRoutes);
+
+// Global catch-all for debugging
+app.use((req, res, next) => {
+  console.log('GLOBAL catch-all:', req.method, req.originalUrl);
+  next();
+});
 
 // Serve vendor pictures
 app.use('/vendorPicture', express.static(path.join(__dirname, '../frontend/vendorPicture')));

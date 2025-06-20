@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { FaHome, FaUtensils, FaClipboardList, FaUserCircle, FaSignOutAlt, FaMoneyCheckAlt } from 'react-icons/fa';
 import { useVendorAuth } from '../context/VendorAuthContext';
 import api from '../api/config';
+import VendorNavbar from '../components/vendor/VendorNavbar';
 
 const vendorLinks = [
   { name: 'Home', path: '/vendor/dashboard', icon: <FaHome className="w-5 h-5" /> },
@@ -74,63 +75,7 @@ const VendorDashboard = () => {
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col">
       {/* Navbar */}
-      <nav className="bg-gray-900 text-white shadow-lg">
-        <div className="container mx-auto px-4 flex justify-between items-center h-16">
-          <div className="flex items-center space-x-2">
-            <img src="/logo.png" alt="Namma Bites" className="h-8 w-auto" />
-            <span className="text-xl font-bold">Vendor Portal</span>
-          </div>
-          {/* Desktop Navigation */}
-          <div className="hidden md:flex items-center space-x-8">
-            {vendorLinks.map(link => (
-              <button
-                key={link.name}
-                onClick={() => navigate(link.path)}
-                className="flex items-center space-x-2 text-gray-300 hover:text-white transition-colors duration-200"
-              >
-                {link.icon}
-                <span>{link.name}</span>
-              </button>
-            ))}
-            <button
-              onClick={handleLogout}
-              className="flex items-center space-x-2 text-red-400 hover:text-red-600 transition-colors duration-200 ml-4"
-            >
-              <FaSignOutAlt className="w-5 h-5" />
-              <span>Logout</span>
-            </button>
-          </div>
-          {/* Mobile Menu Button */}
-          <button
-            onClick={() => setIsMenuOpen(!isMenuOpen)}
-            className="md:hidden text-gray-300 hover:text-white"
-          >
-            {isMenuOpen ? <FaSignOutAlt className="w-6 h-6" /> : <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" /></svg>}
-          </button>
-        </div>
-        {/* Mobile Menu */}
-        {isMenuOpen && (
-          <div className="md:hidden py-4 space-y-4 bg-gray-900">
-            {vendorLinks.map(link => (
-              <button
-                key={link.name}
-                onClick={() => { setIsMenuOpen(false); navigate(link.path); }}
-                className="flex items-center space-x-2 text-gray-300 hover:text-white transition-colors duration-200 px-4 py-2 text-base w-full text-left"
-              >
-                {link.icon}
-                <span>{link.name}</span>
-              </button>
-            ))}
-            <button
-              onClick={() => { setIsMenuOpen(false); handleLogout(); }}
-              className="w-full flex items-center space-x-2 text-red-400 hover:text-red-600 transition-colors duration-200 px-4 py-2 text-base"
-            >
-              <FaSignOutAlt className="w-5 h-5" />
-              <span>Logout</span>
-            </button>
-          </div>
-        )}
-      </nav>
+      <VendorNavbar />
       {/* Main Content */}
       <main className="flex-grow container mx-auto px-4 py-8">
         <div className="bg-white rounded-lg shadow-md p-6 max-w-lg mx-auto">

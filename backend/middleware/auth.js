@@ -2,6 +2,7 @@ import jwt from 'jsonwebtoken';
 import User from '../models/User.js';
 
 const auth = async (req, res, next) => {
+  console.log('auth middleware called for', req.method, req.originalUrl);
   try {
     const token = req.header('Authorization')?.replace('Bearer ', '');
     

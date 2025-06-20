@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { FaUser, FaShoppingCart, FaClipboardList, FaWallet, FaKey, FaHeadset, FaDownload, FaEdit } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import userApi from '../api/userApi';
 
 const UserProfile = () => {
   const navigate = useNavigate();
@@ -52,53 +53,21 @@ const UserProfile = () => {
       setLoading(true);
       setError('');
 
-      let accessToken = localStorage.getItem('accessToken');
-      let response = await fetch('http://localhost:5000/api/auth/update-profile', {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${accessToken}`
-        },
-        body: JSON.stringify(editedUser)
-      });
+      let response = await userApi.put('/update-profile', editedUser);
 
-      // If token expired, try to refresh and retry
-      if (response.status === 401) {
-        const refreshSuccess = await refreshToken();
-        if (refreshSuccess) {
-          accessToken = localStorage.getItem('accessToken');
-          response = await fetch('http://localhost:5000/api/auth/update-profile', {
-            method: 'PUT',
-            headers: {
-              'Content-Type': 'application/json',
-              'Authorization': `Bearer ${accessToken}`
-            },
-            body: JSON.stringify(editedUser)
-          });
-        } else {
-          // If refresh failed, redirect to login
-          navigate('/login');
-          return;
-        }
+      if (response.data && response.data.success) {
+        setEditedUser(response.data.data);
+        setIsEditing(false);
+        checkAuth();
+      } else {
+        setError(response.data?.error || 'Failed to update profile');
       }
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        if (data.errors) {
-          setError(data.errors[0].msg);
-        } else {
-          setError(data.error || 'Failed to update profile');
-        }
-        return;
-      }
-
-      setEditedUser(data);
-      setIsEditing(false);
-      // Refresh auth state
-      checkAuth();
     } catch (error) {
-      setError('Failed to connect to the server');
+      if (error.response?.status === 401) {
+        navigate('/login');
+      } else {
+        setError('Failed to connect to the server');
+      }
     } finally {
       setLoading(false);
     }

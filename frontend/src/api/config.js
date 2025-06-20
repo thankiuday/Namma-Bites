@@ -45,7 +45,7 @@ api.interceptors.request.use(
       config.url.startsWith('/users') ||
       (config.url.startsWith('/vendors') && config.url !== '/vendors/self' && config.url !== '/vendors/me')
     ) {
-      // Do not set Authorization header for admin endpoints; rely on cookies
+      // Do not set Authorization header for admin/user endpoints; rely on cookies
       return config;
     }
     // Vendor endpoints for vendor dashboard (if not admin)
@@ -57,13 +57,6 @@ api.interceptors.request.use(
           : `Bearer ${vendorToken}`;
       }
       return config;
-    }
-    // User endpoints
-    const token = localStorage.getItem('accessToken');
-    if (token) {
-      config.headers.Authorization = token.startsWith('Bearer ')
-        ? token
-        : `Bearer ${token}`;
     }
     return config;
   },

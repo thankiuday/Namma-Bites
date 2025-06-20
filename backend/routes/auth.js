@@ -67,6 +67,20 @@ router.post('/signup', validateSignup, async (req, res) => {
     // Store refresh token in Redis
     await storeRefreshToken(user._id.toString(), refreshToken, 7 * 24 * 60 * 60); // 7 days
 
+    // Set cookies
+    res.cookie('accessToken', accessToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      maxAge: 15 * 60 * 1000 // 15 minutes
+    });
+    res.cookie('refreshToken', refreshToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
+    });
+
     res.status(201).json({
       accessToken,
       refreshToken,
@@ -127,6 +141,20 @@ router.post('/login', [
       rememberMe ? 30 * 24 * 60 * 60 : 7 * 24 * 60 * 60
     );
 
+    // Set cookies
+    res.cookie('accessToken', accessToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      maxAge: 15 * 60 * 1000 // 15 minutes
+    });
+    res.cookie('refreshToken', refreshToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      maxAge: (rememberMe ? 30 : 7) * 24 * 60 * 60 * 1000 // 7 or 30 days
+    });
+
     res.json({
       accessToken,
       refreshToken,
@@ -160,6 +188,14 @@ router.post('/refresh-token', async (req, res) => {
       { expiresIn: '15m' }
     );
 
+    // Set new access token as cookie
+    res.cookie('accessToken', accessToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      maxAge: 15 * 60 * 1000 // 15 minutes
+    });
+
     res.json({ accessToken });
   } catch (error) {
     res.status(401).json({ error: 'Invalid refresh token' });
@@ -170,6 +206,8 @@ router.post('/refresh-token', async (req, res) => {
 router.post('/logout', auth, async (req, res) => {
   try {
     await deleteRefreshToken(req.user._id.toString());
+    res.clearCookie('accessToken');
+    res.clearCookie('refreshToken');
     res.json({ message: 'Logged out successfully' });
   } catch (error) {
     res.status(500).json({ error: 'Server error' });
