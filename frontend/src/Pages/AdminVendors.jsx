@@ -21,11 +21,6 @@ const AdminVendors = () => {
   });
 
   useEffect(() => {
-    const token = localStorage.getItem('adminToken');
-    if (!token) {
-      navigate('/admin/login');
-      return;
-    }
     fetchVendors();
   }, [navigate]);
 
@@ -33,13 +28,6 @@ const AdminVendors = () => {
     try {
       setLoading(true);
       setError('');
-      const token = localStorage.getItem('adminToken');
-      
-      if (!token) {
-        navigate('/admin/login');
-        return;
-      }
-
       const response = await axios.get('/vendors');
       if (response.data.success) {
         setVendors(response.data.data);

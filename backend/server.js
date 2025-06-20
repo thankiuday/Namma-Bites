@@ -106,25 +106,23 @@ if (!fs.existsSync(vendorPictureDir)) {
     fs.mkdirSync(vendorPictureDir, { recursive: true });
 }
 
-// Handle React routing, return all requests to React app
-app.get('*', (req, res) => {
-  console.log('Catch-all route hit:', req.path);
-  res.sendFile(path.join(path.resolve(), '../frontend/dist', 'index.html'));
-});
-
-
-// Serve vendor pictures
-app.use('/vendorPicture', express.static(path.join(__dirname, '../frontend/vendorPicture')));
-
 // API Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/vendors', vendorRoutes);
 
+// Serve vendor pictures
+app.use('/vendorPicture', express.static(path.join(__dirname, '../frontend/vendorPicture')));
+
 // Serve static files from the React frontend app
 app.use(express.static(path.join(path.resolve(), '../frontend/dist')));
 
+// Handle React routing, return all requests to React app
+app.get('*', (req, res) => {
+  console.log('Catch-all route hit:', req.path);
+  res.sendFile(path.join(path.resolve(), '../frontend/dist', 'index.html'));
+});
 
 // Error handling middleware
 app.use((err, req, res, next) => {

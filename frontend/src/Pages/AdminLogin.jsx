@@ -1,13 +1,11 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { FaSignInAlt, FaUserPlus, FaEnvelope, FaLock, FaRedo, FaBars, FaTimes } from 'react-icons/fa';
-import api, { adminAPI } from '../api/config';
+import adminApi from '../api/adminApi';
 import logo from '../../public/logo.png';
-import { useAdminAuth } from '../context/AdminAuthContext';
 
 const AdminLogin = () => {
   const navigate = useNavigate();
-  const { login } = useAdminAuth();
   const [formData, setFormData] = useState({
     email: '',
     password: ''
@@ -26,7 +24,7 @@ const AdminLogin = () => {
 
   const handleResetRateLimit = async () => {
     try {
-      await adminAPI.resetRateLimit();
+      await adminApi.resetRateLimit();
       setIsRateLimited(false);
       setError('');
     } catch (err) {
@@ -40,11 +38,9 @@ const AdminLogin = () => {
     setLoading(true);
 
     try {
-      const response = await api.post('/admin/login', formData);
-      console.log('Admin login response:', response.data.data);
-      const token = response.data.data.accessToken || response.data.data.token;
-      if (response.data.success && token) {
-        login(response.data.data.admin, token);
+      const response = await adminApi.post('/login', formData);
+      console.log('Admin login response:', response.data.admin);
+      if (response.data.success) {
         navigate('/admin/dashboard');
       } else {
         setError(response.data.message || 'Login failed. Please check your credentials.');

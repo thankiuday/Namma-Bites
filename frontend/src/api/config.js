@@ -45,12 +45,7 @@ api.interceptors.request.use(
       config.url.startsWith('/users') ||
       (config.url.startsWith('/vendors') && config.url !== '/vendors/self' && config.url !== '/vendors/me')
     ) {
-      const adminToken = localStorage.getItem('adminToken');
-      if (adminToken) {
-        config.headers.Authorization = adminToken.startsWith('Bearer ')
-          ? adminToken
-          : `Bearer ${adminToken}`;
-      }
+      // Do not set Authorization header for admin endpoints; rely on cookies
       return config;
     }
     // Vendor endpoints for vendor dashboard (if not admin)

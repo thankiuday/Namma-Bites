@@ -11,7 +11,6 @@ const AdminLayout = ({ children }) => {
   const [isProfileOpen, setIsProfileOpen] = React.useState(false);
 
   const handleLogout = () => {
-    localStorage.removeItem('adminToken');
     navigate('/admin/login');
   };
 

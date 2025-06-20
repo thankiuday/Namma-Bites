@@ -13,13 +13,13 @@ import { authenticateAdmin } from '../middleware/authMiddleware.js';
 const router = express.Router();
 
 // Public routes
-router.post('/login', loginAdmin);
+router.post('/login', login);
 router.post('/register/first', registerFirstAdmin);
 router.post('/refresh-token', refreshToken);
 
 // Protected routes
 router.use(authenticateAdmin);
 router.post('/register', registerAdmin);
-router.get('/profile', protect, getAdminProfile);
+router.get('/profile', getAdminProfile);
 
 export default router; 

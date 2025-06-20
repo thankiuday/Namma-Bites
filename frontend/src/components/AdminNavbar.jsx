@@ -8,7 +8,6 @@ const AdminNavbar = () => {
   const [isProfileOpen, setIsProfileOpen] = useState(false);
 
   const handleLogout = () => {
-    localStorage.removeItem('adminToken');
     navigate('/admin/login');
   };
 

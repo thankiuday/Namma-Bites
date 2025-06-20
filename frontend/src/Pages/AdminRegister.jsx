@@ -43,7 +43,6 @@ const AdminRegister = () => {
       });
 
       if (response.data.success) {
-        localStorage.setItem('adminToken', response.data.token);
         navigate('/admin/dashboard');
       } else {
         setError(response.data.message || 'Registration failed');

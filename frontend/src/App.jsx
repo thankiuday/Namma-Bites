@@ -28,7 +28,7 @@ import VendorLogin from './Pages/VendorLogin';
 import VendorDashboard from './Pages/VendorDashboard';
 import VendorProfile from './Pages/VendorProfile';
 import { VendorAuthProvider } from './context/VendorAuthContext';
-import { AdminAuthProvider } from './context/AdminAuthContext';
+import { AdminAuthProvider, useAdminAuth } from './context/AdminAuthContext';
 
 // Placeholder vendor pages
 const VendorMenu = () => <div className="bg-white rounded-lg shadow-md p-6">Vendor Menu Entry Page (Coming Soon)</div>;
@@ -62,8 +62,9 @@ const AdminRoutes = () => (
 
 // AdminProtectedRoute for admin authentication
 const AdminProtectedRoute = ({ children }) => {
-  const adminToken = localStorage.getItem('adminToken');
-  if (!adminToken) {
+  const { admin, loading } = useAdminAuth();
+  if (loading) return null;
+  if (!admin) {
     return <Navigate to="/admin/login" replace />;
   }
   return children;
@@ -96,8 +97,8 @@ const AppContent = () => {
           <Route path="/vendor/login" element={<VendorAuthProvider><VendorLogin /></VendorAuthProvider>} />
           <Route path="/vendor/*" element={<VendorRoutes />} />
           {/* Admin login/register and admin protected routes */}
-          <Route path="/admin/login" element={<AdminAuthProvider><AdminLogin /></AdminAuthProvider>} />
-          <Route path="/admin/register" element={<AdminAuthProvider><AdminRegister /></AdminAuthProvider>} />
+          <Route path="/admin/login" element={<AdminLogin />} />
+          <Route path="/admin/register" element={<AdminRegister />} />
           <Route path="/admin/*" element={<AdminRoutes />} />
         </Routes>
       </main>

@@ -20,14 +20,7 @@ const CreateVendor = () => {
     });
 
     useEffect(() => {
-        const checkAuth = async () => {
-            const token = localStorage.getItem('adminToken');
-            if (!token) {
-                toast.error('Please login to continue');
-                navigate('/admin/login');
-            }
-        };
-        checkAuth();
+        // Remove localStorage check for adminToken
     }, [navigate]);
 
     const handleChange = (e) => {
@@ -46,14 +39,6 @@ const CreateVendor = () => {
         e.preventDefault();
         setLoading(true);
         
-        // Check token before submission
-        const token = localStorage.getItem('adminToken');
-        if (!token) {
-            toast.error('Session expired. Please login again.');
-            navigate('/admin/login');
-            return;
-        }
-
         try {
             const formDataToSend = new FormData();
             
@@ -73,7 +58,6 @@ const CreateVendor = () => {
             const response = await api.post('/vendors/create', formDataToSend, {
                 headers: {
                     'Content-Type': 'multipart/form-data',
-                    'Authorization': `Bearer ${token}`
                 }
             });
 
@@ -84,13 +68,8 @@ const CreateVendor = () => {
                 toast.error(response.data.message || 'Failed to create vendor');
             }
         } catch (error) {
-            if (error.response?.status === 401) {
-                toast.error('Session expired. Please login again.');
-                navigate('/admin/login');
-            } else {
-                const errorMessage = error.response?.data?.message || error.message || 'Failed to create vendor';
-                toast.error(errorMessage);
-            }
+            const errorMessage = error.response?.data?.message || error.message || 'Failed to create vendor';
+            toast.error(errorMessage);
         } finally {
             setLoading(false);
         }

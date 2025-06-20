@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import adminApi from '../api/adminApi';
+import * as jwt_decode from "jwt-decode";
 
 const AdminAuthContext = createContext(null);
 
@@ -10,24 +11,23 @@ export const AdminAuthProvider = ({ children }) => {
   const navigate = useNavigate();
 
   useEffect(() => {
+    console.log("[AdminAuthContext] Render: loading =", loading, "admin =", admin);
+  }, [loading, admin]);
+
+  useEffect(() => {
     checkAdminAuth();
   }, []);
 
   const checkAdminAuth = async () => {
-    const token = localStorage.getItem('adminToken');
-    if (!token) {
-      setLoading(false);
-      return;
-    }
     try {
+      console.log("[AdminAuthContext] Fetching /api/admin/profile...");
       const response = await adminApi.get('/profile');
+      console.log("[AdminAuthContext] Profile fetch result:", response.data);
       if (response.data.success) {
         setAdmin(response.data.data);
-      } else {
-        localStorage.removeItem('adminToken');
       }
     } catch (error) {
-      localStorage.removeItem('adminToken');
+      console.log("[AdminAuthContext] Profile fetch error:", error);
       if (error.response?.status === 401) {
         navigate('/admin/login');
       }
@@ -36,15 +36,13 @@ export const AdminAuthProvider = ({ children }) => {
     }
   };
 
-  const login = (adminData, token) => {
+  const login = (adminData) => {
     setAdmin(adminData);
-    localStorage.setItem('adminToken', token);
   };
 
   const logout = async () => {
     try {
       await adminApi.post('/logout');
-      localStorage.removeItem('adminToken');
       navigate('/admin/login');
     } catch (error) {
       // handle error
@@ -63,7 +61,7 @@ export const AdminAuthProvider = ({ children }) => {
 
   return (
     <AdminAuthContext.Provider value={value}>
-      {!loading && children}
+      {children}
     </AdminAuthContext.Provider>
   );
 };

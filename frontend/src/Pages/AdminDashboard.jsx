@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { FaUsers, FaStore, FaPlus, FaUserFriends, FaStoreAlt, FaCheckCircle, FaClock } from 'react-icons/fa';
-import axios from '../api/config';
+import api from '../api/config';
 import AdminLayout from '../components/AdminLayout';
 
 const AdminDashboard = () => {
@@ -16,34 +16,20 @@ const AdminDashboard = () => {
   const [error, setError] = useState('');
 
   useEffect(() => {
-    const token = localStorage.getItem('adminToken');
-    if (!token) {
-      navigate('/admin/login');
-      return;
-    }
     fetchStats();
-  }, [navigate]);
+  }, []);
 
   const fetchStats = async () => {
     try {
       setLoading(true);
       setError('');
-      const token = localStorage.getItem('adminToken');
-      
-      if (!token) {
-        navigate('/admin/login');
-        return;
-      }
-
       const [usersResponse, vendorsResponse] = await Promise.all([
-        axios.get('/users'),
-        axios.get('/vendors')
+        api.get('/users'),
+        api.get('/vendors')
       ]);
-
       if (usersResponse.data.success && vendorsResponse.data.success) {
         const users = usersResponse.data.data;
         const vendors = vendorsResponse.data.data;
-        
         setStats({
           totalUsers: users.length,
           totalVendors: vendors.length,
@@ -56,7 +42,6 @@ const AdminDashboard = () => {
     } catch (err) {
       setError(err.response?.data?.message || 'Failed to fetch dashboard data. Please try again.');
       if (err.response?.status === 401 || err.response?.status === 403) {
-        localStorage.removeItem('adminToken');
         navigate('/admin/login');
       }
     } finally {

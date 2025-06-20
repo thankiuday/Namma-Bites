@@ -27,10 +27,19 @@ export const login = async (req, res) => {
 
     // Generate token
     const token = jwt.sign(
-      { id: admin._id },
+      { id: admin._id, role: admin.role },
       process.env.JWT_SECRET,
       { expiresIn: '1d' }
     );
+
+    // Set token as HTTP-only cookie
+    res.cookie('adminToken', token, {
+      httpOnly: true,
+      secure: false,
+      sameSite: 'lax',
+      maxAge: 24 * 60 * 60 * 1000,
+      path: '/'
+    });
 
     res.status(200).json({
       success: true,

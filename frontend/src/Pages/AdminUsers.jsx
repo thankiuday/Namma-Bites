@@ -19,11 +19,6 @@ const AdminUsers = () => {
   });
 
   useEffect(() => {
-    const token = localStorage.getItem('adminToken');
-    if (!token) {
-      navigate('/admin/login');
-      return;
-    }
     fetchUsers();
   }, [navigate]);
 
@@ -31,13 +26,6 @@ const AdminUsers = () => {
     try {
       setLoading(true);
       setError('');
-      const token = localStorage.getItem('adminToken');
-      
-      if (!token) {
-        navigate('/admin/login');
-        return;
-      }
-
       const response = await axios.get('/users');
       if (response.data.success) {
         setUsers(response.data.data);
