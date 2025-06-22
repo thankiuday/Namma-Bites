@@ -112,6 +112,9 @@ app.use('/api/auth', authRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/vendors', vendorRoutes);
 
+// Serve uploaded files
+app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
+
 // Global catch-all for debugging
 app.use((req, res, next) => {
   console.log('GLOBAL catch-all:', req.method, req.originalUrl);

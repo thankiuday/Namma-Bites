@@ -33,7 +33,7 @@ export const createVendor = async (req, res) => {
 
     const vendorData = {
       ...req.body,
-      image: req.file.path, // Store the file path
+      image: `/uploads/vendor-images/${req.file.filename}`, // Store relative web path
       createdBy: req.admin._id
     };
 
@@ -200,7 +200,7 @@ export const loginVendor = async (req, res) => {
     }
     // Generate JWT
     const token = jwt.sign(
-      { id: vendor._id, email: vendor.email, role: 'vendor' },
+      { vendorId: vendor._id, email: vendor.email, role: 'vendor' },
       process.env.JWT_SECRET || 'your_jwt_secret',
       { expiresIn: '7d' }
     );
@@ -241,7 +241,7 @@ export const updateCurrentVendorProfile = async (req, res) => {
       return res.status(401).json({ success: false, message: 'Vendor not authenticated' });
     }
     if (req.body.name) vendor.name = req.body.name;
-    if (req.file) vendor.logo = `/uploads/vendor-images/${req.file.filename}`;
+    if (req.file) vendor.image = `/uploads/vendor-images/${req.file.filename}`;
     await vendor.save();
     const vendorObj = vendor.toObject();
     delete vendorObj.password;
@@ -277,18 +277,25 @@ export const changeVendorPassword = async (req, res) => {
   }
 };
 
-
 // Get current vendor details (for vendor dashboard)
 export const getSelfVendor = async (req, res) => {
-  console.log('Cookies received:', req.cookies);
   try {
     if (!req.vendor) {
       return res.status(401).json({ success: false, message: 'Vendor not authenticated' });
     }
-    const vendor = req.vendor.toObject();
-    delete vendor.password;
-    res.status(200).json({ success: true, data: vendor });
+
+    // Populate the 'createdBy' field and select only the 'name'
+    const vendor = await Vendor.findById(req.vendor._id)
+      .populate('createdBy', 'name')
+      .select('-password');
+
+    if (!vendor) {
+      return res.status(404).json({ success: false, message: 'Vendor not found' });
+    }
+
+    res.status(200).json({ success: true, vendor: vendor });
   } catch (error) {
+    console.error('Error in getSelfVendor:', error);
     res.status(500).json({ success: false, message: 'Error fetching vendor details', error: error.message });
   }
 }; 

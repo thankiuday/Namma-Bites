@@ -126,4 +126,33 @@ export const updateProfile = async (req, res) => {
   } catch (error) {
     res.status(500).json({ success: false, message: 'Error updating profile', error: error.message });
   }
+};
+
+export const logoutUser = (req, res) => {
+  res.cookie('accessToken', '', {
+    httpOnly: true,
+    expires: new Date(0),
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'Lax',
+  });
+  res.cookie('refreshToken', '', {
+    httpOnly: true,
+    expires: new Date(0),
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'Lax',
+  });
+  res.status(200).json({ success: true, message: 'User logged out successfully' });
+};
+
+export const getUserProfile = async (req, res) => {
+  try {
+    const user = await User.findById(req.user.id).select('-password');
+    if (!user) {
+      return res.status(404).json({ success: false, message: 'User not found' });
+    }
+    res.status(200).json({ success: true, data: user });
+  } catch (error) {
+    console.error('Error in getUserProfile:', error);
+    res.status(500).json({ success: false, message: 'Error fetching user profile', error: error.message });
+  }
 }; 

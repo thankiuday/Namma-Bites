@@ -3,9 +3,11 @@ import { Link, useNavigate } from 'react-router-dom';
 import { FaSignInAlt, FaUserPlus, FaEnvelope, FaLock, FaRedo, FaBars, FaTimes } from 'react-icons/fa';
 import adminApi from '../api/adminApi';
 import logo from '../../public/logo.png';
+import { useAdminAuth } from '../context/AdminAuthContext';
 
 const AdminLogin = () => {
   const navigate = useNavigate();
+  const { login } = useAdminAuth();
   const [formData, setFormData] = useState({
     email: '',
     password: ''
@@ -41,6 +43,7 @@ const AdminLogin = () => {
       const response = await adminApi.post('/login', formData);
       console.log('Admin login response:', response.data.admin);
       if (response.data.success) {
+        login(response.data.admin);
         navigate('/admin/dashboard');
       } else {
         setError(response.data.message || 'Login failed. Please check your credentials.');

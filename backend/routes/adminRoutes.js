@@ -2,6 +2,7 @@ import express from 'express';
 import {
   registerAdmin,
   loginAdmin,
+  logoutAdmin,
   getAdminProfile,
   registerFirstAdmin,
   refreshToken
@@ -20,6 +21,7 @@ router.post('/refresh-token', refreshToken);
 // Protected routes
 router.use(authenticateAdmin);
 router.post('/register', registerAdmin);
+router.post('/logout', logoutAdmin);
 router.get('/profile', getAdminProfile);
 
 export default router; 

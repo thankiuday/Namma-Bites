@@ -27,7 +27,7 @@ import 'react-toastify/dist/ReactToastify.css';
 import VendorLogin from './pages/VendorLogin';
 import VendorDashboard from './pages/VendorDashboard';
 import VendorProfile from './pages/VendorProfile';
-import { VendorAuthProvider } from './context/VendorAuthContext';
+import { VendorAuthProvider, useVendorAuth } from './context/VendorAuthContext';
 import { AdminAuthProvider, useAdminAuth } from './context/AdminAuthContext';
 
 // Placeholder vendor pages
@@ -35,23 +35,46 @@ const VendorMenu = () => <div className="bg-white rounded-lg shadow-md p-6">Vend
 const VendorOrders = () => <div className="bg-white rounded-lg shadow-md p-6">Vendor Orders Page (Coming Soon)</div>;
 const VendorSubscription = () => <div className="bg-white rounded-lg shadow-md p-6">Vendor Subscription Page (Coming Soon)</div>;
 
-// Vendor routes grouped under a single VendorAuthProvider
+// VendorProtectedRoute for vendor authentication
+const VendorProtectedRoute = ({ children }) => {
+  const { vendor, loading } = useVendorAuth();
+  if (loading) return <div>Loading...</div>;
+  if (!vendor) {
+    return <Navigate to="/vendor/login" replace />;
+  }
+  return children;
+};
+
+// AdminProtectedRoute for admin authentication
+const AdminProtectedRoute = ({ children }) => {
+  const { admin, loading } = useAdminAuth();
+  if (loading) return <div>Loading...</div>;
+  if (!admin) {
+    return <Navigate to="/admin/login" replace />;
+  }
+  return children;
+};
+
+// Group Vendor routes to be wrapped by its provider
 const VendorRoutes = () => (
   <VendorAuthProvider>
     <Routes>
-      <Route path="/dashboard" element={<VendorDashboard />} />
-      <Route path="/menu" element={<VendorMenu />} />
-      <Route path="/orders" element={<VendorOrders />} />
-      <Route path="/subscription" element={<VendorSubscription />} />
-      <Route path="/profile" element={<VendorProfile />} />
+      <Route path="/login" element={<VendorLogin />} />
+      <Route path="/dashboard" element={<VendorProtectedRoute><VendorDashboard /></VendorProtectedRoute>} />
+      <Route path="/menu" element={<VendorProtectedRoute><VendorMenu /></VendorProtectedRoute>} />
+      <Route path="/orders" element={<VendorProtectedRoute><VendorOrders /></VendorProtectedRoute>} />
+      <Route path="/subscription" element={<VendorProtectedRoute><VendorSubscription /></VendorProtectedRoute>} />
+      <Route path="/profile" element={<VendorProtectedRoute><VendorProfile /></VendorProtectedRoute>} />
     </Routes>
   </VendorAuthProvider>
 );
 
-// Admin routes grouped under a single AdminAuthProvider
+// Group Admin routes to be wrapped by its provider
 const AdminRoutes = () => (
   <AdminAuthProvider>
     <Routes>
+      <Route path="/login" element={<AdminLogin />} />
+      <Route path="/register" element={<AdminRegister />} />
       <Route path="/dashboard" element={<AdminProtectedRoute><AdminDashboard /></AdminProtectedRoute>} />
       <Route path="/users" element={<AdminProtectedRoute><AdminUsers /></AdminProtectedRoute>} />
       <Route path="/vendors" element={<AdminProtectedRoute><AdminVendors /></AdminProtectedRoute>} />
@@ -59,16 +82,6 @@ const AdminRoutes = () => (
     </Routes>
   </AdminAuthProvider>
 );
-
-// AdminProtectedRoute for admin authentication
-const AdminProtectedRoute = ({ children }) => {
-  const { admin, loading } = useAdminAuth();
-  if (loading) return null;
-  if (!admin) {
-    return <Navigate to="/admin/login" replace />;
-  }
-  return children;
-};
 
 const AppContent = () => {
   const location = useLocation();
@@ -80,6 +93,7 @@ const AppContent = () => {
       {!isAdminRoute && !isVendorRoute && <Navbar />}
       <main className="flex-grow container mx-auto px-4 py-8">
         <Routes>
+          {/* Public and User Routes */}
           <Route path="/" element={<Home />} />
           <Route path="/about" element={<AboutUs />} />
           <Route path="/contact" element={<ContactUs />} />
@@ -87,18 +101,16 @@ const AppContent = () => {
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
           <Route path="/food/:id" element={<FoodDetails />} />
-          {/* User protected routes */}
+
+          {/* User Protected Routes */}
           <Route path="/user" element={<ProtectedRoute><UserProfile /></ProtectedRoute>} />
           <Route path="/change-password" element={<ProtectedRoute><ChangePassword /></ProtectedRoute>} />
           <Route path="/subscription" element={<ProtectedRoute><Subscription /></ProtectedRoute>} />
           <Route path="/cart" element={<ProtectedRoute><Cart /></ProtectedRoute>} />
           <Route path="/orders" element={<ProtectedRoute><Orders /></ProtectedRoute>} />
-          {/* Vendor login and vendor protected routes */}
-          <Route path="/vendor/login" element={<VendorAuthProvider><VendorLogin /></VendorAuthProvider>} />
+
+          {/* Vendor and Admin Routes */}
           <Route path="/vendor/*" element={<VendorRoutes />} />
-          {/* Admin login/register and admin protected routes */}
-          <Route path="/admin/login" element={<AdminLogin />} />
-          <Route path="/admin/register" element={<AdminRegister />} />
           <Route path="/admin/*" element={<AdminRoutes />} />
         </Routes>
       </main>

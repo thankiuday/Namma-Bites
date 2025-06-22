@@ -62,30 +62,30 @@ export const authenticateVendor = async (req, res, next) => {
         message: 'No authentication token, access denied'
       });
     }
-    try {
-      const decoded = jwt.verify(token, process.env.JWT_SECRET || 'your_jwt_secret');
-      const vendor = await Vendor.findById(decoded.id).select('-password');
-      if (!vendor) {
-        return res.status(401).json({
-          success: false,
-          message: 'Vendor not found'
-        });
-      }
-      req.vendor = vendor;
-      next();
-    } catch (jwtError) {
-      console.error('JWT verification error:', jwtError);
-      return res.status(401).json({
-        success: false,
-        message: 'Invalid or expired token'
-      });
+
+    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'your_jwt_secret');
+    const vendorId = decoded.vendorId || decoded.id;
+
+    if (!vendorId) {
+      return res.status(401).json({ success: false, message: 'Token is missing vendor identifier' });
     }
+
+    const vendor = await Vendor.findById(vendorId).select('-password');
+    if (!vendor) {
+      return res.status(401).json({ success: false, message: 'Vendor not found' });
+    }
+
+    req.vendor = vendor;
+    next();
   } catch (error) {
     console.error('Vendor auth middleware error:', error);
-    res.status(401).json({
-      success: false,
-      message: 'Authentication failed'
-    });
+    if (error.name === 'JsonWebTokenError') {
+      return res.status(401).json({ success: false, message: 'Invalid token' });
+    }
+    if (error.name === 'CastError') {
+      return res.status(400).json({ success: false, message: 'Invalid vendor ID format' });
+    }
+    res.status(500).json({ success: false, message: 'Authentication failed', error: error.message });
   }
 };
 

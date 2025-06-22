@@ -238,4 +238,14 @@ export const getAdminProfile = async (req, res) => {
       error: error.message
     });
   }
+};
+
+export const logoutAdmin = (req, res) => {
+  res.cookie('adminToken', '', {
+    httpOnly: true,
+    expires: new Date(0),
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'Lax',
+  });
+  res.status(200).json({ success: true, message: 'Admin logged out successfully' });
 }; 

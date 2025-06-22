@@ -1,17 +1,25 @@
 import express from 'express';
-import { getAllUsers, deleteUser, updateUser, getMe, updateProfile } from '../controllers/user/userController.js';
+import { 
+  getAllUsers, 
+  deleteUser, 
+  updateUser, 
+  getMe, 
+  updateProfile,
+  logoutUser
+} from '../controllers/user/userController.js';
 import { authenticateAdmin, authenticateUser } from '../middleware/user/authMiddleware.js';
 
 const router = express.Router();
-
-// User self profile routes (must come first)
-router.get('/me', authenticateUser, getMe);
-router.put('/update-profile', authenticateUser, updateProfile);
 
 // Admin-only routes
 router.get('/', authenticateAdmin, getAllUsers);
 router.delete('/:id', authenticateAdmin, deleteUser);
 router.put('/:id', authenticateAdmin, updateUser);
+
+// Authenticated user routes
+router.post('/logout', authenticateUser, logoutUser);
+router.get('/me', authenticateUser, getMe);
+router.put('/profile', authenticateUser, updateProfile);
 
 // Catch-all for debugging
 router.use((req, res, next) => {
