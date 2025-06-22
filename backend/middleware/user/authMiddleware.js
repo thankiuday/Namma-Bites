@@ -20,7 +20,7 @@ export const authenticateAdmin = async (req, res, next) => {
       });
     }
     try {
-      const decoded = jwt.verify(token, process.env.JWT_SECRET);
+      const decoded = jwt.verify(token, process.env.JWT_SECRET || 'your_jwt_secret');
       const admin = await Admin.findById(decoded.id).select('-password');
       if (!admin) {
         return res.status(401).json({
@@ -63,7 +63,7 @@ export const authenticateVendor = async (req, res, next) => {
       });
     }
     try {
-      const decoded = jwt.verify(token, process.env.JWT_SECRET);
+      const decoded = jwt.verify(token, process.env.JWT_SECRET || 'your_jwt_secret');
       const vendor = await Vendor.findById(decoded.id).select('-password');
       if (!vendor) {
         return res.status(401).json({
@@ -104,7 +104,7 @@ export const authenticateUser = async (req, res, next) => {
       return res.status(401).json({ success: false, message: 'No authentication token, access denied' });
     }
     try {
-      const decoded = jwt.verify(token, process.env.JWT_SECRET);
+      const decoded = jwt.verify(token, process.env.JWT_SECRET || 'your_jwt_secret');
       console.log('Decoded JWT:', decoded);
       const user = await User.findById(decoded.userId).select('-password');
       if (!user) {

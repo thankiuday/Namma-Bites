@@ -14,31 +14,34 @@ export const VendorAuthProvider = ({ children }) => {
   }, []);
 
   const checkVendorAuth = async () => {
-    const token = localStorage.getItem('vendorToken');
-    if (!token) {
+    try {
+      const response = await vendorApi.get('/self');
+      if (response.data.success) {
+        setVendor(response.data.vendor);
+      } else {
+        setVendor(null);
+      }
+    } catch (error) {
       setVendor(null);
+    } finally {
       setLoading(false);
-      return;
     }
-    // No API call to /me; just trust the token exists for now
-    setVendor(JSON.parse(localStorage.getItem('vendorData')) || null);
-    setLoading(false);
   };
 
   const login = (vendorData) => {
     setVendor(vendorData);
-    localStorage.setItem('vendorData', JSON.stringify(vendorData));
+    // No need to store token in local storage, it's an HttpOnly cookie
   };
 
   const logout = async () => {
     try {
       await vendorApi.post('/logout');
-      localStorage.removeItem('vendorToken');
-      navigate('/vendor/login');
     } catch (error) {
-      // handle error
+      console.error('Logout failed', error);
+      // Still proceed with client-side logout
     } finally {
       setVendor(null);
+      navigate('/vendor/login');
     }
   };
 

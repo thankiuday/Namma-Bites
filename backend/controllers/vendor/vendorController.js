@@ -209,7 +209,7 @@ export const loginVendor = async (req, res) => {
     res.cookie('vendorToken', token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
-      sameSite: 'strict',
+      sameSite: 'Lax',
       maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
     });
     res.status(200).json({
@@ -220,6 +220,17 @@ export const loginVendor = async (req, res) => {
   } catch (error) {
     res.status(500).json({ success: false, message: 'Server error', error: error.message });
   }
+};
+
+// Vendor logout
+export const logoutVendor = (req, res) => {
+  res.cookie('vendorToken', '', {
+    httpOnly: true,
+    expires: new Date(0),
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'Lax',
+  });
+  res.status(200).json({ success: true, message: 'Logged out successfully' });
 };
 
 // Update current vendor profile

@@ -11,6 +11,7 @@ import {
   updateVendor, 
   deleteVendor, 
   loginVendor, 
+  logoutVendor,
   updateCurrentVendorProfile,
   changeVendorPassword,
   getSelfVendor
@@ -72,6 +73,9 @@ router.delete('/:id', authenticateAdmin, deleteVendor);
 
 // Vendor login route (public)
 router.post('/login', loginVendor);
+
+// Vendor logout route
+router.post('/logout', logoutVendor);
 
 // Update current vendor profile (protected, vendor only)
 // router.put('/me', authenticateVendor, upload.single('logo'), updateCurrentVendorProfile);
