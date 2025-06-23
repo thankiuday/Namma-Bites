@@ -81,11 +81,13 @@ const VendorDashboard = () => {
             <div className="text-center text-gray-500">Loading vendor details...</div>
           ) : vendor ? (
             <div className="flex flex-col items-center">
-              <img
-                src={vendor.image ? `http://localhost:5000${vendor.image}` : '/default-logo.png'}
-                alt="Vendor Logo"
-                className="w-32 h-32 rounded-full object-cover border-4 border-orange-200 mb-4"
-              />
+              <div className="rainbow-border-container">
+                <img
+                  src={vendor.image ? `http://localhost:5000${vendor.image}` : '/default-logo.png'}
+                  alt="Vendor Logo"
+                  className="rainbow-border-img"
+                />
+              </div>
               <div className="text-xl font-semibold text-gray-900 mb-2">{vendor.name}</div>
               <div className="text-gray-700 mb-1">Phone: {vendor.phone}</div>
               <div className="text-gray-700 mb-4">Email: {vendor.email}</div>
