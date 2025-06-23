@@ -1,3 +1,4 @@
+console.log('server.js loaded at', new Date().toISOString());
 import express from 'express';
 import cors from 'cors';
 import path from 'path';
@@ -21,6 +22,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const app = express();
+console.log('server.js app instance created at', new Date().toISOString());
 
 console.log('Server starting...');
 
@@ -111,8 +113,16 @@ app.use('/api/users', userRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/vendors', vendorRoutes);
+app.get('/api/test', (req, res) => {
+  console.log('Server test route hit');
+  res.json({ success: true, message: 'Server test route works' });
+});
 
-// Serve uploaded files
+// Set CORP header for uploads
+app.use('/uploads', (req, res, next) => {
+  res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
+  next();
+});
 app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 
 // Global catch-all for debugging

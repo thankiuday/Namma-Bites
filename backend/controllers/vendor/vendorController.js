@@ -208,10 +208,11 @@ export const loginVendor = async (req, res) => {
     delete vendorObj.password;
     res.cookie('vendorToken', token, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'Lax',
+      secure: false, // for localhost development
+      sameSite: 'Lax', // use Lax for localhost
       maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
     });
+    console.log('Set-Cookie: vendorToken');
     res.status(200).json({
       success: true,
       message: 'Login successful',
@@ -226,9 +227,9 @@ export const loginVendor = async (req, res) => {
 export const logoutVendor = (req, res) => {
   res.cookie('vendorToken', '', {
     httpOnly: true,
-    expires: new Date(0),
-    secure: process.env.NODE_ENV === 'production',
-    sameSite: 'Lax',
+    secure: false, // for localhost development
+    sameSite: 'Lax', // use Lax for localhost
+    expires: new Date(0)
   });
   res.status(200).json({ success: true, message: 'Logged out successfully' });
 };
@@ -279,23 +280,43 @@ export const changeVendorPassword = async (req, res) => {
 
 // Get current vendor details (for vendor dashboard)
 export const getSelfVendor = async (req, res) => {
+  console.log('getSelfVendor called');
   try {
+    console.log('req.vendor in getSelfVendor:', req.vendor);
     if (!req.vendor) {
       return res.status(401).json({ success: false, message: 'Vendor not authenticated' });
     }
-
     // Populate the 'createdBy' field and select only the 'name'
     const vendor = await Vendor.findById(req.vendor._id)
       .populate('createdBy', 'name')
       .select('-password');
-
     if (!vendor) {
       return res.status(404).json({ success: false, message: 'Vendor not found' });
     }
-
     res.status(200).json({ success: true, vendor: vendor });
   } catch (error) {
     console.error('Error in getSelfVendor:', error);
     res.status(500).json({ success: false, message: 'Error fetching vendor details', error: error.message });
+  }
+};
+
+// Update current vendor status
+export const updateCurrentVendorStatus = async (req, res) => {
+  try {
+    const vendor = req.vendor;
+    if (!vendor) {
+      return res.status(401).json({ success: false, message: 'Vendor not authenticated' });
+    }
+    if (!req.body.status) {
+      return res.status(400).json({ success: false, message: 'Status is required' });
+    }
+    vendor.status = req.body.status;
+    await vendor.save();
+    console.log('Vendor after status update:', vendor);
+    const vendorObj = vendor.toObject();
+    delete vendorObj.password;
+    res.status(200).json({ success: true, message: 'Status updated', data: vendorObj });
+  } catch (error) {
+    res.status(500).json({ success: false, message: 'Error updating status', error: error.message });
   }
 }; 

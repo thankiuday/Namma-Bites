@@ -3,6 +3,8 @@ import Admin from '../../models/Admin.js';
 import Vendor from '../../models/Vendor.js';
 import User from '../../models/User.js';
 
+console.log('authenticateVendor middleware loaded');
+
 export const authenticateAdmin = async (req, res, next) => {
   try {
     let token;
@@ -47,9 +49,11 @@ export const authenticateAdmin = async (req, res, next) => {
 };
 
 export const authenticateVendor = async (req, res, next) => {
+  console.log('Raw cookie header:', req.headers.cookie);
   console.log('Cookies received:', req.cookies);
   try {
     let token;
+    // Try to get token from Authorization header
     const authHeader = req.header('Authorization');
     if (authHeader && authHeader.startsWith('Bearer ')) {
       token = authHeader.substring(7);
@@ -62,28 +66,23 @@ export const authenticateVendor = async (req, res, next) => {
         message: 'No authentication token, access denied'
       });
     }
-
     const decoded = jwt.verify(token, process.env.JWT_SECRET || 'your_jwt_secret');
     const vendorId = decoded.vendorId || decoded.id;
-
     if (!vendorId) {
       return res.status(401).json({ success: false, message: 'Token is missing vendor identifier' });
     }
-
     const vendor = await Vendor.findById(vendorId).select('-password');
     if (!vendor) {
       return res.status(401).json({ success: false, message: 'Vendor not found' });
     }
-
     req.vendor = vendor;
     next();
   } catch (error) {
-    console.error('Vendor auth middleware error:', error);
     if (error.name === 'JsonWebTokenError') {
       return res.status(401).json({ success: false, message: 'Invalid token' });
     }
-    if (error.name === 'CastError') {
-      return res.status(400).json({ success: false, message: 'Invalid vendor ID format' });
+    if (error.name === 'TokenExpiredError') {
+      return res.status(401).json({ success: false, message: 'Token expired' });
     }
     res.status(500).json({ success: false, message: 'Authentication failed', error: error.message });
   }

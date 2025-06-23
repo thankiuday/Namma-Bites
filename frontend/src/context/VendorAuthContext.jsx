@@ -15,7 +15,7 @@ export const VendorAuthProvider = ({ children }) => {
 
   const checkVendorAuth = async () => {
     try {
-      const response = await vendorApi.get('/self');
+      const response = await vendorApi.get('/me');
       if (response.data.success) {
         setVendor(response.data.vendor);
       } else {
@@ -23,6 +23,11 @@ export const VendorAuthProvider = ({ children }) => {
       }
     } catch (error) {
       setVendor(null);
+      if (error.response?.status === 401) {
+        if (window.location.pathname !== '/vendor/login') {
+          navigate('/vendor/login');
+        }
+      }
     } finally {
       setLoading(false);
     }

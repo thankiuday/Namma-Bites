@@ -15,27 +15,38 @@ const vendorLinks = [
 
 const VendorDashboard = () => {
   const navigate = useNavigate();
-  const { vendor, logout, loading } = useVendorAuth();
+  const { vendor, logout, loading, checkVendorAuth } = useVendorAuth();
   const [statusLoading, setStatusLoading] = useState(false);
   const [error, setError] = useState('');
+  const [showConfirm, setShowConfirm] = useState(false);
+  const [pendingStatus, setPendingStatus] = useState("");
 
   const handleLogout = () => {
     logout();
     navigate('/vendor/login');
   };
 
-  const handleStatusToggle = async () => {
+  const handleStatusButtonClick = () => {
+    if (!vendor) return;
+    // Show confirmation for both open and close
+    if (vendor.status === 'Open') {
+      setPendingStatus('Closed');
+      setShowConfirm(true);
+    } else {
+      setPendingStatus('Open');
+      setShowConfirm(true);
+    }
+  };
+
+  const handleStatusToggle = async (newStatus) => {
     if (!vendor) return;
     setStatusLoading(true);
     setError('');
     try {
-      const newStatus = vendor.status === 'Open' ? 'Closed' : 'Open';
-      const res = await vendorApi.put(`/vendors/${vendor._id}`, { status: newStatus });
+      const res = await vendorApi.put('/me/status', { status: newStatus });
       if (res.data.success) {
+        await checkVendorAuth();
         // The context should ideally update itself after a successful API call.
-        // For now, a page refresh or re-fetch within the context would be needed to see the change.
-        // Or we can manually update the context's state if a function is provided.
-        // Since no such function is provided, we will rely on the user to refresh or the context to re-fetch.
       } else {
         setError('Failed to update status.');
       }
@@ -43,7 +54,18 @@ const VendorDashboard = () => {
       setError('Failed to update status.');
     } finally {
       setStatusLoading(false);
+      setShowConfirm(false);
+      setPendingStatus("");
     }
+  };
+
+  const handleConfirm = () => {
+    handleStatusToggle(pendingStatus);
+  };
+
+  const handleCancel = () => {
+    setShowConfirm(false);
+    setPendingStatus("");
   };
 
   return (
@@ -60,7 +82,7 @@ const VendorDashboard = () => {
           ) : vendor ? (
             <div className="flex flex-col items-center">
               <img
-                src={vendor.image || '/default-logo.png'}
+                src={vendor.image ? `http://localhost:5000${vendor.image}` : '/default-logo.png'}
                 alt="Vendor Logo"
                 className="w-32 h-32 rounded-full object-cover border-4 border-orange-200 mb-4"
               />
@@ -68,7 +90,7 @@ const VendorDashboard = () => {
               <div className="text-gray-700 mb-1">Phone: {vendor.phone}</div>
               <div className="text-gray-700 mb-4">Email: {vendor.email}</div>
               <button
-                onClick={handleStatusToggle}
+                onClick={handleStatusButtonClick}
                 disabled={statusLoading}
                 className={`px-6 py-2 rounded-full font-bold text-white transition-colors duration-200 ${vendor.status === 'Open' ? 'bg-green-500 hover:bg-green-600' : 'bg-gray-500 hover:bg-gray-600'}`}
               >
@@ -77,6 +99,32 @@ const VendorDashboard = () => {
             </div>
           ) : (
             <div className="text-center text-gray-500">No vendor details found.</div>
+          )}
+          {showConfirm && (
+            <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-40 z-50">
+              <div className="bg-white p-6 rounded-lg shadow-lg max-w-sm w-full">
+                <h2 className="text-lg font-semibold mb-4">Confirm Action</h2>
+                <p className="mb-6">
+                  {pendingStatus === 'Closed'
+                    ? 'Do you really want to close your shop?'
+                    : 'Do you really want to open your shop?'}
+                </p>
+                <div className="flex justify-end gap-4">
+                  <button
+                    onClick={handleCancel}
+                    className="px-4 py-2 rounded bg-gray-300 hover:bg-gray-400 text-gray-800"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={handleConfirm}
+                    className={`px-4 py-2 rounded ${pendingStatus === 'Closed' ? 'bg-red-500 hover:bg-red-600' : 'bg-green-500 hover:bg-green-600'} text-white font-bold`}
+                  >
+                    {pendingStatus === 'Closed' ? 'Yes, Close' : 'Yes, Open'}
+                  </button>
+                </div>
+              </div>
+            </div>
           )}
         </div>
       </main>

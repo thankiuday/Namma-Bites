@@ -1,3 +1,4 @@
+console.log('vendorRoutes.js loaded at', new Date().toISOString());
 console.log('Vendor routes loaded');
 import express from 'express';
 import multer from 'multer';
@@ -14,11 +15,13 @@ import {
   logoutVendor,
   updateCurrentVendorProfile,
   changeVendorPassword,
-  getSelfVendor
+  getSelfVendor,
+  updateCurrentVendorStatus
 } from '../controllers/vendor/vendorController.js';
 import { authenticateAdmin, authenticateVendor } from '../middleware/user/authMiddleware.js';
 
 const router = express.Router();
+console.log('vendorRoutes.js router instance created at', new Date().toISOString());
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
@@ -56,6 +59,14 @@ const upload = multer({
     }
 });
 
+// Debug ping route
+router.get('/ping', (req, res) => {
+  res.json({ success: true, message: 'pong' });
+});
+
+// Get current vendor details (protected, vendor only)
+router.get('/me', authenticateVendor, getSelfVendor);
+
 // Get all vendors (protected, admin only)
 router.get('/', authenticateAdmin, getAllVendors);
 
@@ -83,15 +94,7 @@ router.post('/logout', logoutVendor);
 // Change vendor password (protected, vendor only)
 router.post('/change-password', authenticateVendor, changeVendorPassword);
 
-// Get current vendor details (protected, vendor only)
-router.get('/self', (req, res, next) => {
-  console.log('Route /api/vendors/self hit');
-  next();
-}, authenticateVendor, getSelfVendor);
-
-router.use((req, res, next) => {
-  console.log('Vendor fallback route hit:', req.path);
-  next();
-});
+// Update current vendor status (protected, vendor only)
+router.put('/me/status', authenticateVendor, updateCurrentVendorStatus);
 
 export default router; 

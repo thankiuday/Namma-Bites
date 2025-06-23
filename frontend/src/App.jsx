@@ -133,9 +133,20 @@ const AppContent = () => {
 function App() {
   return (
     <Router>
-      <AuthProvider>
-        <AppContent />
-      </AuthProvider>
+      <Routes>
+        {/* Vendor and Admin routes (do NOT wrap with AuthProvider) */}
+        <Route path="/vendor/*" element={<VendorRoutes />} />
+        <Route path="/admin/*" element={<AdminRoutes />} />
+        {/* User and public routes (with AuthProvider) */}
+        <Route
+          path="/*"
+          element={
+            <AuthProvider>
+              <AppContent />
+            </AuthProvider>
+          }
+        />
+      </Routes>
     </Router>
   );
 }
