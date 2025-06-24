@@ -1,104 +1,68 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import FoodCard from './FoodCard';
+import apiClient from '../api/apiClient';
 
-const AllFoods = () => {
-  const allFoods = [
-    // North Indian Veg
-    {
-      id: 1,
-      name: "Paneer Butter Masala",
-      price: 280,
-      category: "North Indian",
-      image: "https://images.unsplash.com/photo-1585937421612-70a008356fbe?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Mnx8cGFuZWVyJTIwYnV0dGVyJTIwbWFzYWxhfGVufDB8fDB8fHww",
-      isAvailable: true,
-      isVeg: true
-    },
-    {
-      id: 2,
-      name: "Veg Biryani",
-      price: 200,
-      category: "North Indian",
-      image: "https://images.unsplash.com/photo-1563379091339-03b21ab4a4f8?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Mnx8dmVnJTIwYmlyeWFuaXxlbnwwfHwwfHx8MA%3D%3D",
-      isAvailable: true,
-      isVeg: true
-    },
-    // North Indian Non-Veg
-    {
-      id: 3,
-      name: "Butter Chicken",
-      price: 350,
-      category: "North Indian",
-      image: "https://images.unsplash.com/photo-1603894584373-5ac82b2ae398?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Mnx8YnV0dGVyJTIwY2hpY2tlbnxlbnwwfHwwfHx8MA%3D%3D",
-      isAvailable: true,
-      isVeg: false
-    },
-    {
-      id: 4,
-      name: "Chicken Biryani",
-      price: 250,
-      category: "North Indian",
-      image: "https://images.unsplash.com/photo-1563379091339-03b21ab4a4f8?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Mnx8Y2hpY2tlbiUyMGJpcnlhbml8ZW58MHx8MHx8fDA%3D",
-      isAvailable: true,
-      isVeg: false
-    },
-    // South Indian Veg
-    {
-      id: 5,
-      name: "Masala Dosa",
-      price: 120,
-      category: "South Indian",
-      image: "https://images.unsplash.com/photo-1589301760014-d929f3979dbc?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Mnx8bWFzYWxhJTIwZG9zYXxlbnwwfHwwfHx8MA%3D%3D",
-      isAvailable: true,
-      isVeg: true
-    },
-    {
-      id: 6,
-      name: "Idli Sambar",
-      price: 100,
-      category: "South Indian",
-      image: "https://images.unsplash.com/photo-1585937421612-70a008356fbe?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Mnx8aWRsaSUyMHNhbWJhcnxlbnwwfHwwfHx8MA%3D%3D",
-      isAvailable: true,
-      isVeg: true
-    },
-    // Chinese Veg
-    {
-      id: 7,
-      name: "Veg Noodles",
-      price: 160,
-      category: "Chinese",
-      image: "https://images.unsplash.com/photo-1585032226651-759b368d7246?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Mnx8dmVnJTIwbm9vZGxlc3xlbnwwfHwwfHx8MA%3D%3D",
-      isAvailable: true,
-      isVeg: true
-    },
-    {
-      id: 8,
-      name: "Veg Fried Rice",
-      price: 180,
-      category: "Chinese",
-      image: "https://images.unsplash.com/photo-1603133872878-684f208fb84b?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Mnx8dmVnJTIwZnJpZWQlMjByaWNlfGVufDB8fDB8fHww",
-      isAvailable: true,
-      isVeg: true
-    },
-    // Chinese Non-Veg
-    {
-      id: 9,
-      name: "Chicken Noodles",
-      price: 180,
-      category: "Chinese",
-      image: "https://images.unsplash.com/photo-1585032226651-759b368d7246?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Mnx8Y2hpY2tlbiUyMG5vb2RsZXN8ZW58MHx8MHx8fDA%3D",
-      isAvailable: true,
-      isVeg: false
-    },
-  ];
+const AllFoods = ({ searchTerm = '' }) => {
+  const [foods, setFoods] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+
+  useEffect(() => {
+    const fetchFoods = async () => {
+      try {
+        setLoading(true);
+        setError('');
+        const res = await apiClient.get('/vendor/menu-items/all');
+        if (res.data.success) {
+          setFoods(res.data.data);
+        } else {
+          setError(res.data.message || 'Failed to fetch foods');
+        }
+      } catch (err) {
+        setError('Failed to fetch foods');
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchFoods();
+  }, []);
+
+  // Filter foods by search term (name, vendor name, or category)
+  const filteredFoods = foods.filter((food) => {
+    const term = searchTerm.trim().toLowerCase();
+    if (!term) return true;
+    const nameMatch = food.name?.toLowerCase().includes(term);
+    const vendorMatch = food.vendor?.name?.toLowerCase().includes(term);
+    // Robust category matching
+    const foodCategory = food.category?.toLowerCase();
+    const isVeg = ['veg', 'vegetarian'].includes(term);
+    const isNonVeg = ['nonveg', 'non veg', 'non-veg', 'non vegetarian', 'non-vegetarian'].includes(term);
+    const categoryMatch = (foodCategory && foodCategory.includes(term)) ||
+      (isVeg && foodCategory && (foodCategory === 'veg' || foodCategory.includes('veg')) && foodCategory !== 'non-veg') ||
+      (isNonVeg && foodCategory === 'non-veg');
+    return nameMatch || vendorMatch || categoryMatch;
+  });
 
   return (
     <div className="w-full max-w-6xl px-4 mt-16">
       <h2 className="text-2xl font-semibold text-gray-800 mb-8 text-center">Our Menu</h2>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {allFoods.map((food) => (
-          <FoodCard key={food.id} food={food} />
-        ))}
-      </div>
+      {loading ? (
+        <div className="text-center py-8">Loading foods...</div>
+      ) : error ? (
+        <div className="text-center text-red-500 py-8">{error}</div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {filteredFoods.length === 0 ? (
+            <div className="col-span-full text-center text-lg text-gray-500 py-8 font-semibold">
+              No foods found matching your search.
+            </div>
+          ) : (
+            filteredFoods.map((food) => (
+              <FoodCard key={food._id} food={food} />
+            ))
+          )}
+        </div>
+      )}
     </div>
   );
 };

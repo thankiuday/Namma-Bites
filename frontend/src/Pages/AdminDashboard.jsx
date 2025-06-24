@@ -89,7 +89,7 @@ const AdminDashboard = () => {
               </button>
 
               <button
-                onClick={() => navigate('/admin/vendors')}
+                onClick={() => navigate('/admin/vendor')}
                 className="flex items-center p-6 bg-white border-2 border-gray-200 rounded-lg hover:border-orange-600 hover:shadow-md transition-all duration-200"
               >
                 <div className="p-3 bg-orange-100 rounded-lg mr-4">

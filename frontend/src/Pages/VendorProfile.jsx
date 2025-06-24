@@ -31,7 +31,7 @@ const VendorProfile = () => {
     }
 
     try {
-      const res = await api.put('/vendors/me', formData, {
+      const res = await api.put('/vendor/me', formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
       });
       if (res.data.success) {
@@ -53,7 +53,7 @@ const VendorProfile = () => {
       return;
     }
     try {
-      const res = await api.post('/vendors/change-password', {
+      const res = await api.post('/vendor/change-password', {
         oldPassword,
         newPassword,
       });

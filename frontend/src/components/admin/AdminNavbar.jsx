@@ -17,7 +17,7 @@ const AdminNavbar = () => {
     { name: 'Home', path: '/admin/dashboard', icon: <FaHome className="w-5 h-5" /> },
     { name: 'Create Vendor', path: '/admin/create-vendor', icon: <FaStore className="w-5 h-5" /> },
     { name: 'All Users', path: '/admin/users', icon: <FaUsers className="w-5 h-5" /> },
-    { name: 'All Vendors', path: '/admin/vendors', icon: <FaStore className="w-5 h-5" /> },
+    { name: 'All Vendors', path: '/admin/vendor', icon: <FaStore className="w-5 h-5" /> },
   ];
 
   return (

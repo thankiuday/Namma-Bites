@@ -75,7 +75,7 @@ const AdminRoutes = () => (
       <Route path="/register" element={<AdminRegister />} />
       <Route path="/dashboard" element={<AdminProtectedRoute><AdminDashboard /></AdminProtectedRoute>} />
       <Route path="/users" element={<AdminProtectedRoute><AdminUsers /></AdminProtectedRoute>} />
-      <Route path="/vendors" element={<AdminProtectedRoute><AdminVendors /></AdminProtectedRoute>} />
+      <Route path="/vendor" element={<AdminProtectedRoute><AdminVendors /></AdminProtectedRoute>} />
       <Route path="/create-vendor" element={<AdminProtectedRoute><CreateVendor /></AdminProtectedRoute>} />
     </Routes>
   </AdminAuthProvider>

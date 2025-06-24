@@ -1,6 +1,6 @@
 import React from 'react';
 
-const CategorySection = () => {
+const CategorySection = ({ onCategoryClick }) => {
   const categories = [
     {
       id: 1,
@@ -8,7 +8,8 @@ const CategorySection = () => {
       image: "https://images.unsplash.com/photo-1585937421612-70a008356fbe?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Mnx8dmVnZXRhcmlhbiUyMGZvb2R8ZW58MHx8MHx8fDA%3D",
       count: 120,
       type: "V",
-      color: "bg-green-500"
+      color: "bg-green-500",
+      scrollType: 'veg',
     },
     {
       id: 2,
@@ -16,7 +17,8 @@ const CategorySection = () => {
       image: "https://images.unsplash.com/photo-1603894584373-5ac82b2ae398?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Mnx8Y2hpY2tlbiUyMGZvb2R8ZW58MHx8MHx8fDA%3D",
       count: 85,
       type: "NV",
-      color: "bg-red-500"
+      color: "bg-red-500",
+      scrollType: 'non-veg',
     }
   ];
 
@@ -28,6 +30,8 @@ const CategorySection = () => {
           <div 
             key={category.id} 
             className="bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition-all duration-300 transform hover:scale-105"
+            onClick={() => onCategoryClick && onCategoryClick(category.scrollType)}
+            style={{ cursor: 'pointer' }}
           >
             <div className="relative h-64">
               <img 

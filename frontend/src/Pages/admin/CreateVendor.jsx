@@ -55,7 +55,7 @@ const CreateVendor = () => {
                 formDataToSend.append('image', formData.image);
             }
             
-            const response = await api.post('/vendors/create', formDataToSend, {
+            const response = await api.post('/vendor/create', formDataToSend, {
                 headers: {
                     'Content-Type': 'multipart/form-data',
                 }

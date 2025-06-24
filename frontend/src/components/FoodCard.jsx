@@ -17,7 +17,7 @@ const FoodCard = ({ food }) => {
       {/* Food Image */}
       <div className="relative h-48 w-full overflow-hidden">
         <img
-          src={food.image}
+          src={food.image ? `http://localhost:5000${food.image}` : '/default-food.png'}
           alt={food.name}
           className="w-full h-full object-cover transition-transform duration-300 hover:scale-110"
         />
@@ -39,7 +39,7 @@ const FoodCard = ({ food }) => {
         </div>
         {/* Veg/Non-Veg Badge */}
         <div className="absolute top-2 left-2">
-          {food.isVeg ? (
+          {food.category === 'veg' ? (
             <div className="bg-green-500 text-white px-3 py-1 rounded-full flex items-center gap-1">
               <FaLeaf /> Veg
             </div>
@@ -58,10 +58,14 @@ const FoodCard = ({ food }) => {
           <span className="text-lg font-bold text-orange-600">₹{food.price}</span>
         </div>
         
-        {/* Category Badge */}
+        {/* Vendor Badge */}
         <div className="inline-block bg-orange-100 text-orange-800 px-3 py-1 rounded-full text-sm font-medium flex items-center gap-1">
-          <FaTag className="text-orange-600" /> {food.category}
+          <FaTag className="text-orange-600" /> {food.vendor?.name || 'Unknown Vendor'}
         </div>
+        {/* Category Info (less prominent) */}
+        {/* <div className="mt-1 text-xs text-gray-500 font-semibold">
+          {food.category}
+        </div> */}
       </div>
     </div>
   );

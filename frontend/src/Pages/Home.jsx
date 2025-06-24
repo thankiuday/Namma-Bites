@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useRef, useState } from "react";
 import gujarati from '../../public/gujarati.jpg';
 import tindi from '../../public/tindi.jpg';
 import south from '../../public/south.jpg';
@@ -87,6 +87,19 @@ const Home = () => {
     }
   ];
 
+  const topBuysRef = useRef(null);
+  const [scrollToType, setScrollToType] = useState(null);
+  const [searchTerm, setSearchTerm] = useState('');
+
+  const handleCategoryClick = (type) => {
+    setScrollToType(type);
+    setTimeout(() => {
+      if (topBuysRef.current) {
+        topBuysRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    }, 100); // allow TopBuys to react to prop change
+  };
+
   return (
     <main className="flex-grow">
       <div className="flex flex-col items-center justify-center">
@@ -106,8 +119,10 @@ const Home = () => {
           <div className="flex gap-2">
             <input
               type="text"
-              placeholder="Search for food..."
-              className="flex-1 px-4 py-3 rounded-lg border-2 border-gray-200 focus:border-orange-600 focus:outline-none text-gray-800"
+              placeholder="Search by food, vendor, or veg/non-veg..."
+              className="flex-1 px-4 py-3 rounded-lg border-2 border-gray-200 focus:border-orange-600 focus:outline-none text-gray-800 placeholder-gray-400"
+              value={searchTerm}
+              onChange={e => setSearchTerm(e.target.value)}
             />
             <button className="px-6 py-3 bg-orange-600 text-white rounded-lg hover:bg-orange-500 transition-colors duration-300">
               Search
@@ -120,8 +135,10 @@ const Home = () => {
           <div className="flex gap-4 max-w-3xl mx-auto">
             <input
               type="text"
-              placeholder="Search for food..."
-              className="flex-1 px-6 py-4 rounded-lg border-2 border-gray-200 focus:border-orange-600 focus:outline-none text-gray-800 text-lg"
+              placeholder="Search by food, vendor, or veg/non-veg..."
+              className="flex-1 px-6 py-4 rounded-lg border-2 border-gray-200 focus:border-orange-600 focus:outline-none text-gray-800 text-lg placeholder-gray-400"
+              value={searchTerm}
+              onChange={e => setSearchTerm(e.target.value)}
             />
             <button className="px-8 py-4 bg-orange-600 text-white rounded-lg hover:bg-orange-500 transition-colors duration-300 text-lg font-medium">
               Search
@@ -130,13 +147,15 @@ const Home = () => {
         </div>
 
          {/* All Foods Section */}
-         <AllFoods />
+         <AllFoods searchTerm={searchTerm} />
 
         {/* Categories Section */}
-        <CategorySection />
+        <CategorySection onCategoryClick={handleCategoryClick} />
 
         {/* Top Buys Section */}
-        <TopBuys />
+        <div ref={topBuysRef} style={{ width: '100%' }}>
+          <TopBuys scrollToType={scrollToType} />
+        </div>
 
       </div>
     </main>

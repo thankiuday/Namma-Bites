@@ -473,6 +473,42 @@ export const getPublicVendors = async (req, res) => {
   }
 };
 
+// Get all menu items (public)
+export const getAllMenuItems = async (req, res) => {
+  try {
+    const items = await MenuItem.find({})
+      .sort({ createdAt: -1 })
+      .populate('vendor', 'name image'); // Populate vendor name and image
+    res.status(200).json({ success: true, data: items });
+  } catch (error) {
+    res.status(500).json({ success: false, message: 'Error fetching menu items', error: error.message });
+  }
+};
+
+// Get all veg menu items (public)
+export const getAllVegMenuItems = async (req, res) => {
+  try {
+    const items = await MenuItem.find({ category: 'veg' })
+      .sort({ createdAt: -1 })
+      .populate('vendor', 'name image');
+    res.status(200).json({ success: true, data: items });
+  } catch (error) {
+    res.status(500).json({ success: false, message: 'Error fetching veg menu items', error: error.message });
+  }
+};
+
+// Get all non-veg menu items (public)
+export const getAllNonVegMenuItems = async (req, res) => {
+  try {
+    const items = await MenuItem.find({ category: 'non-veg' })
+      .sort({ createdAt: -1 })
+      .populate('vendor', 'name image');
+    res.status(200).json({ success: true, data: items });
+  } catch (error) {
+    res.status(500).json({ success: false, message: 'Error fetching non-veg menu items', error: error.message });
+  }
+};
+
 // Approve a vendor (admin only)
 export const approveVendor = async (req, res) => {
   try {

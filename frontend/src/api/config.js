@@ -30,7 +30,7 @@ const processQueue = (error, token = null) => {
 api.interceptors.request.use(
   (config) => {
     // Vendor self endpoints (always use vendor token)
-    if (config.url === '/vendors/self' || config.url === '/vendors/me') {
+    if (config.url === '/vendor/self' || config.url === '/vendor/me') {
       const vendorToken = localStorage.getItem('vendorToken');
       if (vendorToken) {
         config.headers.Authorization = vendorToken.startsWith('Bearer ')
@@ -43,13 +43,13 @@ api.interceptors.request.use(
     if (
       config.url.startsWith('/admin') ||
       config.url.startsWith('/users') ||
-      (config.url.startsWith('/vendors') && config.url !== '/vendors/self' && config.url !== '/vendors/me')
+      (config.url.startsWith('/vendor') && config.url !== '/vendor/self' && config.url !== '/vendor/me')
     ) {
       // Do not set Authorization header for admin/user endpoints; rely on cookies
       return config;
     }
     // Vendor endpoints for vendor dashboard (if not admin)
-    if (config.url.startsWith('/vendors')) {
+    if (config.url.startsWith('/vendor')) {
       const vendorToken = localStorage.getItem('vendorToken');
       if (vendorToken) {
         config.headers.Authorization = vendorToken.startsWith('Bearer ')
@@ -91,7 +91,7 @@ api.interceptors.response.use(
       }
 
       // Vendor endpoints or currently on vendor route
-      if (url.startsWith('/vendors') || currentPath.startsWith('/vendor')) {
+      if (url.startsWith('/vendor') || currentPath.startsWith('/vendor')) {
         localStorage.removeItem('vendorToken');
         window.location.href = '/vendor/login';
         return Promise.reject(error);

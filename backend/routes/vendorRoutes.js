@@ -22,7 +22,10 @@ import {
   updateMenuItem,
   deleteMenuItem,
   getPublicVendors,
-  approveVendor
+  approveVendor,
+  getAllMenuItems,
+  getAllVegMenuItems,
+  getAllNonVegMenuItems
 } from '../controllers/vendor/vendorController.js';
 import { authenticateAdmin, authenticateVendor } from '../middleware/user/authMiddleware.js';
 
@@ -95,6 +98,14 @@ const uploadItemImage = multer({
 // Get all public vendors (public)
 router.get('/public', getPublicVendors);
 
+// Get all public menu items (public)
+router.get('/menu-items/all', getAllMenuItems);
+
+// Get all veg menu items (public)
+router.get('/menu-items/veg', getAllVegMenuItems);
+
+// Get all non-veg menu items (public)
+router.get('/menu-items/non-veg', getAllNonVegMenuItems);
 
 // Debug ping route
 router.get('/ping', (req, res) => {

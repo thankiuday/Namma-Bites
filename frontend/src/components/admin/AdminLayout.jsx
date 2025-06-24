@@ -19,7 +19,7 @@ const AdminLayout = ({ children }) => {
   const adminLinks = [
     { to: '/admin/dashboard', label: 'Dashboard', icon: 'home' },
     { to: '/admin/users', label: 'Users', icon: 'users' },
-    { to: '/admin/vendors', label: 'Vendors', icon: 'store' },
+    { to: '/admin/vendor', label: 'Vendors', icon: 'store' },
     { to: '/admin/create-vendor', label: 'Create Vendor', icon: 'user-plus' },
   ];
 
