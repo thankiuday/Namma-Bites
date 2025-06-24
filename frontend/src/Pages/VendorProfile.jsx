@@ -1,9 +1,11 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useVendorAuth } from '../context/VendorAuthContext';
 import api from '../api/config';
 
 const VendorProfile = () => {
   const { vendor, checkVendorAuth } = useVendorAuth();
+  const navigate = useNavigate();
   const [editMode, setEditMode] = useState(false);
   const [name, setName] = useState(vendor?.name || '');
   const [logo, setLogo] = useState(null);
@@ -18,27 +20,30 @@ const VendorProfile = () => {
 
   const handleProfileUpdate = async (e) => {
     e.preventDefault();
-    // The /vendors/me endpoint is no longer available
-    setProfileMsg('Profile update is currently unavailable.');
-    return;
-    // Old code:
-    // const formData = new FormData();
-    // formData.append('name', name);
-    // if (logo) formData.append('logo', logo);
-    // try {
-    //   const res = await api.put('/vendors/me', formData, {
-    //     headers: { 'Content-Type': 'multipart/form-data' },
-    //   });
-    //   if (res.data.success) {
-    //     setProfileMsg('Profile updated successfully!');
-    //     setEditMode(false);
-    //     await checkVendorAuth(); // Refresh vendor data
-    //   } else {
-    //     setProfileMsg('Failed to update profile.');
-    //   }
-    // } catch (err) {
-    //   setProfileMsg('Error updating profile.');
-    // }
+    const formData = new FormData();
+    formData.append('name', name);
+    if (logo) formData.append('logo', logo);
+
+    // Only proceed if there is something to update
+    if (!name && !logo) {
+      setProfileMsg('Please provide a new name or logo to update.');
+      return;
+    }
+
+    try {
+      const res = await api.put('/vendors/me', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      });
+      if (res.data.success) {
+        setProfileMsg('Profile updated successfully!');
+        setEditMode(false);
+        await checkVendorAuth(); // Refresh vendor data to show new logo/name
+      } else {
+        setProfileMsg(res.data.message || 'Failed to update profile.');
+      }
+    } catch (err) {
+      setProfileMsg(err.response?.data?.message || 'Error updating profile.');
+    }
   };
 
   const handlePasswordChange = async (e) => {
@@ -61,90 +66,100 @@ const VendorProfile = () => {
         setPasswordMsg(res.data.message || 'Failed to change password.');
       }
     } catch (err) {
-      setPasswordMsg('Error changing password.');
+      setPasswordMsg(err.response?.data?.message || 'Error changing password.');
     }
   };
 
   if (!vendor) return <div className="text-center mt-10">Loading...</div>;
 
   return (
-    <div className="max-w-2xl mx-auto p-6 bg-white rounded shadow mt-10">
-      <h2 className="text-2xl font-bold mb-4">Vendor Profile</h2>
+    <div className="max-w-4xl mx-auto p-8 bg-gray-50 rounded-lg shadow-md mt-10">
+      <div className="flex justify-between items-center mb-6">
+        <h2 className="text-3xl font-bold text-gray-800">Vendor Profile</h2>
+        <button 
+          onClick={() => navigate('/vendor/dashboard')}
+          className="bg-gray-200 text-gray-800 px-4 py-2 rounded-md hover:bg-gray-300"
+        >
+          &larr; Back to Dashboard
+        </button>
+      </div>
       <div className="flex items-center mb-6">
         <img
-          src={vendor.logo ? vendor.logo : '/default-logo.png'}
+          src={vendor.image ? `http://localhost:5000${vendor.image}` : '/default-logo.png'}
           alt="Vendor Logo"
-          className="w-24 h-24 rounded-full object-cover border mr-6"
+          className="w-24 h-24 rounded-full object-cover border-4 border-gray-200 mr-6"
         />
         <div>
-          <div className="font-semibold text-lg">{vendor.name}</div>
-          <div className="text-gray-600">{vendor.email}</div>
+          <div className="font-bold text-2xl text-gray-900">{vendor.name}</div>
+          <div className="text-gray-500 text-lg">{vendor.email}</div>
         </div>
       </div>
       {editMode ? (
-        <form onSubmit={handleProfileUpdate} className="mb-6">
-          <div className="mb-4">
-            <label className="block mb-1 font-medium">Name</label>
+        <form onSubmit={handleProfileUpdate} className="mb-6 space-y-4">
+          <div>
+            <label className="block mb-1 font-medium text-gray-700">Name</label>
             <input
               type="text"
               value={name}
               onChange={e => setName(e.target.value)}
-              className="w-full border rounded px-3 py-2"
+              className="w-full border-gray-300 rounded-md shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 px-3 py-2 text-gray-900"
               required
             />
           </div>
-          <div className="mb-4">
-            <label className="block mb-1 font-medium">Logo</label>
+          <div>
+            <label className="block mb-1 font-medium text-gray-700">Logo</label>
             <input
               type="file"
               accept="image/*"
               onChange={e => setLogo(e.target.files[0])}
-              className="w-full"
+              className="w-full text-gray-700"
             />
           </div>
-          <button type="submit" className="bg-blue-600 text-white px-4 py-2 rounded mr-2">Save</button>
-          <button type="button" onClick={() => setEditMode(false)} className="bg-gray-300 px-4 py-2 rounded">Cancel</button>
+          <div className="flex justify-end">
+            <button type="button" onClick={() => setEditMode(false)} className="bg-gray-200 text-gray-800 px-4 py-2 rounded-md hover:bg-gray-300 mr-2">Cancel</button>
+            <button type="submit" className="bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">Save</button>
+          </div>
           {profileMsg && <div className="mt-2 text-green-600">{profileMsg}</div>}
         </form>
       ) : (
-        <button onClick={() => setEditMode(true)} className="bg-blue-600 text-white px-4 py-2 rounded mb-6">Edit Profile</button>
+        <button onClick={() => setEditMode(true)} className="bg-indigo-600 text-white px-6 py-2 rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 mb-6">Edit Profile</button>
       )}
 
-      <hr className="my-6" />
+      <hr className="my-8" />
 
-      <h3 className="text-xl font-semibold mb-2">Change Password</h3>
-      <form onSubmit={handlePasswordChange}>
-        <div className="mb-3">
-          <label className="block mb-1">Old Password</label>
+      <h3 className="text-2xl font-semibold mb-4 text-gray-800">Change Password</h3>
+      <form onSubmit={handlePasswordChange} className="space-y-4">
+        <div>
+          <label className="block mb-1 font-medium text-gray-700">Old Password</label>
           <input
             type="password"
             value={oldPassword}
             onChange={e => setOldPassword(e.target.value)}
-            className="w-full border rounded px-3 py-2"
+            className="w-full border-gray-300 rounded-md shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 px-3 py-2 text-gray-900"
             required
           />
         </div>
-        <div className="mb-3">
-          <label className="block mb-1">New Password</label>
+        <div>
+          <label className="block mb-1 font-medium text-gray-700">New Password</label>
           <input
             type="password"
             value={newPassword}
             onChange={e => setNewPassword(e.target.value)}
-            className="w-full border rounded px-3 py-2"
+            className="w-full border-gray-300 rounded-md shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 px-3 py-2 text-gray-900"
             required
           />
         </div>
-        <div className="mb-3">
-          <label className="block mb-1">Confirm New Password</label>
+        <div>
+          <label className="block mb-1 font-medium text-gray-700">Confirm New Password</label>
           <input
             type="password"
             value={confirmPassword}
             onChange={e => setConfirmPassword(e.target.value)}
-            className="w-full border rounded px-3 py-2"
+            className="w-full border-gray-300 rounded-md shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 px-3 py-2 text-gray-900"
             required
           />
         </div>
-        <button type="submit" className="bg-green-600 text-white px-4 py-2 rounded">Change Password</button>
+        <button type="submit" className="bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">Change Password</button>
         {passwordMsg && <div className="mt-2 text-red-600">{passwordMsg}</div>}
       </form>
     </div>

@@ -19,6 +19,12 @@
   -moz-osx-font-smoothing: grayscale;
 }
 
+/* Custom placeholder styles */
+::placeholder {
+  color: black !important; /* Use !important to ensure override */
+  opacity: 1; /* Firefox adds a lower opacity by default */
+}
+
 /* We are disabling this css part for now. Later will use if needed. 
 a {
   font-weight: 500;

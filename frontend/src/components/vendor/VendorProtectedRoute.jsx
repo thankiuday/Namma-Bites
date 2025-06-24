@@ -1,4 +1,4 @@
-import { useVendorAuth } from '../context/VendorAuthContext';
+import { useVendorAuth } from '../../context/VendorAuthContext';
 import { Navigate } from 'react-router-dom';
 
 const VendorProtectedRoute = ({ children }) => {

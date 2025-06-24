@@ -30,7 +30,7 @@ export const AdminAuthProvider = ({ children }) => {
       console.log("[AdminAuthContext] Profile fetch error:", error);
       if (error.response?.status === 401) {
         if (window.location.pathname !== '/admin/login') {
-          navigate('/admin/login');
+        navigate('/admin/login');
         }
       }
     } finally {

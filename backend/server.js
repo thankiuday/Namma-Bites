@@ -36,6 +36,16 @@ app.use(cors({
 app.use(express.json());
 app.use(cookieParser());
 
+// Set CORP header for uploads
+app.use('/uploads', (req, res, next) => {
+  res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
+  next();
+});
+
+// Serve static files from the /uploads directory
+const uploadsDir = path.resolve(__dirname, '../uploads');
+app.use('/uploads', express.static(uploadsDir));
+
 // Rate limiting with Redis
 const generalLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
@@ -117,13 +127,6 @@ app.get('/api/test', (req, res) => {
   console.log('Server test route hit');
   res.json({ success: true, message: 'Server test route works' });
 });
-
-// Set CORP header for uploads
-app.use('/uploads', (req, res, next) => {
-  res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
-  next();
-});
-app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 
 // Global catch-all for debugging
 app.use((req, res, next) => {

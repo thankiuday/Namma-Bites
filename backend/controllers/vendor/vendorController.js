@@ -1,5 +1,8 @@
 import Vendor from '../../models/Vendor.js';
+import MenuItem from '../../models/MenuItem.js';
 import jwt from 'jsonwebtoken';
+import fs from 'fs';
+import path from 'path';
 
 // Create a new vendor
 export const createVendor = async (req, res) => {
@@ -255,11 +258,19 @@ export const updateCurrentVendorProfile = async (req, res) => {
 // Change vendor password
 export const changeVendorPassword = async (req, res) => {
   try {
-    const vendor = req.vendor;
     const { oldPassword, newPassword } = req.body;
-    if (!vendor) {
+    
+    // Check if vendor is authenticated
+    if (!req.vendor || !req.vendor._id) {
       return res.status(401).json({ success: false, message: 'Vendor not authenticated' });
     }
+
+    // Fetch the full vendor document to access the password hash
+    const vendor = await Vendor.findById(req.vendor._id);
+    if (!vendor) {
+      return res.status(404).json({ success: false, message: 'Vendor not found' });
+    }
+
     if (!oldPassword || !newPassword) {
       return res.status(400).json({ success: false, message: 'Old and new password are required' });
     }
@@ -274,6 +285,7 @@ export const changeVendorPassword = async (req, res) => {
     await vendor.save();
     res.status(200).json({ success: true, message: 'Password changed successfully' });
   } catch (error) {
+    console.error("Error changing vendor password:", error);
     res.status(500).json({ success: false, message: 'Error changing password', error: error.message });
   }
 };
@@ -318,5 +330,119 @@ export const updateCurrentVendorStatus = async (req, res) => {
     res.status(200).json({ success: true, message: 'Status updated', data: vendorObj });
   } catch (error) {
     res.status(500).json({ success: false, message: 'Error updating status', error: error.message });
+  }
+};
+
+// Add a new menu item
+export const addMenuItem = async (req, res) => {
+  try {
+    const { name, price, category } = req.body;
+    const vendorId = req.vendor._id;
+    const vendorEmail = req.vendor.email;
+
+    if (!name || !price || !category || !req.file) {
+      return res.status(400).json({ success: false, message: 'All fields, including an image, are required.' });
+    }
+
+    const menuItem = new MenuItem({
+      name,
+      price,
+      category,
+      image: `/uploads/items-images/${req.file.filename}`,
+      vendor: vendorId,
+      vendorEmail: vendorEmail,
+    });
+
+    await menuItem.save();
+
+    res.status(201).json({ success: true, message: 'Menu item added successfully', data: menuItem });
+  } catch (error) {
+    console.error("Error adding menu item:", error);
+    res.status(500).json({ success: false, message: 'Error adding menu item', error: error.message });
+  }
+};
+
+// Get all menu items for the authenticated vendor
+export const getMenuItemsByVendor = async (req, res) => {
+  try {
+    const vendorId = req.vendor._id;
+    const menuItems = await MenuItem.find({ vendor: vendorId }).sort({ createdAt: -1 });
+    res.status(200).json({ success: true, data: menuItems });
+  } catch (error) {
+    console.error("Error fetching menu items:", error);
+    res.status(500).json({ success: false, message: 'Error fetching menu items' });
+  }
+};
+
+// Update a menu item
+export const updateMenuItem = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { name, price, category } = req.body;
+    const vendorId = req.vendor._id;
+
+    const menuItem = await MenuItem.findById(id);
+
+    if (!menuItem) {
+      return res.status(404).json({ success: false, message: 'Menu item not found.' });
+    }
+
+    if (menuItem.vendor.toString() !== vendorId.toString()) {
+      return res.status(403).json({ success: false, message: 'You are not authorized to update this item.' });
+    }
+
+    menuItem.name = name || menuItem.name;
+    menuItem.price = price || menuItem.price;
+    menuItem.category = category || menuItem.category;
+
+    if (req.file) {
+      // Delete old image if it exists
+      if (menuItem.image) {
+        const oldImagePath = path.join(path.resolve(), 'uploads/items-images', path.basename(menuItem.image));
+        if (fs.existsSync(oldImagePath)) {
+          fs.unlinkSync(oldImagePath);
+        }
+      }
+      menuItem.image = `/uploads/items-images/${req.file.filename}`;
+    }
+
+    await menuItem.save();
+    res.status(200).json({ success: true, message: 'Menu item updated successfully.', data: menuItem });
+  } catch (error) {
+    console.error("Error updating menu item:", error);
+    res.status(500).json({ success: false, message: 'Error updating menu item.' });
+  }
+};
+
+// Delete a menu item
+export const deleteMenuItem = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const vendorId = req.vendor._id;
+
+    const menuItem = await MenuItem.findById(id);
+
+    if (!menuItem) {
+      return res.status(404).json({ success: false, message: 'Menu item not found.' });
+    }
+
+    if (menuItem.vendor.toString() !== vendorId.toString()) {
+      return res.status(403).json({ success: false, message: 'You are not authorized to delete this item.' });
+    }
+    
+    // Delete the image file
+    if (menuItem.image) {
+      const imagePath = path.join(path.resolve(), 'uploads/items-images', path.basename(menuItem.image));
+      if (fs.existsSync(imagePath)) {
+        fs.unlinkSync(imagePath);
+      }
+    }
+
+    await menuItem.deleteOne(); // Use deleteOne on the document
+
+    res.status(200).json({ success: true, message: 'Menu item deleted successfully.' });
+  } catch (error) {
+    console.error("Error deleting menu item:", error);
+    res.status(500).json({ success: false, message: 'Error deleting menu item.' });
   }
 }; 
