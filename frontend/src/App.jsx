@@ -16,6 +16,7 @@ import Cart from './Pages/Cart';
 import Orders from './Pages/Orders';
 import FoodDetails from './pages/FoodDetails';
 import Register from './Pages/Register';
+
 import AdminLogin from './Pages/AdminLogin';
 import AdminRegister from './pages/AdminRegister';
 import AdminDashboard from './Pages/AdminDashboard';
@@ -31,6 +32,7 @@ import { VendorAuthProvider, useVendorAuth } from './context/VendorAuthContext';
 import { AdminAuthProvider, useAdminAuth } from './context/AdminAuthContext';
 import MenuEntry from './Pages/MenuEntry';
 import VendorProtectedRoute from './components/vendor/VendorProtectedRoute';
+import AdminProtectedRoute from './components/admin/AdminProtectedRoute';
 
 // Placeholder vendor pages
 const VendorOrders = () => <div className="bg-white rounded-lg shadow-md p-6">Vendor Orders Page (Coming Soon)</div>;

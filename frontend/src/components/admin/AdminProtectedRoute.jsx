@@ -1,4 +1,4 @@
-import { useAdminAuth } from '../context/AdminAuthContext';
+import { useAdminAuth } from '/src/context/AdminAuthContext.jsx';
 import { Navigate } from 'react-router-dom';
 
 const AdminProtectedRoute = ({ children }) => {

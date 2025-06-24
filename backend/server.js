@@ -122,7 +122,7 @@ if (!fs.existsSync(vendorPictureDir)) {
 app.use('/api/users', userRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api/admin', adminRoutes);
-app.use('/api/vendors', vendorRoutes);
+app.use('/api/vendor', vendorRoutes);
 app.get('/api/test', (req, res) => {
   console.log('Server test route hit');
   res.json({ success: true, message: 'Server test route works' });

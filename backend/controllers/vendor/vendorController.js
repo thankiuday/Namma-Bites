@@ -447,4 +447,58 @@ export const deleteMenuItem = async (req, res) => {
     console.error("Error deleting menu item:", error);
     res.status(500).json({ success: false, message: 'Error deleting menu item.' });
   }
+};
+
+// Get all vendors for public display
+export const getPublicVendors = async (req, res) => {
+  console.log('[Public] Attempting to fetch public vendors...');
+  try {
+    const vendors = await Vendor.find({ isApproved: true }) // Only show approved vendors
+      .select('name image cuisine address') // Select only public-facing fields
+      .sort({ name: 1 }); // Sort alphabetically by name
+
+    console.log('[Public] Successfully fetched vendors:', vendors.length);
+
+    res.status(200).json({
+      success: true,
+      data: vendors,
+    });
+  } catch (error) {
+    console.error('!!! SERVER CRASH in getPublicVendors:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error fetching vendors',
+      error: error.message,
+    });
+  }
+};
+
+// Approve a vendor (admin only)
+export const approveVendor = async (req, res) => {
+  try {
+    const vendor = await Vendor.findByIdAndUpdate(
+      req.params.id,
+      { isApproved: true },
+      { new: true }
+    );
+
+    if (!vendor) {
+      return res.status(404).json({
+        success: false,
+        message: 'Vendor not found',
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: 'Vendor approved successfully',
+      data: vendor,
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: 'Error approving vendor',
+      error: error.message,
+    });
+  }
 }; 

@@ -20,7 +20,9 @@ import {
   addMenuItem,
   getMenuItemsByVendor,
   updateMenuItem,
-  deleteMenuItem
+  deleteMenuItem,
+  getPublicVendors,
+  approveVendor
 } from '../controllers/vendor/vendorController.js';
 import { authenticateAdmin, authenticateVendor } from '../middleware/user/authMiddleware.js';
 
@@ -87,6 +89,13 @@ const uploadItemImage = multer({
     }
 });
 
+// === PUBLIC ROUTES ===
+// Note: These must be defined before any routes with parameters like /:id
+
+// Get all public vendors (public)
+router.get('/public', getPublicVendors);
+
+
 // Debug ping route
 router.get('/ping', (req, res) => {
   res.json({ success: true, message: 'pong' });
@@ -132,6 +141,9 @@ router.post('/create', authenticateAdmin, uploadVendorImage.single('image'), cre
 
 // Update vendor route (protected, admin only)
 router.put('/:id', authenticateAdmin, updateVendor);
+
+// Approve vendor route (protected, admin only)
+router.put('/:id/approve', authenticateAdmin, approveVendor);
 
 // Delete vendor route (protected, admin only)
 router.delete('/:id', authenticateAdmin, deleteVendor);

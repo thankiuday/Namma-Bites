@@ -28,7 +28,7 @@ const AdminVendors = () => {
     try {
       setLoading(true);
       setError('');
-      const response = await axios.get('/vendors');
+      const response = await axios.get('/vendor');
       if (response.data.success) {
         setVendors(response.data.data);
       } else {
@@ -61,7 +61,7 @@ const AdminVendors = () => {
     e.preventDefault();
     try {
       setLoading(true);
-      const response = await axios.put(`/vendors/${editingVendor._id}`, editForm);
+      const response = await axios.put(`/vendor/${editingVendor._id}`, editForm);
       if (response.data.success) {
         setVendors(vendors.map(vendor => 
           vendor._id === editingVendor._id ? { ...vendor, ...editForm } : vendor
@@ -82,7 +82,7 @@ const AdminVendors = () => {
     
     try {
       setLoading(true);
-      const response = await axios.delete(`/vendors/${vendorId}`);
+      const response = await axios.delete(`/vendor/${vendorId}`);
       if (response.data.success) {
         setVendors(vendors.filter(vendor => vendor._id !== vendorId));
       }
@@ -93,21 +93,27 @@ const AdminVendors = () => {
     }
   };
 
-  const handleApprove = async (vendorId, currentStatus) => {
+  const handleApprove = async (vendorId) => {
+    // Only proceed if the vendor is not already approved
+    const vendorToApprove = vendors.find(v => v._id === vendorId);
+    if (vendorToApprove && vendorToApprove.isApproved) {
+      // Optionally, you could add logic here to "unapprove" if needed
+      // For now, we do nothing if they are already approved.
+      return;
+    }
+
     try {
       setLoading(true);
-      const response = await axios.put(`/vendors/${vendorId}/approve`, {
-        isApproved: !currentStatus
-      });
+      const response = await axios.put(`/vendor/${vendorId}/approve`);
       if (response.data.success) {
-        setVendors(vendors.map(vendor => 
-          vendor._id === vendorId 
-            ? { ...vendor, isApproved: !currentStatus }
+        setVendors(vendors.map(vendor =>
+          vendor._id === vendorId
+            ? { ...vendor, isApproved: true }
             : vendor
         ));
       }
     } catch (err) {
-      setError(err.response?.data?.message || 'Failed to update vendor approval status');
+      setError(err.response?.data?.message || 'Failed to approve vendor');
     } finally {
       setLoading(false);
     }
@@ -188,12 +194,15 @@ const AdminVendors = () => {
                       >
                         <FaTrash />
                       </button>
-                      <button
-                        onClick={() => handleApprove(vendor._id, vendor.isApproved)}
-                        className={`${vendor.isApproved ? 'text-red-600 hover:text-red-900' : 'text-green-600 hover:text-green-900'}`}
-                      >
-                        {vendor.isApproved ? <FaTimes /> : <FaCheck />}
-                      </button>
+                      {!vendor.isApproved && (
+                        <button
+                          onClick={() => handleApprove(vendor._id)}
+                          className="text-green-600 hover:text-green-900"
+                          title="Approve Vendor"
+                        >
+                          <FaCheck />
+                        </button>
+                      )}
                     </td>
                   </tr>
                 ))}

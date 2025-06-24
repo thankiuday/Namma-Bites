@@ -26,7 +26,7 @@ const AdminDashboard = () => {
       setError('');
       const [usersResponse, vendorsResponse] = await Promise.all([
         api.get('/users'),
-        api.get('/vendors')
+        api.get('/vendor')
       ]);
       if (usersResponse.data.success && vendorsResponse.data.success) {
         const users = usersResponse.data.data;
