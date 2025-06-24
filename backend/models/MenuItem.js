@@ -19,6 +19,10 @@ const menuItemSchema = new mongoose.Schema({
     type: String, 
     required: true,
   },
+  isAvailable: {
+    type: Boolean,
+    default: true,
+  },
   vendor: {
     type: mongoose.Schema.Types.ObjectId,
     required: true,

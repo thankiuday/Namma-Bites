@@ -336,29 +336,27 @@ export const updateCurrentVendorStatus = async (req, res) => {
 // Add a new menu item
 export const addMenuItem = async (req, res) => {
   try {
-    const { name, price, category } = req.body;
-    const vendorId = req.vendor._id;
-    const vendorEmail = req.vendor.email;
+    const { name, price, category, isAvailable } = req.body;
+    const vendor = req.vendor;
 
-    if (!name || !price || !category || !req.file) {
-      return res.status(400).json({ success: false, message: 'All fields, including an image, are required.' });
+    if (!req.file) {
+      return res.status(400).json({ success: false, message: 'Item image is required' });
     }
 
-    const menuItem = new MenuItem({
+    const newItem = new MenuItem({
       name,
       price,
       category,
+      isAvailable,
       image: `/uploads/items-images/${req.file.filename}`,
-      vendor: vendorId,
-      vendorEmail: vendorEmail,
+      vendor: vendor._id,
+      vendorEmail: vendor.email
     });
 
-    await menuItem.save();
-
-    res.status(201).json({ success: true, message: 'Menu item added successfully', data: menuItem });
+    await newItem.save();
+    res.status(201).json({ success: true, message: 'Menu item added successfully', item: newItem });
   } catch (error) {
-    console.error("Error adding menu item:", error);
-    res.status(500).json({ success: false, message: 'Error adding menu item', error: error.message });
+    res.status(500).json({ success: false, message: 'Server error', error: error.message });
   }
 };
 
@@ -378,39 +376,43 @@ export const getMenuItemsByVendor = async (req, res) => {
 export const updateMenuItem = async (req, res) => {
   try {
     const { id } = req.params;
-    const { name, price, category } = req.body;
-    const vendorId = req.vendor._id;
+    const { name, price, category, isAvailable } = req.body;
+    const vendor = req.vendor;
 
-    const menuItem = await MenuItem.findById(id);
+    let item = await MenuItem.findById(id);
 
-    if (!menuItem) {
-      return res.status(404).json({ success: false, message: 'Menu item not found.' });
+    if (!item) {
+      return res.status(404).json({ success: false, message: 'Menu item not found' });
     }
 
-    if (menuItem.vendor.toString() !== vendorId.toString()) {
-      return res.status(403).json({ success: false, message: 'You are not authorized to update this item.' });
+    if (item.vendor.toString() !== vendor._id.toString()) {
+      return res.status(403).json({ success: false, message: 'Unauthorized to update this item' });
     }
 
-    menuItem.name = name || menuItem.name;
-    menuItem.price = price || menuItem.price;
-    menuItem.category = category || menuItem.category;
+    item.name = name || item.name;
+    item.price = price || item.price;
+    item.category = category || item.category;
+    if (isAvailable !== undefined) {
+      item.isAvailable = isAvailable;
+    }
 
     if (req.file) {
       // Delete old image if it exists
-      if (menuItem.image) {
-        const oldImagePath = path.join(path.resolve(), 'uploads/items-images', path.basename(menuItem.image));
+      if (item.image) {
+        const oldImageName = path.basename(item.image);
+        const oldImagePath = path.resolve('uploads', 'items-images', oldImageName);
         if (fs.existsSync(oldImagePath)) {
           fs.unlinkSync(oldImagePath);
         }
       }
-      menuItem.image = `/uploads/items-images/${req.file.filename}`;
+      item.image = `/uploads/items-images/${req.file.filename}`;
     }
 
-    await menuItem.save();
-    res.status(200).json({ success: true, message: 'Menu item updated successfully.', data: menuItem });
+    await item.save();
+
+    res.status(200).json({ success: true, message: 'Menu item updated successfully', item });
   } catch (error) {
-    console.error("Error updating menu item:", error);
-    res.status(500).json({ success: false, message: 'Error updating menu item.' });
+    res.status(500).json({ success: false, message: 'Server error', error: error.message });
   }
 };
 
