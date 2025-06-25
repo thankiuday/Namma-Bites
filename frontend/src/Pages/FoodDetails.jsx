@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { FaLeaf, FaDrumstickBite, FaMinus, FaPlus, FaShoppingCart, FaStar, FaClock, FaFire, FaCheckCircle, FaTimesCircle } from 'react-icons/fa';
 import apiClient from '../api/apiClient';
 import { useAuth } from '../context/AuthContext';
+import { useCart } from '../context/CartContext';
 
 const FoodDetails = () => {
   const { id } = useParams();
@@ -15,6 +16,8 @@ const FoodDetails = () => {
   const [submittingRating, setSubmittingRating] = useState(false);
   const [ratingError, setRatingError] = useState('');
   const { user } = useAuth();
+  const { addToCart } = useCart();
+  const [cartMsg, setCartMsg] = useState('');
 
   useEffect(() => {
     const fetchFood = async () => {
@@ -52,8 +55,9 @@ const FoodDetails = () => {
 
   const handleAddToCart = () => {
     if (!food) return;
-    // Add to cart logic here
-    console.log(`Added ${quantity} ${food.name} to cart`);
+    addToCart(food, quantity);
+    setCartMsg('Added to cart!');
+    setTimeout(() => setCartMsg(''), 1500);
   };
 
   const handleRate = async (value) => {
@@ -251,6 +255,7 @@ const FoodDetails = () => {
                   : 'Currently Unavailable'
                 }
               </button>
+              {cartMsg && <div className="mt-2 text-green-600 text-center">{cartMsg}</div>}
             </div>
           </div>
         </div>

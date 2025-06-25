@@ -536,51 +536,53 @@ const MenuEntry = () => {
 
             {!showDeleteConfirm ? (
               <form onSubmit={handleUpdateSubmit} className="space-y-4">
-                <div>
-                  <label htmlFor="editItemName" className="block text-sm font-medium text-gray-700">Item Name</label>
-                  <input type="text" id="editItemName" value={editItemName} onChange={(e) => setEditItemName(e.target.value)} className="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm text-black" required />
-                </div>
-                <div>
-                  <label htmlFor="editItemPrice" className="block text-sm font-medium text-gray-700">Item Price</label>
-                  <input type="number" id="editItemPrice" value={editItemPrice} onChange={(e) => setEditItemPrice(e.target.value)} className="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm text-black" required />
-                </div>
-                <div>
-                  <label htmlFor="editDescription" className="block text-sm font-medium text-gray-700">Description</label>
-                  <textarea id="editDescription" value={editDescription} onChange={(e) => setEditDescription(e.target.value)} className="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm text-black" />
-                </div>
-                <div>
-                  <label htmlFor="editIngredients" className="block text-sm font-medium text-gray-700">Ingredients (comma-separated)</label>
-                  <input type="text" id="editIngredients" value={editIngredients} onChange={(e) => setEditIngredients(e.target.value)} className="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm text-black" />
-                </div>
-                <div>
-                  <label htmlFor="editAllergens" className="block text-sm font-medium text-gray-700">Allergens (comma-separated)</label>
-                  <input type="text" id="editAllergens" value={editAllergens} onChange={(e) => setEditAllergens(e.target.value)} className="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm text-black" />
-                </div>
-                <div>
-                  <label htmlFor="editPreparationTime" className="block text-sm font-medium text-gray-700">Preparation Time</label>
-                  <input type="text" id="editPreparationTime" value={editPreparationTime} onChange={(e) => setEditPreparationTime(e.target.value)} className="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm text-black" />
-                </div>
-                <div>
-                  <label htmlFor="editCalories" className="block text-sm font-medium text-gray-700">Calories</label>
-                  <input type="text" id="editCalories" value={editCalories} onChange={(e) => setEditCalories(e.target.value)} className="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm text-black" />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">Category</label>
-                  <select value={editItemCategory} onChange={(e) => setEditItemCategory(e.target.value)} className="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm text-black">
-                    <option value="veg">Veg</option>
-                    <option value="non-veg">Non-Veg</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">Availability</label>
-                  <div className="mt-2 flex items-center">
-                    <input type="checkbox" id="editIsAvailable" checked={editIsAvailable} onChange={(e) => setEditIsAvailable(e.target.checked)} className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded" />
-                    <label htmlFor="editIsAvailable" className="ml-2 block text-sm text-gray-900">Available</label>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label htmlFor="editItemName" className="block text-sm font-medium text-gray-700">Item Name</label>
+                    <input type="text" id="editItemName" value={editItemName} onChange={(e) => setEditItemName(e.target.value)} className="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm text-black" required />
                   </div>
-                </div>
-                <div>
-                  <label htmlFor="editItemImage" className="block text-sm font-medium text-gray-700">New Image (optional)</label>
-                  <input type="file" accept="image/*" onChange={(e) => setEditItemImage(e.target.files[0])} className="mt-1 block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-600 hover:file:bg-indigo-100 text-black" />
+                  <div>
+                    <label htmlFor="editItemPrice" className="block text-sm font-medium text-gray-700">Item Price</label>
+                    <input type="number" id="editItemPrice" value={editItemPrice} onChange={(e) => setEditItemPrice(e.target.value)} className="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm text-black" required />
+                  </div>
+                  <div className="md:col-span-2">
+                    <label htmlFor="editDescription" className="block text-sm font-medium text-gray-700">Description</label>
+                    <textarea id="editDescription" value={editDescription} onChange={(e) => setEditDescription(e.target.value)} className="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm text-black" />
+                  </div>
+                  <div>
+                    <label htmlFor="editIngredients" className="block text-sm font-medium text-gray-700">Ingredients (comma-separated)</label>
+                    <input type="text" id="editIngredients" value={editIngredients} onChange={(e) => setEditIngredients(e.target.value)} className="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm text-black" />
+                  </div>
+                  <div>
+                    <label htmlFor="editAllergens" className="block text-sm font-medium text-gray-700">Allergens (comma-separated)</label>
+                    <input type="text" id="editAllergens" value={editAllergens} onChange={(e) => setEditAllergens(e.target.value)} className="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm text-black" />
+                  </div>
+                  <div>
+                    <label htmlFor="editPreparationTime" className="block text-sm font-medium text-gray-700">Preparation Time</label>
+                    <input type="text" id="editPreparationTime" value={editPreparationTime} onChange={(e) => setEditPreparationTime(e.target.value)} className="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm text-black" />
+                  </div>
+                  <div>
+                    <label htmlFor="editCalories" className="block text-sm font-medium text-gray-700">Calories</label>
+                    <input type="text" id="editCalories" value={editCalories} onChange={(e) => setEditCalories(e.target.value)} className="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm text-black" />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700">Category</label>
+                    <select value={editItemCategory} onChange={(e) => setEditItemCategory(e.target.value)} className="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm text-black">
+                      <option value="veg">Veg</option>
+                      <option value="non-veg">Non-Veg</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700">Availability</label>
+                    <div className="mt-2 flex items-center">
+                      <input type="checkbox" id="editIsAvailable" checked={editIsAvailable} onChange={(e) => setEditIsAvailable(e.target.checked)} className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded" />
+                      <label htmlFor="editIsAvailable" className="ml-2 block text-sm text-gray-900">Available</label>
+                    </div>
+                  </div>
+                  <div className="md:col-span-2">
+                    <label htmlFor="editItemImage" className="block text-sm font-medium text-gray-700">New Image (optional)</label>
+                    <input type="file" accept="image/*" onChange={(e) => setEditItemImage(e.target.files[0])} className="mt-1 block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-600 hover:file:bg-indigo-100 text-black" />
+                  </div>
                 </div>
                 <div className="flex justify-between items-center pt-4">
                   <button type="button" onClick={handleDeleteClick} className="px-4 py-2 border border-red-500 rounded-md shadow-sm text-sm font-medium text-red-500 bg-white hover:bg-red-50">
@@ -591,7 +593,9 @@ const MenuEntry = () => {
                       Cancel
                     </button>
                     <button type="submit" disabled={editLoading} className="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 disabled:bg-indigo-400">
-                      {editLoading ? 'Updating...' : 'Update Item'}
+                      {editLoading ? (
+                        <span className="flex items-center gap-2"><svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"></path></svg>Updating...</span>
+                      ) : 'Update Item'}
                     </button>
                   </div>
                 </div>
