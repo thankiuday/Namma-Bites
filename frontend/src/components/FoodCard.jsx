@@ -6,7 +6,7 @@ const FoodCard = ({ food }) => {
   const navigate = useNavigate();
 
   const handleClick = () => {
-    navigate(`/food/${food.id}`);
+    navigate(`/food/${food._id}`);
   };
 
   return (

@@ -25,9 +25,11 @@ import {
   approveVendor,
   getAllMenuItems,
   getAllVegMenuItems,
-  getAllNonVegMenuItems
+  getAllNonVegMenuItems,
+  getMenuItemById,
+  rateMenuItem
 } from '../controllers/vendor/vendorController.js';
-import { authenticateAdmin, authenticateVendor } from '../middleware/user/authMiddleware.js';
+import { authenticateAdmin, authenticateVendor, authenticateUser } from '../middleware/user/authMiddleware.js';
 
 const router = express.Router();
 console.log('vendorRoutes.js router instance created at', new Date().toISOString());
@@ -106,6 +108,12 @@ router.get('/menu-items/veg', getAllVegMenuItems);
 
 // Get all non-veg menu items (public)
 router.get('/menu-items/non-veg', getAllNonVegMenuItems);
+
+// Get menu item by ID (public)
+router.get('/menu-items/:id', getMenuItemById);
+
+// Add rating to menu item (authenticated user only)
+router.post('/menu-items/:id/rate', authenticateUser, rateMenuItem);
 
 // Debug ping route
 router.get('/ping', (req, res) => {

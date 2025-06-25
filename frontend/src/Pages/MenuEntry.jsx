@@ -2,12 +2,20 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import vendorApi from '../api/vendorApi';
 import VendorNavbar from '../components/vendor/VendorNavbar';
+import { useVendorAuth } from '../context/VendorAuthContext';
+import apiClient from '../api/apiClient';
 
 const MenuEntry = () => {
   const navigate = useNavigate();
+  const { vendor, token } = useVendorAuth();
   const [itemName, setItemName] = useState('');
   const [itemPrice, setItemPrice] = useState('');
   const [itemCategory, setItemCategory] = useState('veg');
+  const [description, setDescription] = useState('');
+  const [ingredients, setIngredients] = useState('');
+  const [allergens, setAllergens] = useState('');
+  const [preparationTime, setPreparationTime] = useState('');
+  const [calories, setCalories] = useState('');
   const [isAvailable, setIsAvailable] = useState(true);
   const [itemImage, setItemImage] = useState(null);
   const [error, setError] = useState('');
@@ -26,12 +34,31 @@ const MenuEntry = () => {
   const [editItemName, setEditItemName] = useState('');
   const [editItemPrice, setEditItemPrice] = useState('');
   const [editItemCategory, setEditItemCategory] = useState('');
+  const [editDescription, setEditDescription] = useState('');
+  const [editIngredients, setEditIngredients] = useState('');
+  const [editAllergens, setEditAllergens] = useState('');
+  const [editPreparationTime, setEditPreparationTime] = useState('');
+  const [editCalories, setEditCalories] = useState('');
   const [editIsAvailable, setEditIsAvailable] = useState(true);
   const [editItemImage, setEditItemImage] = useState(null);
   const [editError, setEditError] = useState('');
   const [editSuccess, setEditSuccess] = useState('');
   const [editLoading, setEditLoading] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+
+  const [formData, setFormData] = useState({
+    id: null,
+    name: '',
+    price: '',
+    category: 'veg',
+    description: '',
+    ingredients: '',
+    allergens: '',
+    preparationTime: '',
+    calories: '',
+    image: null,
+    isAvailable: true,
+  });
 
   const fetchMenuItems = async () => {
     try {
@@ -55,6 +82,11 @@ const MenuEntry = () => {
     setItemName('');
     setItemPrice('');
     setItemCategory('veg');
+    setDescription('');
+    setIngredients('');
+    setAllergens('');
+    setPreparationTime('');
+    setCalories('');
     setIsAvailable(true);
     setItemImage(null);
     setError('');
@@ -77,6 +109,11 @@ const MenuEntry = () => {
     formData.append('name', itemName);
     formData.append('price', itemPrice);
     formData.append('category', itemCategory);
+    formData.append('description', description);
+    formData.append('ingredients', ingredients);
+    formData.append('allergens', allergens);
+    formData.append('preparationTime', preparationTime);
+    formData.append('calories', calories);
     formData.append('isAvailable', isAvailable);
     formData.append('image', itemImage);
 
@@ -106,6 +143,11 @@ const MenuEntry = () => {
     setEditItemName(item.name);
     setEditItemPrice(item.price);
     setEditItemCategory(item.category);
+    setEditDescription(item.description || '');
+    setEditIngredients(item.ingredients ? item.ingredients.join(', ') : '');
+    setEditAllergens(item.allergens ? item.allergens.join(', ') : '');
+    setEditPreparationTime(item.preparationTime || '');
+    setEditCalories(item.calories || '');
     setEditIsAvailable(item.isAvailable);
     setEditItemImage(null); // Reset file input
     setEditError('');
@@ -123,6 +165,11 @@ const MenuEntry = () => {
     formData.append('name', editItemName);
     formData.append('price', editItemPrice);
     formData.append('category', editItemCategory);
+    formData.append('description', editDescription);
+    formData.append('ingredients', editIngredients);
+    formData.append('allergens', editAllergens);
+    formData.append('preparationTime', editPreparationTime);
+    formData.append('calories', editCalories);
     formData.append('isAvailable', editIsAvailable);
     if (editItemImage) {
       formData.append('image', editItemImage);
@@ -191,6 +238,37 @@ const MenuEntry = () => {
     return items;
   }, [menuItems, filterCategory, filterAvailability, sortBy]);
 
+  const handleChange = (e) => {
+    const { name, value, type, checked, files } = e.target;
+    if (type === 'file') {
+      setFormData({ ...formData, [name]: files[0] });
+    } else if (type === 'checkbox') {
+      setFormData({ ...formData, [name]: checked });
+    } else {
+      setFormData({ ...formData, [name]: value });
+    }
+  };
+
+  const handleReset = () => {
+    setFormData({
+      id: null,
+      name: '',
+      price: '',
+      category: 'veg',
+      description: '',
+      ingredients: '',
+      allergens: '',
+      preparationTime: '',
+      calories: '',
+      image: null,
+      isAvailable: true,
+    });
+    setPreview(null);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col">
       <VendorNavbar />
@@ -225,6 +303,56 @@ const MenuEntry = () => {
                   onChange={(e) => setItemPrice(e.target.value)}
                   className="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm text-black"
                   required
+                />
+              </div>
+
+              <div>
+                <label htmlFor="description" className="block text-sm font-medium text-gray-700">Description</label>
+                <textarea
+                  id="description"
+                  value={description}
+                  onChange={(e) => setDescription(e.target.value)}
+                  className="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm text-black"
+                />
+              </div>
+              <div>
+                <label htmlFor="ingredients" className="block text-sm font-medium text-gray-700">Ingredients (comma-separated)</label>
+                <input
+                  type="text"
+                  id="ingredients"
+                  value={ingredients}
+                  onChange={(e) => setIngredients(e.target.value)}
+                  className="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm text-black"
+                />
+              </div>
+              <div>
+                <label htmlFor="allergens" className="block text-sm font-medium text-gray-700">Allergens (comma-separated)</label>
+                <input
+                  type="text"
+                  id="allergens"
+                  value={allergens}
+                  onChange={(e) => setAllergens(e.target.value)}
+                  className="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm text-black"
+                />
+              </div>
+              <div>
+                <label htmlFor="preparationTime" className="block text-sm font-medium text-gray-700">Preparation Time</label>
+                <input
+                  type="text"
+                  id="preparationTime"
+                  value={preparationTime}
+                  onChange={(e) => setPreparationTime(e.target.value)}
+                  className="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm text-black"
+                />
+              </div>
+              <div>
+                <label htmlFor="calories" className="block text-sm font-medium text-gray-700">Calories</label>
+                <input
+                  type="text"
+                  id="calories"
+                  value={calories}
+                  onChange={(e) => setCalories(e.target.value)}
+                  className="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm text-black"
                 />
               </div>
 
@@ -415,6 +543,26 @@ const MenuEntry = () => {
                 <div>
                   <label htmlFor="editItemPrice" className="block text-sm font-medium text-gray-700">Item Price</label>
                   <input type="number" id="editItemPrice" value={editItemPrice} onChange={(e) => setEditItemPrice(e.target.value)} className="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm text-black" required />
+                </div>
+                <div>
+                  <label htmlFor="editDescription" className="block text-sm font-medium text-gray-700">Description</label>
+                  <textarea id="editDescription" value={editDescription} onChange={(e) => setEditDescription(e.target.value)} className="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm text-black" />
+                </div>
+                <div>
+                  <label htmlFor="editIngredients" className="block text-sm font-medium text-gray-700">Ingredients (comma-separated)</label>
+                  <input type="text" id="editIngredients" value={editIngredients} onChange={(e) => setEditIngredients(e.target.value)} className="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm text-black" />
+                </div>
+                <div>
+                  <label htmlFor="editAllergens" className="block text-sm font-medium text-gray-700">Allergens (comma-separated)</label>
+                  <input type="text" id="editAllergens" value={editAllergens} onChange={(e) => setEditAllergens(e.target.value)} className="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm text-black" />
+                </div>
+                <div>
+                  <label htmlFor="editPreparationTime" className="block text-sm font-medium text-gray-700">Preparation Time</label>
+                  <input type="text" id="editPreparationTime" value={editPreparationTime} onChange={(e) => setEditPreparationTime(e.target.value)} className="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm text-black" />
+                </div>
+                <div>
+                  <label htmlFor="editCalories" className="block text-sm font-medium text-gray-700">Calories</label>
+                  <input type="text" id="editCalories" value={editCalories} onChange={(e) => setEditCalories(e.target.value)} className="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm text-black" />
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700">Category</label>

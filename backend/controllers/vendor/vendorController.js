@@ -336,7 +336,7 @@ export const updateCurrentVendorStatus = async (req, res) => {
 // Add a new menu item
 export const addMenuItem = async (req, res) => {
   try {
-    const { name, price, category, isAvailable } = req.body;
+    const { name, price, category, isAvailable, description, ingredients, allergens, preparationTime, calories, rating } = req.body;
     const vendor = req.vendor;
 
     if (!req.file) {
@@ -350,7 +350,13 @@ export const addMenuItem = async (req, res) => {
       isAvailable,
       image: `/uploads/items-images/${req.file.filename}`,
       vendor: vendor._id,
-      vendorEmail: vendor.email
+      vendorEmail: vendor.email,
+      description: description || '',
+      ingredients: ingredients ? (Array.isArray(ingredients) ? ingredients : ingredients.split(',').map(i => i.trim())) : [],
+      allergens: allergens ? (Array.isArray(allergens) ? allergens : allergens.split(',').map(a => a.trim())) : [],
+      preparationTime: preparationTime || '',
+      calories: calories || '',
+      rating: rating || 0
     });
 
     await newItem.save();
@@ -376,7 +382,7 @@ export const getMenuItemsByVendor = async (req, res) => {
 export const updateMenuItem = async (req, res) => {
   try {
     const { id } = req.params;
-    const { name, price, category, isAvailable } = req.body;
+    const { name, price, category, isAvailable, description, ingredients, allergens, preparationTime, calories, rating } = req.body;
     const vendor = req.vendor;
 
     let item = await MenuItem.findById(id);
@@ -395,6 +401,12 @@ export const updateMenuItem = async (req, res) => {
     if (isAvailable !== undefined) {
       item.isAvailable = isAvailable;
     }
+    if (description !== undefined) item.description = description;
+    if (ingredients !== undefined) item.ingredients = Array.isArray(ingredients) ? ingredients : ingredients.split(',').map(i => i.trim());
+    if (allergens !== undefined) item.allergens = Array.isArray(allergens) ? allergens : allergens.split(',').map(a => a.trim());
+    if (preparationTime !== undefined) item.preparationTime = preparationTime;
+    if (calories !== undefined) item.calories = calories;
+    if (rating !== undefined) item.rating = rating;
 
     if (req.file) {
       // Delete old image if it exists
@@ -536,5 +548,52 @@ export const approveVendor = async (req, res) => {
       message: 'Error approving vendor',
       error: error.message,
     });
+  }
+};
+
+// Get menu item by ID (public)
+export const getMenuItemById = async (req, res) => {
+  try {
+    const menuItem = await MenuItem.findById(req.params.id).populate('vendor', 'name email');
+    if (!menuItem) {
+      return res.status(404).json({ success: false, message: 'Menu item not found' });
+    }
+    res.status(200).json({ success: true, data: menuItem });
+  } catch (error) {
+    res.status(500).json({ success: false, message: 'Error fetching menu item', error: error.message });
+  }
+};
+
+// Add a rating to a menu item
+export const rateMenuItem = async (req, res) => {
+  try {
+    const { value } = req.body;
+    if (!value || value < 1 || value > 5) {
+      return res.status(400).json({ success: false, message: 'Invalid rating value' });
+    }
+    if (!req.user || !req.user._id) {
+      return res.status(401).json({ success: false, message: 'Authentication required' });
+    }
+    const item = await MenuItem.findById(req.params.id);
+    if (!item) {
+      return res.status(404).json({ success: false, message: 'Menu item not found' });
+    }
+    // Check if user already rated
+    const existing = item.ratings.find(r => r.user.toString() === req.user._id.toString());
+    if (existing) {
+      // Update rating
+      item.ratingsSum = item.ratingsSum - existing.value + Number(value);
+      existing.value = Number(value);
+    } else {
+      // Add new rating
+      item.ratings.push({ user: req.user._id, value: Number(value) });
+      item.ratingsSum += Number(value);
+      item.ratingsCount += 1;
+    }
+    item.rating = item.ratingsSum / (item.ratingsCount || 1);
+    await item.save();
+    res.json({ success: true, average: item.rating });
+  } catch (error) {
+    res.status(500).json({ success: false, message: 'Error rating menu item', error: error.message });
   }
 }; 
