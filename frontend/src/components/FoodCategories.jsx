@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import apiClient from '../api/apiClient'; // Using generic apiClient for public endpoints
+import { useNavigate } from 'react-router-dom';
 
 const BrowseVendors = () => {
   const [vendors, setVendors] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchVendors = async () => {
@@ -43,6 +45,7 @@ const BrowseVendors = () => {
           <div
             key={vendor._id}
             className="flex flex-col items-center group cursor-pointer"
+            onClick={() => navigate(`/vendor-details/${vendor._id}`)}
           >
             <div className="w-32 h-32 rounded-full overflow-hidden border-4 border-orange-600 group-hover:border-orange-500 transition-all duration-300">
               <img

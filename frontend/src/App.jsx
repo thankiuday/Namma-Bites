@@ -33,6 +33,7 @@ import { AdminAuthProvider, useAdminAuth } from './context/AdminAuthContext';
 import MenuEntry from './Pages/MenuEntry';
 import VendorProtectedRoute from './components/vendor/VendorProtectedRoute';
 import AdminProtectedRoute from './components/admin/AdminProtectedRoute';
+import VendorDetails from './Pages/VendorDetails';
 
 // Placeholder vendor pages
 const VendorOrders = () => <div className="bg-white rounded-lg shadow-md p-6">Vendor Orders Page (Coming Soon)</div>;
@@ -110,6 +111,7 @@ const AppContent = () => {
           {/* Vendor and Admin Routes */}
           <Route path="/vendor/*" element={<VendorRoutes />} />
           <Route path="/admin/*" element={<AdminRoutes />} />
+          <Route path="/vendor-details/:id" element={<VendorDetails />} />
         </Routes>
       </main>
       {!isAdminRoute && !isVendorRoute && <Footer />}
