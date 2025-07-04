@@ -55,6 +55,10 @@ const FoodDetails = () => {
 
   const handleAddToCart = () => {
     if (!food) return;
+    if (!user) {
+      navigate('/login');
+      return;
+    }
     addToCart(food, quantity);
     setCartMsg('Added to cart!');
     setTimeout(() => setCartMsg(''), 1500);
