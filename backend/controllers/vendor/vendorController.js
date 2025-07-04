@@ -3,6 +3,7 @@ import MenuItem from '../../models/MenuItem.js';
 import jwt from 'jsonwebtoken';
 import fs from 'fs';
 import path from 'path';
+import SubscriptionPlan from '../../models/SubscriptionPlan.js';
 
 // Create a new vendor
 export const createVendor = async (req, res) => {
@@ -595,5 +596,91 @@ export const rateMenuItem = async (req, res) => {
     res.json({ success: true, average: item.rating });
   } catch (error) {
     res.status(500).json({ success: false, message: 'Error rating menu item', error: error.message });
+  }
+};
+
+// Create a new subscription plan
+export const createSubscriptionPlan = async (req, res) => {
+  try {
+    const vendorId = req.vendor?._id || req.body.vendor;
+    if (!vendorId) {
+      return res.status(400).json({ success: false, message: 'Vendor is required' });
+    }
+    const { duration, price, weekMeals, planType } = req.body;
+    if (![7, 15, 30].includes(Number(duration))) {
+      return res.status(400).json({ success: false, message: 'Invalid duration' });
+    }
+    if (!price || price <= 0) {
+      return res.status(400).json({ success: false, message: 'Price is required and must be positive' });
+    }
+    if (!planType || !['veg', 'non-veg'].includes(planType)) {
+      return res.status(400).json({ success: false, message: 'planType must be "veg" or "non-veg"' });
+    }
+    // Validate weekMeals structure
+    const days = ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'];
+    for (const day of days) {
+      const meals = weekMeals?.[day];
+      if (!meals || !meals.breakfast || !meals.lunch || !meals.dinner || !meals.snacks) {
+        return res.status(400).json({ success: false, message: `All meals required for ${day}` });
+      }
+    }
+    const plan = new SubscriptionPlan({
+      vendor: vendorId,
+      duration,
+      price,
+      weekMeals,
+      planType
+    });
+    await plan.save();
+    res.status(201).json({ success: true, message: 'Subscription plan created', data: plan });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// Get all subscription plans for the current vendor
+export const getMySubscriptionPlans = async (req, res) => {
+  try {
+    const vendorId = req.vendor._id;
+    const plans = await SubscriptionPlan.find({ vendor: vendorId }).populate({
+      path: 'weekMeals.Monday.breakfast weekMeals.Monday.lunch weekMeals.Monday.dinner weekMeals.Monday.snacks weekMeals.Tuesday.breakfast weekMeals.Tuesday.lunch weekMeals.Tuesday.dinner weekMeals.Tuesday.snacks weekMeals.Wednesday.breakfast weekMeals.Wednesday.lunch weekMeals.Wednesday.dinner weekMeals.Wednesday.snacks weekMeals.Thursday.breakfast weekMeals.Thursday.lunch weekMeals.Thursday.dinner weekMeals.Thursday.snacks weekMeals.Friday.breakfast weekMeals.Friday.lunch weekMeals.Friday.dinner weekMeals.Friday.snacks weekMeals.Saturday.breakfast weekMeals.Saturday.lunch weekMeals.Saturday.dinner weekMeals.Saturday.snacks weekMeals.Sunday.breakfast weekMeals.Sunday.lunch weekMeals.Sunday.dinner weekMeals.Sunday.snacks',
+      model: 'MenuItem'
+    });
+    res.json({ success: true, data: plans });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// Get a single subscription plan by ID (vendor only)
+export const getMySubscriptionPlanById = async (req, res) => {
+  try {
+    const vendorId = req.vendor._id;
+    const plan = await SubscriptionPlan.findOne({ _id: req.params.id, vendor: vendorId }).populate({
+      path: 'weekMeals.Monday.breakfast weekMeals.Monday.lunch weekMeals.Monday.dinner weekMeals.Monday.snacks weekMeals.Tuesday.breakfast weekMeals.Tuesday.lunch weekMeals.Tuesday.dinner weekMeals.Tuesday.snacks weekMeals.Wednesday.breakfast weekMeals.Wednesday.lunch weekMeals.Wednesday.dinner weekMeals.Wednesday.snacks weekMeals.Thursday.breakfast weekMeals.Thursday.lunch weekMeals.Thursday.dinner weekMeals.Thursday.snacks weekMeals.Friday.breakfast weekMeals.Friday.lunch weekMeals.Friday.dinner weekMeals.Friday.snacks weekMeals.Saturday.breakfast weekMeals.Saturday.lunch weekMeals.Saturday.dinner weekMeals.Saturday.snacks weekMeals.Sunday.breakfast weekMeals.Sunday.lunch weekMeals.Sunday.dinner weekMeals.Sunday.snacks',
+      model: 'MenuItem'
+    });
+    if (!plan) return res.status(404).json({ success: false, message: 'Plan not found' });
+    res.json({ success: true, data: plan });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// Update a subscription plan (vendor only)
+export const updateMySubscriptionPlan = async (req, res) => {
+  try {
+    const vendorId = req.vendor._id;
+    const { duration, price, weekMeals, planType } = req.body;
+    const plan = await SubscriptionPlan.findOne({ _id: req.params.id, vendor: vendorId });
+    if (!plan) return res.status(404).json({ success: false, message: 'Plan not found' });
+    if (duration) plan.duration = duration;
+    if (price) plan.price = price;
+    if (weekMeals) plan.weekMeals = weekMeals;
+    if (planType && ['veg', 'non-veg'].includes(planType)) plan.planType = planType;
+    await plan.save();
+    res.json({ success: true, message: 'Plan updated', data: plan });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
   }
 }; 

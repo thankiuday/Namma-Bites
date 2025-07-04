@@ -64,6 +64,11 @@ const VendorRoutes = () => (
           <MenuEntry />
         </VendorProtectedRoute>
       } />
+      <Route path="/subscription" element={
+        <VendorProtectedRoute>
+          <Subscription />
+        </VendorProtectedRoute>
+      } />
     </Routes>
   </VendorAuthProvider>
 );

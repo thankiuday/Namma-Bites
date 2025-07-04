@@ -27,7 +27,11 @@ import {
   getAllVegMenuItems,
   getAllNonVegMenuItems,
   getMenuItemById,
-  rateMenuItem
+  rateMenuItem,
+  createSubscriptionPlan,
+  getMySubscriptionPlans,
+  getMySubscriptionPlanById,
+  updateMySubscriptionPlan
 } from '../controllers/vendor/vendorController.js';
 import { authenticateAdmin, authenticateVendor, authenticateUser } from '../middleware/user/authMiddleware.js';
 
@@ -146,6 +150,17 @@ router.put('/menu-items/:id', authenticateVendor, uploadItemImage.single('image'
 // Delete a menu item (protected, vendor only)
 router.delete('/menu-items/:id', authenticateVendor, deleteMenuItem);
 
+// Add a new subscription plan (protected, vendor only)
+router.post('/subscription-plans', authenticateVendor, createSubscriptionPlan);
+
+// Get all subscription plans for current vendor
+router.get('/subscription-plans', authenticateVendor, getMySubscriptionPlans);
+
+// Get a single subscription plan by ID
+router.get('/subscription-plans/:id', authenticateVendor, getMySubscriptionPlanById);
+
+// Update a subscription plan by ID
+router.put('/subscription-plans/:id', authenticateVendor, updateMySubscriptionPlan);
 
 // === ADMIN-ONLY ROUTES ===
 
