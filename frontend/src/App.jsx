@@ -10,6 +10,7 @@ import ChangePassword from './Pages/ChangePassword';
 import Navbar from './components/user/Navbar';
 import Footer from './components/Footer';
 import { AuthProvider } from './context/AuthContext';
+import { CartProvider } from './context/CartContext';
 import ProtectedRoute from './components/user/ProtectedRoute';
 import Cart from './Pages/Cart';
 import Orders from './Pages/Orders';
@@ -147,7 +148,9 @@ function App() {
           path="/*"
           element={
             <AuthProvider>
-              <AppContent />
+              <CartProvider>
+                <AppContent />
+              </CartProvider>
             </AuthProvider>
           }
         />

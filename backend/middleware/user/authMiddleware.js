@@ -90,16 +90,22 @@ export const authenticateVendor = async (req, res, next) => {
 
 export const authenticateUser = async (req, res, next) => {
   console.log('authenticateUser called for', req.method, req.originalUrl);
+  console.log('Cookies received:', req.cookies);
+  console.log('Headers:', req.headers);
+  console.log('Cookie header:', req.headers.cookie);
   try {
     let token = req.cookies.accessToken;
+    console.log('Token from cookies:', token);
     if (!token) {
       const authHeader = req.header('Authorization');
+      console.log('Authorization header:', authHeader);
       if (authHeader && authHeader.startsWith('Bearer ')) {
         token = authHeader.substring(7);
+        console.log('Token from Authorization header:', token);
       }
     }
     if (!token) {
-      console.log('No token found');
+      console.log('No token found in cookies or headers');
       return res.status(401).json({ success: false, message: 'No authentication token, access denied' });
     }
     try {

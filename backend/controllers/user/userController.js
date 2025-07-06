@@ -221,4 +221,105 @@ export const getSubscriptionPlanById = async (req, res) => {
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
+};
+
+// --- CART MANAGEMENT ---
+
+// Get current user's cart
+export const getCart = async (req, res) => {
+  try {
+    const user = await User.findById(req.user._id).populate('cart.item');
+    if (!user) return res.status(404).json({ success: false, message: 'User not found' });
+    res.json({ success: true, cart: user.cart });
+  } catch (error) {
+    res.status(500).json({ success: false, message: 'Error fetching cart', error: error.message });
+  }
+};
+
+// Add or update an item in the cart
+export const addOrUpdateCartItem = async (req, res) => {
+  try {
+    const { itemId, quantity } = req.body;
+    if (!itemId || !quantity || quantity < 1) {
+      return res.status(400).json({ success: false, message: 'Invalid item or quantity' });
+    }
+    const user = await User.findById(req.user._id);
+    if (!user) return res.status(404).json({ success: false, message: 'User not found' });
+    const existing = user.cart.find(i => i.item.toString() === itemId);
+    if (existing) {
+      existing.quantity += quantity;
+    } else {
+      user.cart.push({ item: itemId, quantity });
+    }
+    await user.save();
+    
+    // Populate cart items before sending response
+    const populatedUser = await User.findById(req.user._id).populate('cart.item');
+    res.json({ success: true, cart: populatedUser.cart });
+  } catch (error) {
+    res.status(500).json({ success: false, message: 'Error updating cart', error: error.message });
+  }
+};
+
+// Update quantity of a cart item
+export const updateCartItemQuantity = async (req, res) => {
+  try {
+    const { itemId } = req.params;
+    const { quantity } = req.body;
+    if (!quantity || quantity < 1) {
+      return res.status(400).json({ success: false, message: 'Invalid quantity' });
+    }
+    const user = await User.findById(req.user._id);
+    if (!user) return res.status(404).json({ success: false, message: 'User not found' });
+    const item = user.cart.find(i => i.item.toString() === itemId);
+    if (!item) return res.status(404).json({ success: false, message: 'Cart item not found' });
+    item.quantity = quantity;
+    await user.save();
+    
+    // Populate cart items before sending response
+    const populatedUser = await User.findById(req.user._id).populate('cart.item');
+    res.json({ success: true, cart: populatedUser.cart });
+  } catch (error) {
+    res.status(500).json({ success: false, message: 'Error updating cart item', error: error.message });
+  }
+};
+
+// Remove an item from the cart
+export const removeCartItem = async (req, res) => {
+  try {
+    const { itemId } = req.params;
+    const user = await User.findById(req.user._id);
+    if (!user) return res.status(404).json({ success: false, message: 'User not found' });
+    user.cart = user.cart.filter(i => i.item.toString() !== itemId);
+    await user.save();
+    
+    // Populate cart items before sending response
+    const populatedUser = await User.findById(req.user._id).populate('cart.item');
+    res.json({ success: true, cart: populatedUser.cart });
+  } catch (error) {
+    res.status(500).json({ success: false, message: 'Error removing cart item', error: error.message });
+  }
+};
+
+// Clear the cart
+export const clearCart = async (req, res) => {
+  console.log('clearCart called for user:', req.user._id);
+  try {
+    const user = await User.findById(req.user._id);
+    if (!user) {
+      console.log('User not found:', req.user._id);
+      return res.status(404).json({ success: false, message: 'User not found' });
+    }
+    console.log('Clearing cart for user:', user._id);
+    user.cart = [];
+    await user.save();
+    
+    // Populate cart items before sending response
+    const populatedUser = await User.findById(req.user._id).populate('cart.item');
+    console.log('Cart cleared successfully for user:', user._id);
+    res.json({ success: true, cart: populatedUser.cart });
+  } catch (error) {
+    console.error('Error clearing cart:', error);
+    res.status(500).json({ success: false, message: 'Error clearing cart', error: error.message });
+  }
 }; 

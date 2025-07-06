@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { FaSignOutAlt, FaHome, FaUsers, FaStore, FaUserPlus } from 'react-icons/fa';
 import { useAuth } from '../../context/AuthContext';
+import { useCart } from '../../context/CartContext';
 import logo from '../../../public/logo.png';
 
 const defaultStudentLinks = [
@@ -26,7 +27,11 @@ const iconMap = {
 const Navbar = ({ links = defaultStudentLinks, isAdmin = false }) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const { user, logout } = useAuth();
+  const { cart } = useCart();
   const navigate = useNavigate();
+
+  // Calculate total items in cart
+  const cartItemCount = cart.reduce((total, item) => total + item.quantity, 0);
 
   const toggleMenu = () => {
     setIsMenuOpen(!isMenuOpen);
@@ -70,10 +75,16 @@ const Navbar = ({ links = defaultStudentLinks, isAdmin = false }) => {
               <Link
                 key={link.to}
                 to={link.to}
-                className="text-black hover:text-orange-600 px-3 py-2 rounded-md text-sm font-medium flex items-center gap-2"
+                className="text-black hover:text-orange-600 px-3 py-2 rounded-md text-sm font-medium flex items-center gap-2 relative"
               >
                 {iconMap[link.icon]?.('text-lg')}
                 {link.label}
+                {/* Cart counter */}
+                {link.to === '/cart' && cartItemCount > 0 && (
+                  <span className="absolute -top-2 -right-2 bg-orange-600 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center font-bold">
+                    {cartItemCount}
+                  </span>
+                )}
               </Link>
             ))}
             {isAuthenticated && (
@@ -125,10 +136,16 @@ const Navbar = ({ links = defaultStudentLinks, isAdmin = false }) => {
             <Link
               key={link.to}
               to={link.to}
-              className="block px-3 py-2 rounded-md text-base font-medium text-black hover:text-orange-600 hover:bg-gray-800 flex items-center gap-2"
+              className="block px-3 py-2 rounded-md text-base font-medium text-black hover:text-orange-600 hover:bg-gray-800 flex items-center gap-2 relative"
             >
               {iconMap[link.icon]?.('text-base h-5 w-5')}
               {link.label}
+              {/* Cart counter for mobile */}
+              {link.to === '/cart' && cartItemCount > 0 && (
+                <span className="ml-auto bg-orange-600 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center font-bold">
+                  {cartItemCount}
+                </span>
+              )}
             </Link>
           ))}
           {isAuthenticated && (

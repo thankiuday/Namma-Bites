@@ -69,13 +69,13 @@ router.post('/signup', validateSignup, async (req, res) => {
 
     // Set cookies
     res.cookie('accessToken', accessToken, {
-      httpOnly: true,
+      httpOnly: false, // Temporarily set to false for debugging
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',
       maxAge: 15 * 60 * 1000 // 15 minutes
     });
     res.cookie('refreshToken', refreshToken, {
-      httpOnly: true,
+      httpOnly: false, // Allow JavaScript access for token refresh
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',
       maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
@@ -143,13 +143,13 @@ router.post('/login', [
 
     // Set cookies
     res.cookie('accessToken', accessToken, {
-      httpOnly: true,
+      httpOnly: false, // Temporarily set to false for debugging
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',
       maxAge: 15 * 60 * 1000 // 15 minutes
     });
     res.cookie('refreshToken', refreshToken, {
-      httpOnly: true,
+      httpOnly: false, // Allow JavaScript access for token refresh
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',
       maxAge: (rememberMe ? 30 : 7) * 24 * 60 * 60 * 1000 // 7 or 30 days
@@ -181,22 +181,44 @@ router.post('/refresh-token', async (req, res) => {
       return res.status(401).json({ error: 'Invalid refresh token' });
     }
 
-    // Generate new access token
-    const accessToken = jwt.sign(
+    // Generate new tokens
+    const newAccessToken = jwt.sign(
       { userId: user._id },
       process.env.JWT_SECRET,
       { expiresIn: '15m' }
     );
 
-    // Set new access token as cookie
-    res.cookie('accessToken', accessToken, {
-      httpOnly: true,
+    const newRefreshToken = jwt.sign(
+      { userId: user._id },
+      process.env.JWT_REFRESH_SECRET,
+      { expiresIn: '7d' }
+    );
+
+    // Store new refresh token in Redis
+    await storeRefreshToken(user._id.toString(), newRefreshToken, 7 * 24 * 60 * 60);
+
+    // Set new tokens as cookies
+    res.cookie('accessToken', newAccessToken, {
+      httpOnly: false, // Temporarily set to false for debugging
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',
-      maxAge: 15 * 60 * 1000 // 15 minutes
+      maxAge: 15 * 60 * 1000, // 15 minutes
+      path: '/',
+      domain: process.env.NODE_ENV === 'production' ? undefined : 'localhost'
+    });
+    res.cookie('refreshToken', newRefreshToken, {
+      httpOnly: false, // Allow JavaScript access for token refresh
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+      path: '/',
+      domain: process.env.NODE_ENV === 'production' ? undefined : 'localhost'
     });
 
-    res.json({ accessToken });
+    res.json({ 
+      accessToken: newAccessToken,
+      refreshToken: newRefreshToken 
+    });
   } catch (error) {
     res.status(401).json({ error: 'Invalid refresh token' });
   }
