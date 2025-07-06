@@ -1,90 +1,31 @@
-import { BrowserRouter as Router, Routes, Route, useLocation, Navigate } from "react-router-dom";
+import { BrowserRouter as Router, Routes, Route, useLocation } from "react-router-dom";
 import './App.css'
-import Home from './Pages/Home';
-import AboutUs from './Pages/AboutUs';
-import ContactUs from './Pages/ContactUs';
-import Signup from './pages/Signup';
-import Login from './Pages/Login';
-import UserProfile from './Pages/UserProfile';
-import ChangePassword from './Pages/ChangePassword';
 import Navbar from './components/user/Navbar';
 import Footer from './components/Footer';
 import { AuthProvider } from './context/AuthContext';
 import { CartProvider } from './context/CartContext';
-import ProtectedRoute from './components/user/ProtectedRoute';
-import Cart from './Pages/Cart';
-import Orders from './Pages/Orders';
-import FoodDetails from './pages/FoodDetails';
-import Register from './Pages/Register';
-
-import AdminLogin from './Pages/AdminLogin';
-import AdminRegister from './pages/AdminRegister';
-import AdminDashboard from './Pages/AdminDashboard';
-import AdminUsers from './Pages/AdminUsers';
-import AdminVendors from './Pages/AdminVendors';
-import CreateVendor from './Pages/admin/CreateVendor';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-import VendorLogin from './Pages/VendorLogin';
-import VendorDashboard from './Pages/VendorDashboard';
-import VendorProfile from './Pages/VendorProfile';
-import { VendorAuthProvider, useVendorAuth } from './context/VendorAuthContext';
-import { AdminAuthProvider, useAdminAuth } from './context/AdminAuthContext';
-import MenuEntry from './Pages/MenuEntry';
-import VendorProtectedRoute from './components/vendor/VendorProtectedRoute';
-import AdminProtectedRoute from './components/admin/AdminProtectedRoute';
+import { VendorAuthProvider } from './context/VendorAuthContext';
+import { AdminAuthProvider } from './context/AdminAuthContext';
 import VendorDetails from './Pages/VendorDetails';
-import Subscription from './Pages/Subscription';
-import UserSubscription from './Pages/UserSubscription';
 
-// Placeholder vendor pages
-const VendorOrders = () => <div className="bg-white rounded-lg shadow-md p-6">Vendor Orders Page (Coming Soon)</div>;
+// Animated Route Components
+import AnimatedRoutes from './components/AnimatedRoutes';
+import AnimatedAdminRoutes from './components/AnimatedAdminRoutes';
+import AnimatedVendorRoutes from './components/AnimatedVendorRoutes';
 
 // Group Vendor routes to be wrapped by its provider
 const VendorRoutes = () => (
   <VendorAuthProvider>
-    <Routes>
-      <Route path="/login" element={<VendorLogin />} />
-      <Route path="/dashboard" element={
-        <VendorProtectedRoute>
-          <VendorDashboard />
-        </VendorProtectedRoute>
-      } />
-      <Route path="/profile" element={
-        <VendorProtectedRoute>
-          <VendorProfile />
-        </VendorProtectedRoute>
-      } />
-      <Route path="/menu" element={
-        <VendorProtectedRoute>
-          <MenuEntry />
-        </VendorProtectedRoute>
-      } />
-      <Route path="/menu-entry" element={
-        <VendorProtectedRoute>
-          <MenuEntry />
-        </VendorProtectedRoute>
-      } />
-      <Route path="/subscription" element={
-        <VendorProtectedRoute>
-          <Subscription />
-        </VendorProtectedRoute>
-      } />
-    </Routes>
+    <AnimatedVendorRoutes />
   </VendorAuthProvider>
 );
 
 // Group Admin routes to be wrapped by its provider
 const AdminRoutes = () => (
   <AdminAuthProvider>
-    <Routes>
-      <Route path="/login" element={<AdminLogin />} />
-      <Route path="/register" element={<AdminRegister />} />
-      <Route path="/dashboard" element={<AdminProtectedRoute><AdminDashboard /></AdminProtectedRoute>} />
-      <Route path="/users" element={<AdminProtectedRoute><AdminUsers /></AdminProtectedRoute>} />
-      <Route path="/vendor" element={<AdminProtectedRoute><AdminVendors /></AdminProtectedRoute>} />
-      <Route path="/create-vendor" element={<AdminProtectedRoute><CreateVendor /></AdminProtectedRoute>} />
-    </Routes>
+    <AnimatedAdminRoutes />
   </AdminAuthProvider>
 );
 
@@ -97,23 +38,8 @@ const AppContent = () => {
     <div className="min-h-screen flex flex-col bg-gray-50">
       {!isAdminRoute && !isVendorRoute && <Navbar />}
       <main className="flex-grow container mx-auto px-4 py-8">
+        <AnimatedRoutes />
         <Routes>
-          {/* Public and User Routes */}
-          <Route path="/" element={<Home />} />
-          <Route path="/about" element={<AboutUs />} />
-          <Route path="/contact" element={<ContactUs />} />
-          <Route path="/signup" element={<Signup />} />
-          <Route path="/login" element={<Login />} />
-          <Route path="/register" element={<Register />} />
-          <Route path="/food/:id" element={<FoodDetails />} />
-
-          {/* User Protected Routes */}
-          <Route path="/user" element={<ProtectedRoute><UserProfile /></ProtectedRoute>} />
-          <Route path="/change-password" element={<ProtectedRoute><ChangePassword /></ProtectedRoute>} />
-          <Route path="/subscription" element={<ProtectedRoute><UserSubscription /></ProtectedRoute>} />
-          <Route path="/cart" element={<ProtectedRoute><Cart /></ProtectedRoute>} />
-          <Route path="/orders" element={<ProtectedRoute><Orders /></ProtectedRoute>} />
-
           {/* Vendor and Admin Routes */}
           <Route path="/vendor/*" element={<VendorRoutes />} />
           <Route path="/admin/*" element={<AdminRoutes />} />

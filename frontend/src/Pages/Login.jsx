@@ -53,7 +53,7 @@ const Login = () => {
       }
 
       // Use the auth context to handle login
-      login(data.user);
+      login(data.user, formData.rememberMe);
 
       // Redirect to home page or dashboard
       navigate('/');

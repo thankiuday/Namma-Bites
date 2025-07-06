@@ -1,6 +1,7 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { FaCheckCircle, FaTimesCircle, FaTag, FaLeaf, FaDrumstickBite } from 'react-icons/fa';
+import AnimatedCard from './AnimatedCard';
 
 const FoodCard = ({ food }) => {
   const navigate = useNavigate();
@@ -10,8 +11,8 @@ const FoodCard = ({ food }) => {
   };
 
   return (
-    <div 
-      className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-all duration-300 transform hover:scale-105 cursor-pointer"
+    <AnimatedCard 
+      className="overflow-hidden cursor-pointer"
       onClick={handleClick}
     >
       {/* Food Image */}
@@ -67,7 +68,7 @@ const FoodCard = ({ food }) => {
           {food.category}
         </div> */}
       </div>
-    </div>
+    </AnimatedCard>
   );
 };
 

@@ -110,11 +110,13 @@ export const AuthProvider = ({ children }) => {
     return false;
   };
 
-  const login = (userData) => {
+  const login = (userData, rememberMe) => {
     setUser(userData);
-    // Store refresh token in localStorage for token refresh
-    if (userData.refreshToken) {
+    // Store refresh token in localStorage for token refresh only if rememberMe is true
+    if (userData.refreshToken && rememberMe) {
       localStorage.setItem('refreshToken', userData.refreshToken);
+    } else {
+      localStorage.removeItem('refreshToken');
     }
   };
 
