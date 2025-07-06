@@ -11,7 +11,6 @@ import Navbar from './components/user/Navbar';
 import Footer from './components/Footer';
 import { AuthProvider } from './context/AuthContext';
 import ProtectedRoute from './components/user/ProtectedRoute';
-import Subscription from './Pages/Subscription';
 import Cart from './Pages/Cart';
 import Orders from './Pages/Orders';
 import FoodDetails from './pages/FoodDetails';
@@ -34,10 +33,11 @@ import MenuEntry from './Pages/MenuEntry';
 import VendorProtectedRoute from './components/vendor/VendorProtectedRoute';
 import AdminProtectedRoute from './components/admin/AdminProtectedRoute';
 import VendorDetails from './Pages/VendorDetails';
+import Subscription from './Pages/Subscription';
+import UserSubscription from './Pages/UserSubscription';
 
 // Placeholder vendor pages
 const VendorOrders = () => <div className="bg-white rounded-lg shadow-md p-6">Vendor Orders Page (Coming Soon)</div>;
-const VendorSubscription = () => <div className="bg-white rounded-lg shadow-md p-6">Vendor Subscription Page (Coming Soon)</div>;
 
 // Group Vendor routes to be wrapped by its provider
 const VendorRoutes = () => (
@@ -109,7 +109,7 @@ const AppContent = () => {
           {/* User Protected Routes */}
           <Route path="/user" element={<ProtectedRoute><UserProfile /></ProtectedRoute>} />
           <Route path="/change-password" element={<ProtectedRoute><ChangePassword /></ProtectedRoute>} />
-          <Route path="/subscription" element={<ProtectedRoute><Subscription /></ProtectedRoute>} />
+          <Route path="/subscription" element={<ProtectedRoute><UserSubscription /></ProtectedRoute>} />
           <Route path="/cart" element={<ProtectedRoute><Cart /></ProtectedRoute>} />
           <Route path="/orders" element={<ProtectedRoute><Orders /></ProtectedRoute>} />
 

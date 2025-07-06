@@ -1,4 +1,5 @@
 import User from '../../models/User.js';
+import SubscriptionPlan from '../../models/SubscriptionPlan.js';
 
 // Get all users
 export const getAllUsers = async (req, res) => {
@@ -154,5 +155,70 @@ export const getUserProfile = async (req, res) => {
   } catch (error) {
     console.error('Error in getUserProfile:', error);
     res.status(500).json({ success: false, message: 'Error fetching user profile', error: error.message });
+  }
+};
+
+// Get all subscription plans (for users to browse)
+export const getAllSubscriptionPlans = async (req, res) => {
+  try {
+    const plans = await SubscriptionPlan.find()
+      .populate('vendor', 'name image location phone email address cuisine')
+      .populate({
+        path: 'weekMeals.Monday.breakfast weekMeals.Monday.lunch weekMeals.Monday.dinner weekMeals.Monday.snacks weekMeals.Tuesday.breakfast weekMeals.Tuesday.lunch weekMeals.Tuesday.dinner weekMeals.Tuesday.snacks weekMeals.Wednesday.breakfast weekMeals.Wednesday.lunch weekMeals.Wednesday.dinner weekMeals.Wednesday.snacks weekMeals.Thursday.breakfast weekMeals.Thursday.lunch weekMeals.Thursday.dinner weekMeals.Thursday.snacks weekMeals.Friday.breakfast weekMeals.Friday.lunch weekMeals.Friday.dinner weekMeals.Friday.snacks weekMeals.Saturday.breakfast weekMeals.Saturday.lunch weekMeals.Saturday.dinner weekMeals.Saturday.snacks weekMeals.Sunday.breakfast weekMeals.Sunday.lunch weekMeals.Sunday.dinner weekMeals.Sunday.snacks',
+        model: 'MenuItem'
+      })
+      .sort({ createdAt: -1 });
+    
+    console.log('Subscription plans with vendors:', plans.map(plan => ({
+      planId: plan._id,
+      vendor: plan.vendor ? {
+        id: plan.vendor._id,
+        name: plan.vendor.name,
+        image: plan.vendor.image,
+        location: plan.vendor.location
+      } : null
+    })));
+    
+    res.json({ success: true, data: plans });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// Get subscription plans by vendor
+export const getSubscriptionPlansByVendor = async (req, res) => {
+  try {
+    const { vendorId } = req.params;
+    const plans = await SubscriptionPlan.find({ vendor: vendorId })
+      .populate('vendor', 'name image location')
+      .populate({
+        path: 'weekMeals.Monday.breakfast weekMeals.Monday.lunch weekMeals.Monday.dinner weekMeals.Monday.snacks weekMeals.Tuesday.breakfast weekMeals.Tuesday.lunch weekMeals.Tuesday.dinner weekMeals.Tuesday.snacks weekMeals.Wednesday.breakfast weekMeals.Wednesday.lunch weekMeals.Wednesday.dinner weekMeals.Wednesday.snacks weekMeals.Thursday.breakfast weekMeals.Thursday.lunch weekMeals.Thursday.dinner weekMeals.Thursday.snacks weekMeals.Friday.breakfast weekMeals.Friday.lunch weekMeals.Friday.dinner weekMeals.Friday.snacks weekMeals.Saturday.breakfast weekMeals.Saturday.lunch weekMeals.Saturday.dinner weekMeals.Saturday.snacks weekMeals.Sunday.breakfast weekMeals.Sunday.lunch weekMeals.Sunday.dinner weekMeals.Sunday.snacks',
+        model: 'MenuItem'
+      })
+      .sort({ createdAt: -1 });
+    
+    res.json({ success: true, data: plans });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// Get a single subscription plan by ID (for users to view details)
+export const getSubscriptionPlanById = async (req, res) => {
+  try {
+    const plan = await SubscriptionPlan.findById(req.params.id)
+      .populate('vendor', 'name image location phone email')
+      .populate({
+        path: 'weekMeals.Monday.breakfast weekMeals.Monday.lunch weekMeals.Monday.dinner weekMeals.Monday.snacks weekMeals.Tuesday.breakfast weekMeals.Tuesday.lunch weekMeals.Tuesday.dinner weekMeals.Tuesday.snacks weekMeals.Wednesday.breakfast weekMeals.Wednesday.lunch weekMeals.Wednesday.dinner weekMeals.Wednesday.snacks weekMeals.Thursday.breakfast weekMeals.Thursday.lunch weekMeals.Thursday.dinner weekMeals.Thursday.snacks weekMeals.Friday.breakfast weekMeals.Friday.lunch weekMeals.Friday.dinner weekMeals.Friday.snacks weekMeals.Saturday.breakfast weekMeals.Saturday.lunch weekMeals.Saturday.dinner weekMeals.Saturday.snacks weekMeals.Sunday.breakfast weekMeals.Sunday.lunch weekMeals.Sunday.dinner weekMeals.Sunday.snacks',
+        model: 'MenuItem'
+      });
+    
+    if (!plan) {
+      return res.status(404).json({ success: false, message: 'Subscription plan not found' });
+    }
+    
+    res.json({ success: true, data: plan });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
   }
 }; 

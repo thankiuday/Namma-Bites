@@ -228,9 +228,9 @@ const UserProfile = () => {
             <p className="text-gray-600">No active subscription</p>
             <button
               onClick={() => navigate('/subscription')}
-              className="mt-4 px-4 py-2 bg-orange-600 text-white rounded-md hover:bg-orange-700 transition-colors"
+              className="mt-4 px-4 py-2 bg-orange-600 text-white rounded-md hover:bg-orange-700 transition-colors duration-200"
             >
-              View Plans
+              Browse Plans
             </button>
           </div>
           <div className="p-4 border border-gray-200 rounded-lg">

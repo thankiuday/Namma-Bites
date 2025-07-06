@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { createSubscriptionPlan, getSubscriptionPlans, updateSubscriptionPlan, deleteSubscriptionPlan } from '../api/vendorApi';
 import apiClient from '../api/apiClient';
-import { FaEdit } from 'react-icons/fa';
+import { FaEdit, FaArrowLeft } from 'react-icons/fa';
 
 const days = ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'];
 const mealTypes = ['breakfast', 'lunch', 'dinner', 'snacks'];
@@ -12,6 +13,7 @@ const planTypes = [
 ];
 
 const Subscription = () => {
+  const navigate = useNavigate();
   const [menuItems, setMenuItems] = useState([]);
   const [plans, setPlans] = useState([]);
   const [form, setForm] = useState({
@@ -201,6 +203,17 @@ const Subscription = () => {
 
   return (
     <div className="max-w-5xl mx-auto p-6 bg-gradient-to-br from-orange-50 to-white min-h-screen rounded-2xl shadow-2xl border border-orange-100">
+      {/* Back Button */}
+      <div className="mb-6">
+        <button
+          onClick={() => navigate('/vendor/dashboard')}
+          className="flex items-center space-x-2 px-4 py-2 bg-orange-100 text-orange-700 rounded-lg hover:bg-orange-200 transition-all duration-200 font-semibold border border-orange-200"
+        >
+          <FaArrowLeft className="text-sm" />
+          <span>Back to Dashboard</span>
+        </button>
+      </div>
+      
       <h2 className="text-3xl font-extrabold mb-6 text-orange-700 drop-shadow">Create Subscription Plan</h2>
       <form onSubmit={handleSubmit} className="bg-white rounded-2xl shadow-lg p-6 mb-10 border border-orange-100">
         <div className="flex flex-col md:flex-row gap-6 mb-6">

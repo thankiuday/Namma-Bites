@@ -5,7 +5,10 @@ import {
   updateUser, 
   getMe, 
   updateProfile,
-  logoutUser
+  logoutUser,
+  getAllSubscriptionPlans,
+  getSubscriptionPlansByVendor,
+  getSubscriptionPlanById
 } from '../controllers/user/userController.js';
 import { authenticateAdmin, authenticateUser } from '../middleware/user/authMiddleware.js';
 
@@ -20,6 +23,11 @@ router.put('/:id', authenticateAdmin, updateUser);
 router.post('/logout', authenticateUser, logoutUser);
 router.get('/me', authenticateUser, getMe);
 router.put('/profile', authenticateUser, updateProfile);
+
+// Subscription plan routes (for users to browse)
+router.get('/subscription-plans', getAllSubscriptionPlans);
+router.get('/subscription-plans/vendor/:vendorId', getSubscriptionPlansByVendor);
+router.get('/subscription-plans/:id', getSubscriptionPlanById);
 
 // Catch-all for debugging
 router.use((req, res, next) => {
