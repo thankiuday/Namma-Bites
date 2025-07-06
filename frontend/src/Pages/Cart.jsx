@@ -78,53 +78,62 @@ const Cart = () => {
 
   if (loading) {
     return (
-      <div className="max-w-4xl mx-auto">
-        <h1 className="text-3xl font-bold text-gray-800 mb-8">Your Cart</h1>
-        <div className="text-center py-12">
-          <p className="text-gray-600 text-lg">Loading cart...</p>
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+        <h1 className="text-2xl sm:text-3xl font-bold text-gray-800 mb-6 sm:mb-8">Your Cart</h1>
+        <div className="text-center py-8 sm:py-12">
+          <p className="text-gray-600 text-base sm:text-lg">Loading cart...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="max-w-4xl mx-auto">
-      <h1 className="text-3xl font-bold text-gray-800 mb-8">Your Cart</h1>
+    <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+      <h1 className="text-2xl sm:text-3xl font-bold text-gray-800 mb-6 sm:mb-8">Your Cart</h1>
       {cart.length === 0 ? (
-        <div className="text-center py-12">
-          <p className="text-gray-600 text-lg">Your cart is empty</p>
+        <div className="text-center py-8 sm:py-12">
+          <p className="text-gray-600 text-base sm:text-lg">Your cart is empty</p>
         </div>
       ) : (
-        <>
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-8">
           {/* Cart Items */}
-          <div className="bg-white rounded-lg shadow-lg p-6 mb-8">
+          <div className="lg:col-span-2 bg-white rounded-lg shadow-lg p-4 sm:p-6">
             {cart.map((item) => (
-              <div key={item._id} className="flex items-center gap-4 py-4 border-b last:border-b-0">
+              <div key={item._id} className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4 py-4 border-b last:border-b-0">
                 <img
                   src={item.image ? (item.image.startsWith('http') ? item.image : `http://localhost:5000${item.image}`) : '/default-food.png'}
                   alt={item.name}
-                  className="w-20 h-20 object-cover rounded-md"
+                  className="w-16 h-16 sm:w-20 sm:h-20 object-cover rounded-md self-start sm:self-center"
                 />
-                <div className="flex-grow">
-                  <h3 className="text-lg font-semibold text-gray-800">{item.name}</h3>
-                  <p className="text-orange-600 font-semibold">₹{item.price}</p>
+                <div className="flex-grow min-w-0">
+                  <h3 className="text-base sm:text-lg font-semibold text-gray-800 truncate">{item.name}</h3>
+                  <p className="text-orange-600 font-semibold text-sm sm:text-base">₹{item.price}</p>
                 </div>
-                <div className="flex items-center gap-2">
-                  <button className="p-2 text-gray-600 hover:text-orange-600" onClick={() => updateQuantity(item._id, Math.max(1, item.quantity - 1))}>
-                    <FaMinus />
+                <div className="flex items-center gap-2 self-end sm:self-center">
+                  <button 
+                    className="p-1 sm:p-2 text-gray-600 hover:text-orange-600 rounded-full hover:bg-gray-100" 
+                    onClick={() => updateQuantity(item._id, Math.max(1, item.quantity - 1))}
+                  >
+                    <FaMinus className="w-3 h-3 sm:w-4 sm:h-4" />
                   </button>
-                  <span className="w-8 text-center text-black">{item.quantity}</span>
-                  <button className="p-2 text-gray-600 hover:text-orange-600" onClick={() => updateQuantity(item._id, item.quantity + 1)}>
-                    <FaPlus />
+                  <span className="w-6 sm:w-8 text-center text-black text-sm sm:text-base font-medium">{item.quantity}</span>
+                  <button 
+                    className="p-1 sm:p-2 text-gray-600 hover:text-orange-600 rounded-full hover:bg-gray-100" 
+                    onClick={() => updateQuantity(item._id, item.quantity + 1)}
+                  >
+                    <FaPlus className="w-3 h-3 sm:w-4 sm:h-4" />
                   </button>
                 </div>
-                <button className="p-2 text-red-600 hover:text-red-700" onClick={() => removeFromCart(item._id)}>
-                  <FaTrash />
+                <button 
+                  className="p-1 sm:p-2 text-red-600 hover:text-red-700 rounded-full hover:bg-red-50 self-end sm:self-center" 
+                  onClick={() => removeFromCart(item._id)}
+                >
+                  <FaTrash className="w-3 h-3 sm:w-4 sm:h-4" />
                 </button>
               </div>
             ))}
             <button 
-              className="mt-4 text-sm text-red-500 hover:underline disabled:opacity-50 disabled:cursor-not-allowed" 
+              className="mt-4 text-xs sm:text-sm text-red-500 hover:underline disabled:opacity-50 disabled:cursor-not-allowed" 
               onClick={handleClearCart}
               disabled={clearing}
             >
@@ -133,27 +142,27 @@ const Cart = () => {
           </div>
 
           {/* Order Summary */}
-          <div className="bg-white rounded-lg shadow-lg p-6">
-            <h2 className="text-xl font-bold text-gray-800 mb-4">Order Summary</h2>
-            <div className="space-y-2 mb-4">
-              <div className="flex justify-between text-gray-600">
+          <div className="bg-white rounded-lg shadow-lg p-4 sm:p-6 h-fit">
+            <h2 className="text-lg sm:text-xl font-bold text-gray-800 mb-4">Order Summary</h2>
+            <div className="space-y-3 sm:space-y-2 mb-4">
+              <div className="flex justify-between text-sm sm:text-base text-gray-600">
                 <span>Subtotal</span>
                 <span>₹{subtotal}</span>
               </div>
-              <div className="flex justify-between text-gray-600">
+              <div className="flex justify-between text-sm sm:text-base text-gray-600">
                 <span>Delivery Fee</span>
                 <span>₹{deliveryFee}</span>
               </div>
-              <div className="flex justify-between text-lg font-bold text-gray-800 pt-2 border-t">
+              <div className="flex justify-between text-base sm:text-lg font-bold text-gray-800 pt-2 border-t">
                 <span>Total</span>
                 <span>₹{total}</span>
               </div>
             </div>
-            <button className="w-full bg-orange-600 text-white py-3 px-4 rounded-md hover:bg-orange-700 transition-colors">
+            <button className="w-full bg-orange-600 text-white py-2 sm:py-3 px-4 rounded-md hover:bg-orange-700 transition-colors text-sm sm:text-base font-medium">
               Proceed to Checkout
             </button>
           </div>
-        </>
+        </div>
       )}
     </div>
   );

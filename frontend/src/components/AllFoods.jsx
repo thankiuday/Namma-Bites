@@ -44,16 +44,16 @@ const AllFoods = ({ searchTerm = '' }) => {
   });
 
   return (
-    <div className="w-full max-w-6xl px-4 mt-16">
-      <h2 className="text-2xl font-semibold text-gray-800 mb-8 text-center">Our Menu</h2>
+    <div className="w-full max-w-6xl px-4 sm:px-6 lg:px-8 mt-8 sm:mt-16">
+      <h2 className="text-xl sm:text-2xl font-semibold text-gray-800 mb-6 sm:mb-8 text-center">Our Menu</h2>
       {loading ? (
-        <div className="text-center py-8">Loading foods...</div>
+        <div className="text-center py-6 sm:py-8 text-base sm:text-lg">Loading foods...</div>
       ) : error ? (
-        <div className="text-center text-red-500 py-8">{error}</div>
+        <div className="text-center text-red-500 py-6 sm:py-8 text-base sm:text-lg">{error}</div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
           {filteredFoods.length === 0 ? (
-            <div className="col-span-full text-center text-lg text-gray-500 py-8 font-semibold">
+            <div className="col-span-full text-center text-base sm:text-lg text-gray-500 py-6 sm:py-8 font-semibold">
               No foods found matching your search.
             </div>
           ) : (

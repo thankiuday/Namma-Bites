@@ -62,7 +62,7 @@ const Navbar = ({ links = defaultStudentLinks, isAdmin = false }) => {
           <div className="flex items-center">
             <Link to={isAdmin ? "/admin/dashboard" : "/"} className="flex-shrink-0 flex items-center">
               <img
-                className="h-15 w-auto"
+                className="h-10 sm:h-12 w-auto"
                 src={logo}
                 alt="Namma Bites"
               />
@@ -70,15 +70,15 @@ const Navbar = ({ links = defaultStudentLinks, isAdmin = false }) => {
           </div>
 
           {/* Desktop Navigation */}
-          <div className="hidden md:flex items-center space-x-4 text-lg">
+          <div className="hidden md:flex items-center space-x-2 lg:space-x-4">
             {links.map((link) => (
               <Link
                 key={link.to}
                 to={link.to}
-                className="text-black hover:text-orange-600 px-3 py-2 rounded-md text-sm font-medium flex items-center gap-2 relative"
+                className="text-black hover:text-orange-600 px-2 lg:px-3 py-2 rounded-md text-sm font-medium flex items-center gap-1 lg:gap-2 relative"
               >
-                {iconMap[link.icon]?.('text-lg')}
-                {link.label}
+                {iconMap[link.icon]?.('text-base lg:text-lg')}
+                <span className="hidden lg:inline">{link.label}</span>
                 {/* Cart counter */}
                 {link.to === '/cart' && cartItemCount > 0 && (
                   <span className="absolute -top-2 -right-2 bg-orange-600 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center font-bold">
@@ -90,9 +90,10 @@ const Navbar = ({ links = defaultStudentLinks, isAdmin = false }) => {
             {isAuthenticated && (
               <button
                 onClick={handleLogout}
-                className="text-black hover:text-orange-600 px-3 py-2 rounded-md text-sm font-medium flex items-center gap-2"
+                className="text-black hover:text-orange-600 px-2 lg:px-3 py-2 rounded-md text-sm font-medium flex items-center gap-1 lg:gap-2"
               >
-                <FaSignOutAlt className="text-lg" /> Logout
+                <FaSignOutAlt className="text-base lg:text-lg" /> 
+                <span className="hidden lg:inline">Logout</span>
               </button>
             )}
           </div>
@@ -131,14 +132,15 @@ const Navbar = ({ links = defaultStudentLinks, isAdmin = false }) => {
 
       {/* Mobile menu */}
       <div className={`${isMenuOpen ? 'block' : 'hidden'} md:hidden`}>
-        <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3">
+        <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3 bg-white border-t border-gray-200">
           {links.map((link) => (
             <Link
               key={link.to}
               to={link.to}
-              className="block px-3 py-2 rounded-md text-base font-medium text-black hover:text-orange-600 hover:bg-gray-800 flex items-center gap-2 relative"
+              className="block px-3 py-3 rounded-md text-base font-medium text-black hover:text-orange-600 hover:bg-orange-50 flex items-center gap-3 relative transition-colors"
+              onClick={() => setIsMenuOpen(false)}
             >
-              {iconMap[link.icon]?.('text-base h-5 w-5')}
+              {iconMap[link.icon]?.('text-lg h-5 w-5')}
               {link.label}
               {/* Cart counter for mobile */}
               {link.to === '/cart' && cartItemCount > 0 && (
@@ -150,10 +152,13 @@ const Navbar = ({ links = defaultStudentLinks, isAdmin = false }) => {
           ))}
           {isAuthenticated && (
             <button
-              onClick={handleLogout}
-              className="w-full text-left block px-3 py-2 rounded-md text-base font-medium text-black hover:text-orange-600 hover:bg-gray-800 flex items-center gap-2"
+              onClick={() => {
+                handleLogout();
+                setIsMenuOpen(false);
+              }}
+              className="w-full text-left block px-3 py-3 rounded-md text-base font-medium text-black hover:text-orange-600 hover:bg-orange-50 flex items-center gap-3 transition-colors"
             >
-              <FaSignOutAlt className="text-base h-5 w-5" /> Logout
+              <FaSignOutAlt className="text-lg h-5 w-5" /> Logout
             </button>
           )}
         </div>

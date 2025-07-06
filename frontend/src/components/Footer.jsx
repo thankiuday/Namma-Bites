@@ -3,9 +3,9 @@ import { FaHome, FaInfoCircle, FaEnvelope, FaPhone, FaMapMarkerAlt, FaFacebook, 
 
 const Footer = () => {
   return (
-    <footer className="bg-white shadow-lg mt-auto border-t border-gray-700">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
+    <footer className="bg-white shadow-lg mt-auto border-t border-gray-200">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 sm:gap-8">
           {/* Company Info */}
           <div className="space-y-4">
             <h3 className="text-lg font-semibold text-black">Namma Bites</h3>
@@ -70,8 +70,8 @@ const Footer = () => {
         </div>
 
         {/* Bottom Bar */}
-        <div className="mt-8 pt-8 border-t border-gray-200">
-          <p className="text-center text-orange-600 text-sm">
+        <div className="mt-6 sm:mt-8 pt-6 sm:pt-8 border-t border-gray-200">
+          <p className="text-center text-orange-600 text-xs sm:text-sm">
             © {new Date().getFullYear()} Namma Bites. All rights reserved.
           </p>
         </div>

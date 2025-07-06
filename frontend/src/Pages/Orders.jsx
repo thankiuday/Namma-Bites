@@ -66,25 +66,25 @@ const Orders = () => {
   };
 
   return (
-    <div className="max-w-4xl mx-auto">
-      <h1 className="text-3xl font-bold text-gray-800 mb-8">Your Orders</h1>
+    <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+      <h1 className="text-2xl sm:text-3xl font-bold text-gray-800 mb-6 sm:mb-8">Your Orders</h1>
       
       {orders.length === 0 ? (
-        <div className="text-center py-12">
-          <p className="text-gray-600 text-lg">No orders found</p>
+        <div className="text-center py-8 sm:py-12">
+          <p className="text-gray-600 text-base sm:text-lg">No orders found</p>
         </div>
       ) : (
-        <div className="space-y-6">
+        <div className="space-y-4 sm:space-y-6">
           {orders.map((order) => (
-            <div key={order.id} className="bg-white rounded-lg shadow-lg p-6">
-              <div className="flex justify-between items-start mb-4">
+            <div key={order.id} className="bg-white rounded-lg shadow-lg p-4 sm:p-6">
+              <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-3 sm:gap-0 mb-4">
                 <div>
-                  <h3 className="text-lg font-semibold text-gray-800">Order #{order.id}</h3>
-                  <p className="text-gray-600">Placed on {order.date}</p>
+                  <h3 className="text-base sm:text-lg font-semibold text-gray-800">Order #{order.id}</h3>
+                  <p className="text-gray-600 text-sm sm:text-base">Placed on {order.date}</p>
                 </div>
                 <div className="flex items-center gap-2">
                   {getStatusIcon(order.status)}
-                  <span className={`font-medium ${
+                  <span className={`font-medium text-sm sm:text-base ${
                     order.status === 'delivered' ? 'text-green-500' :
                     order.status === 'processing' ? 'text-orange-500' :
                     'text-red-500'
@@ -94,25 +94,25 @@ const Orders = () => {
                 </div>
               </div>
 
-              <div className="border-t border-b py-4 my-4">
+              <div className="border-t border-b py-3 sm:py-4 my-3 sm:my-4">
                 {order.items.map((item, index) => (
                   <div key={index} className="flex justify-between items-center mb-2 last:mb-0">
-                    <span className="text-gray-600">
+                    <span className="text-gray-600 text-sm sm:text-base">
                       {item.quantity}x {item.name}
                     </span>
-                    <span className="text-gray-800">₹{item.price * item.quantity}</span>
+                    <span className="text-gray-800 text-sm sm:text-base">₹{item.price * item.quantity}</span>
                   </div>
                 ))}
               </div>
 
-              <div className="flex justify-between items-center">
+              <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 sm:gap-0">
                 <div>
-                  <p className="text-sm text-gray-600">Delivery Address:</p>
-                  <p className="text-gray-800">{order.deliveryAddress}</p>
+                  <p className="text-xs sm:text-sm text-gray-600">Delivery Address:</p>
+                  <p className="text-gray-800 text-sm sm:text-base">{order.deliveryAddress}</p>
                 </div>
-                <div className="text-right">
-                  <p className="text-sm text-gray-600">Total Amount:</p>
-                  <p className="text-lg font-bold text-orange-600">₹{order.total}</p>
+                <div className="text-left sm:text-right">
+                  <p className="text-xs sm:text-sm text-gray-600">Total Amount:</p>
+                  <p className="text-base sm:text-lg font-bold text-orange-600">₹{order.total}</p>
                 </div>
               </div>
             </div>

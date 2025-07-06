@@ -81,76 +81,100 @@ const FoodDetails = () => {
   };
 
   if (loading) {
-    return <div className="max-w-6xl mx-auto px-4 py-8 text-center">Loading food details...</div>;
+    return (
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8 text-center">
+        <div className="bg-white rounded-xl shadow-lg p-8">
+          <p className="text-gray-600 text-base sm:text-lg">Loading food details...</p>
+        </div>
+      </div>
+    );
   }
   if (error) {
-    return <div className="max-w-6xl mx-auto px-4 py-8 text-center text-red-500">{error}</div>;
+    return (
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8 text-center">
+        <div className="bg-white rounded-xl shadow-lg p-8">
+          <p className="text-red-500 text-base sm:text-lg">{error}</p>
+        </div>
+      </div>
+    );
   }
   if (!food) {
-    return <div className="max-w-6xl mx-auto px-4 py-8 text-center text-gray-500">Food not found.</div>;
+    return (
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8 text-center">
+        <div className="bg-white rounded-xl shadow-lg p-8">
+          <p className="text-gray-500 text-base sm:text-lg">Food not found.</p>
+        </div>
+      </div>
+    );
   }
 
   return (
-    <div className="max-w-6xl mx-auto px-4 py-8">
+    <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
       <div className="bg-white rounded-xl shadow-lg overflow-hidden">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 p-6">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-8 p-4 sm:p-6">
           {/* Food Image */}
           <div className="relative">
             <img
               src={food.image ? (food.image.startsWith('http') ? food.image : `http://localhost:5000${food.image}`) : '/default-food.png'}
               alt={food.name}
-              className="w-full h-[400px] object-cover rounded-lg"
+              className="w-full h-64 sm:h-80 lg:h-[400px] object-cover rounded-lg"
             />
-            <div className="absolute top-4 right-4 flex flex-col gap-2">
+            <div className="absolute top-2 sm:top-4 right-2 sm:right-4 flex flex-col gap-1 sm:gap-2">
               {/* Availability Badge */}
-              <div className={`px-3 py-1 rounded-full text-sm font-medium flex items-center gap-1 ${
+              <div className={`px-2 sm:px-3 py-1 rounded-full text-xs sm:text-sm font-medium flex items-center gap-1 ${
                 food.isAvailable 
                   ? 'bg-green-300 text-black font-bold' 
                   : 'bg-red-300 text-black font-bold'
               }`}>
                 {food.isAvailable ? (
                   <>
-                    <FaCheckCircle className="text-green-600" /> Available
+                    <FaCheckCircle className="text-green-600 w-3 h-3 sm:w-4 sm:h-4" /> 
+                    <span className="hidden sm:inline">Available</span>
+                    <span className="sm:hidden">✓</span>
                   </>
                 ) : (
                   <>
-                    <FaTimesCircle className="text-red-600" /> Not Available
+                    <FaTimesCircle className="text-red-600 w-3 h-3 sm:w-4 sm:h-4" /> 
+                    <span className="hidden sm:inline">Not Available</span>
+                    <span className="sm:hidden">✗</span>
                   </>
                 )}
               </div>
               {/* Veg/Non-Veg Badge */}
               {food.category === 'veg' ? (
-                <div className="bg-green-500 text-white px-3 py-1 rounded-full flex items-center gap-1">
-                  <FaLeaf /> Veg
+                <div className="bg-green-500 text-white px-2 sm:px-3 py-1 rounded-full flex items-center gap-1">
+                  <FaLeaf className="w-3 h-3 sm:w-4 sm:h-4" /> 
+                  <span className="text-xs sm:text-sm">Veg</span>
                 </div>
               ) : (
-                <div className="bg-red-500 text-white px-3 py-1 rounded-full flex items-center gap-1">
-                  <FaDrumstickBite /> Non-Veg
+                <div className="bg-red-500 text-white px-2 sm:px-3 py-1 rounded-full flex items-center gap-1">
+                  <FaDrumstickBite className="w-3 h-3 sm:w-4 sm:h-4" /> 
+                  <span className="text-xs sm:text-sm">Non-Veg</span>
                 </div>
               )}
             </div>
           </div>
 
           {/* Food Details */}
-          <div className="space-y-6">
+          <div className="space-y-4 sm:space-y-6">
             <div>
-              <h1 className="text-3xl font-bold text-gray-800 mb-2">{food.name}</h1>
-              <div className="flex items-center gap-4 text-gray-600">
+              <h1 className="text-2xl sm:text-3xl font-bold text-gray-800 mb-2">{food.name}</h1>
+              <div className="flex flex-wrap items-center gap-2 sm:gap-4 text-gray-600 text-sm sm:text-base">
                 {food.rating !== undefined && food.rating !== null && (
                   <div className="flex items-center gap-1">
-                    <FaStar className="text-yellow-400" />
+                    <FaStar className="text-yellow-400 w-4 h-4 sm:w-5 sm:h-5" />
                     <span>{food.rating.toFixed(1)}</span>
                   </div>
                 )}
                 {food.preparationTime && (
                   <div className="flex items-center gap-1">
-                    <FaClock className="text-orange-500" />
+                    <FaClock className="text-orange-500 w-4 h-4 sm:w-5 sm:h-5" />
                     <span>{food.preparationTime}</span>
                   </div>
                 )}
                 {food.calories && (
                   <div className="flex items-center gap-1">
-                    <FaFire className="text-red-500" />
+                    <FaFire className="text-red-500 w-4 h-4 sm:w-5 sm:h-5" />
                     <span>{food.calories}</span>
                   </div>
                 )}

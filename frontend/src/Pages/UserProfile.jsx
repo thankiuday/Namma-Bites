@@ -86,25 +86,25 @@ const UserProfile = () => {
   }
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
       {/* Profile Hub Section */}
-      <section className="bg-white rounded-xl shadow-lg p-6 mb-8">
-        <div className="flex justify-between items-center mb-6">
-          <h2 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
-            <FaUser className="text-orange-600" /> Profile Hub
+      <section className="bg-white rounded-xl shadow-lg p-4 sm:p-6 mb-6 sm:mb-8">
+        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 sm:gap-0 mb-6">
+          <h2 className="text-xl sm:text-2xl font-bold text-gray-900 flex items-center gap-2">
+            <FaUser className="text-orange-600 w-5 h-5 sm:w-6 sm:h-6" /> Profile Hub
           </h2>
           {!isEditing ? (
             <button
               onClick={handleEdit}
-              className="flex items-center gap-2 px-4 py-2 bg-orange-600 text-white rounded-md hover:bg-orange-700 transition-colors"
+              className="flex items-center justify-center gap-2 px-3 sm:px-4 py-2 bg-orange-600 text-white rounded-md hover:bg-orange-700 transition-colors text-sm sm:text-base"
             >
-              <FaEdit /> Edit Profile
+              <FaEdit className="w-4 h-4" /> Edit Profile
             </button>
           ) : (
             <button
               onClick={handleSave}
               disabled={loading}
-              className={`px-4 py-2 ${loading ? 'bg-gray-400' : 'bg-green-600 hover:bg-green-700'} text-white rounded-md transition-colors`}
+              className={`px-3 sm:px-4 py-2 text-sm sm:text-base ${loading ? 'bg-gray-400' : 'bg-green-600 hover:bg-green-700'} text-white rounded-md transition-colors`}
             >
               {loading ? 'Saving...' : 'Save Changes'}
             </button>
@@ -115,7 +115,7 @@ const UserProfile = () => {
             {error}
           </div>
         )}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
           <div>
             <label className="block text-sm font-medium text-gray-700">Username</label>
             {isEditing ? (
@@ -124,6 +124,7 @@ const UserProfile = () => {
                 name="username"
                 value={editedUser?.username || ''}
                 onChange={handleInputChange}
+                placeholder="Enter your username"
                 className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-orange-500 focus:border-orange-500 text-gray-900"
               />
             ) : (
@@ -138,6 +139,7 @@ const UserProfile = () => {
                 name="email"
                 value={editedUser?.email || ''}
                 onChange={handleInputChange}
+                placeholder="Enter your email address"
                 className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-orange-500 focus:border-orange-500 text-gray-900"
               />
             ) : (
@@ -152,6 +154,7 @@ const UserProfile = () => {
                 name="name"
                 value={editedUser?.name || ''}
                 onChange={handleInputChange}
+                placeholder="Enter your full name"
                 className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-orange-500 focus:border-orange-500 text-gray-900"
               />
             ) : (
@@ -166,6 +169,7 @@ const UserProfile = () => {
                 name="mobileNumber"
                 value={editedUser?.mobileNumber || ''}
                 onChange={handleInputChange}
+                placeholder="Enter your mobile number"
                 className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-orange-500 focus:border-orange-500 text-gray-900"
               />
             ) : (
@@ -176,26 +180,26 @@ const UserProfile = () => {
       </section>
 
       {/* Quick Actions Section */}
-      <section className="bg-white rounded-xl shadow-lg p-6 mb-8">
-        <h2 className="text-2xl font-bold text-gray-900 mb-6">Quick Actions</h2>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <section className="bg-white rounded-xl shadow-lg p-4 sm:p-6 mb-6 sm:mb-8">
+        <h2 className="text-xl sm:text-2xl font-bold text-gray-900 mb-4 sm:mb-6">Quick Actions</h2>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
           <button
             onClick={() => navigate('/orders')}
-            className="flex items-center justify-center gap-2 px-6 py-3 bg-orange-600 text-white rounded-md hover:bg-orange-700 transition-colors"
+            className="flex items-center justify-center gap-2 px-4 sm:px-6 py-2 sm:py-3 bg-orange-600 text-white rounded-md hover:bg-orange-700 transition-colors text-sm sm:text-base"
           >
-            <FaClipboardList /> View Orders
+            <FaClipboardList className="w-4 h-4" /> View Orders
           </button>
           <button
             onClick={() => navigate('/cart')}
-            className="flex items-center justify-center gap-2 px-6 py-3 bg-orange-600 text-white rounded-md hover:bg-orange-700 transition-colors"
+            className="flex items-center justify-center gap-2 px-4 sm:px-6 py-2 sm:py-3 bg-orange-600 text-white rounded-md hover:bg-orange-700 transition-colors text-sm sm:text-base"
           >
-            <FaShoppingCart /> Cart View
+            <FaShoppingCart className="w-4 h-4" /> Cart View
           </button>
           <button
             onClick={() => navigate('/wallet')}
-            className="flex items-center justify-center gap-2 px-6 py-3 bg-orange-600 text-white rounded-md hover:bg-orange-700 transition-colors"
+            className="flex items-center justify-center gap-2 px-4 sm:px-6 py-2 sm:py-3 bg-orange-600 text-white rounded-md hover:bg-orange-700 transition-colors text-sm sm:text-base"
           >
-            <FaWallet /> My Wallet
+            <FaWallet className="w-4 h-4" /> My Wallet
           </button>
         </div>
       </section>

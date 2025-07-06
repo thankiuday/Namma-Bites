@@ -102,6 +102,7 @@ const Signup = () => {
                 minLength={3}
                 value={formData.username}
                 onChange={handleChange}
+                placeholder="Enter your username"
                 className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-orange-500 focus:border-orange-500 text-gray-900"
               />
             </div>
@@ -118,6 +119,7 @@ const Signup = () => {
                 required
                 value={formData.email}
                 onChange={handleChange}
+                placeholder="Enter your email address"
                 className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-orange-500 focus:border-orange-500 text-gray-900"
               />
             </div>
@@ -134,6 +136,7 @@ const Signup = () => {
                 required
                 value={formData.name}
                 onChange={handleChange}
+                placeholder="Enter your full name"
                 className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-orange-500 focus:border-orange-500 text-gray-900"
               />
             </div>
@@ -151,6 +154,7 @@ const Signup = () => {
                 minLength={6}
                 value={formData.password}
                 onChange={handleChange}
+                placeholder="Create a password"
                 className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-orange-500 focus:border-orange-500 text-gray-900"
               />
             </div>
@@ -168,6 +172,7 @@ const Signup = () => {
                 pattern="[0-9]{10}"
                 value={formData.mobileNumber}
                 onChange={handleChange}
+                placeholder="Enter your 10-digit mobile number"
                 className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-orange-500 focus:border-orange-500 text-gray-900"
               />
             </div>
