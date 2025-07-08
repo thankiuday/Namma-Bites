@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { FaArrowLeft, FaUpload, FaCheckCircle, FaHourglassHalf, FaTimesCircle } from 'react-icons/fa';
-import { uploadPaymentProof } from '../api/userApi';
+import { uploadPaymentProof, getUserSubscriptions } from '../api/userApi';
 
 const PaymentStatus = () => {
   const { subscriptionId } = useParams();
@@ -10,6 +10,22 @@ const PaymentStatus = () => {
   const [file, setFile] = useState(null);
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState('');
+  const [subscription, setSubscription] = useState(null);
+  const [scannerUrl, setScannerUrl] = useState('');
+
+  useEffect(() => {
+    async function fetchSubscription() {
+      const res = await getUserSubscriptions();
+      if (res.data && res.data.data) {
+        const sub = res.data.data.find(s => s._id === subscriptionId);
+        setSubscription(sub);
+        if (sub && sub.vendor && sub.vendor.scanner) {
+          setScannerUrl(`http://localhost:5000${sub.vendor.scanner}`);
+        }
+      }
+    }
+    fetchSubscription();
+  }, [subscriptionId]);
 
   const handleFileChange = (e) => {
     setFile(e.target.files[0]);
@@ -50,6 +66,12 @@ const PaymentStatus = () => {
           {statusDisplay[status].icon}
           <span className={`font-bold text-lg ${statusDisplay[status].color}`}>{statusDisplay[status].text}</span>
         </div>
+        {scannerUrl && (
+          <div className="flex flex-col items-center mb-4">
+            <div className="font-semibold text-orange-700 mb-2">Scan to Pay Vendor (Google Pay)</div>
+            <img src={scannerUrl} alt="Vendor Google Pay Scanner" className="w-48 h-48 object-contain rounded-lg border-2 border-orange-200 bg-white shadow" />
+          </div>
+        )}
         {status === 'un-paid' && (
           <>
             <div className="bg-orange-50 rounded-xl p-4 border border-orange-200 mb-2 text-orange-700 font-medium">

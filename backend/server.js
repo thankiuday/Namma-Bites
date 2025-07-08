@@ -44,6 +44,11 @@ app.use('/uploads', (req, res, next) => {
 
 // Serve uploads directory (must be before React catch-all)
 const uploadsDir = path.resolve(__dirname, '../uploads');
+app.use('/uploads', (req, res, next) => {
+  const filePath = path.join(uploadsDir, req.path);
+  console.log('Static file requested:', filePath);
+  next();
+});
 app.use('/uploads', express.static(uploadsDir));
 
 // Rate limiting with Redis

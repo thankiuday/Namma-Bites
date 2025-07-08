@@ -12,7 +12,7 @@ export const createVendor = async (req, res) => {
     console.log('Request body:', req.body);
     console.log('Request file:', req.file);
 
-    if (!req.file) {
+    if (!req.files?.image?.[0]) {
       return res.status(400).json({
         success: false,
         message: 'Vendor image is required'
@@ -38,7 +38,8 @@ export const createVendor = async (req, res) => {
 
     const vendorData = {
       ...req.body,
-      image: `/uploads/vendor-images/${req.file.filename}`, // Store relative web path
+      image: `/uploads/vendor-images/${req.files?.image?.[0]?.filename}`,
+      scanner: req.files?.scanner?.[0] ? `/uploads/vendor-scanner/${req.files.scanner[0].filename}` : undefined,
       createdBy: req.admin._id
     };
 
@@ -134,6 +135,14 @@ export const updateVendor = async (req, res) => {
           message: 'Password must be at least 6 characters long'
         });
       }
+    }
+
+    // Handle uploaded image and scanner files
+    if (req.files?.image?.[0]) {
+      updateData.image = `/uploads/vendor-images/${req.files.image[0].filename}`;
+    }
+    if (req.files?.scanner?.[0]) {
+      updateData.scanner = `/uploads/vendor-scanner/${req.files.scanner[0].filename}`;
     }
 
     const vendor = await Vendor.findByIdAndUpdate(
@@ -728,6 +737,19 @@ export const getApprovedUserSubscriptions = async (req, res) => {
       .populate('user', 'name email')
       .populate('subscriptionPlan', 'duration price planType');
     res.json({ success: true, data: approvedSubs });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+}; 
+
+// Get all rejected user subscriptions for this vendor
+export const getRejectedUserSubscriptions = async (req, res) => {
+  try {
+    const vendorId = req.vendor._id;
+    const rejectedSubs = await UserSubscription.find({ vendor: vendorId, paymentStatus: 'rejected' })
+      .populate('user', 'name email')
+      .populate('subscriptionPlan', 'duration price planType');
+    res.json({ success: true, data: rejectedSubs });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }

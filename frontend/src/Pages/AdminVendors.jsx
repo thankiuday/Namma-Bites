@@ -17,6 +17,10 @@ const AdminVendors = () => {
     phone: '',
     address: '',
     cuisine: '',
+    status: 'Closed',
+    establishedDate: '',
+    image: null,
+    scanner: null,
     isApproved: false
   });
 
@@ -53,17 +57,47 @@ const AdminVendors = () => {
       phone: vendor.phone || '',
       address: vendor.address || '',
       cuisine: vendor.cuisine || '',
+      status: vendor.status || 'Closed',
+      establishedDate: vendor.establishedDate ? vendor.establishedDate.slice(0, 10) : '',
+      image: null,
+      scanner: null,
       isApproved: vendor.isApproved || false
     });
+  };
+
+  const handleEditFormChange = (e) => {
+    const { name, value, files } = e.target;
+    setEditForm(prev => ({
+      ...prev,
+      [name]: files ? files[0] : value
+    }));
   };
 
   const handleEditSubmit = async (e) => {
     e.preventDefault();
     try {
       setLoading(true);
-      const response = await axios.put(`/vendor/${editingVendor._id}`, editForm);
+      let response;
+      if (editForm.image || editForm.scanner) {
+        const formDataToSend = new FormData();
+        formDataToSend.append('name', editForm.name);
+        formDataToSend.append('email', editForm.email);
+        formDataToSend.append('phone', editForm.phone);
+        formDataToSend.append('address', editForm.address);
+        formDataToSend.append('cuisine', editForm.cuisine);
+        formDataToSend.append('status', editForm.status);
+        formDataToSend.append('establishedDate', editForm.establishedDate);
+        formDataToSend.append('isApproved', editForm.isApproved);
+        if (editForm.image) formDataToSend.append('image', editForm.image);
+        if (editForm.scanner) formDataToSend.append('scanner', editForm.scanner);
+        response = await axios.put(`/vendor/${editingVendor._id}`, formDataToSend, {
+          headers: { 'Content-Type': 'multipart/form-data' }
+        });
+      } else {
+        response = await axios.put(`/vendor/${editingVendor._id}`, editForm);
+      }
       if (response.data.success) {
-        setVendors(vendors.map(vendor => 
+        setVendors(vendors.map(vendor =>
           vendor._id === editingVendor._id ? { ...vendor, ...editForm } : vendor
         ));
         setEditingVendor(null);
@@ -222,8 +256,9 @@ const AdminVendors = () => {
                 <label className="block text-gray-700 text-sm font-bold mb-2">Name</label>
                 <input
                   type="text"
+                  name="name"
                   value={editForm.name}
-                  onChange={(e) => setEditForm({ ...editForm, name: e.target.value })}
+                  onChange={handleEditFormChange}
                   className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-600  text-black"
                 />
               </div>
@@ -231,8 +266,9 @@ const AdminVendors = () => {
                 <label className="block text-gray-700 text-sm font-bold mb-2">Email</label>
                 <input
                   type="email"
+                  name="email"
                   value={editForm.email}
-                  onChange={(e) => setEditForm({ ...editForm, email: e.target.value })}
+                  onChange={handleEditFormChange}
                   className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-600 text-black"
                 />
               </div>
@@ -240,8 +276,9 @@ const AdminVendors = () => {
                 <label className="block text-gray-700 text-sm font-bold mb-2">Phone</label>
                 <input
                   type="text"
+                  name="phone"
                   value={editForm.phone}
-                  onChange={(e) => setEditForm({ ...editForm, phone: e.target.value })}
+                  onChange={handleEditFormChange}
                   className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-600 text-black"
                 />
               </div>
@@ -249,8 +286,9 @@ const AdminVendors = () => {
                 <label className="block text-gray-700 text-sm font-bold mb-2">Address</label>
                 <input
                   type="text"
+                  name="address"
                   value={editForm.address}
-                  onChange={(e) => setEditForm({ ...editForm, address: e.target.value })}
+                  onChange={handleEditFormChange}
                   className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-600 text-black"
                 />
               </div>
@@ -258,8 +296,51 @@ const AdminVendors = () => {
                 <label className="block text-gray-700 text-sm font-bold mb-2">Cuisine</label>
                 <input
                   type="text"
+                  name="cuisine"
                   value={editForm.cuisine}
-                  onChange={(e) => setEditForm({ ...editForm, cuisine: e.target.value })}
+                  onChange={handleEditFormChange}
+                  className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-600 text-black"
+                />
+              </div>
+              <div>
+                <label className="block text-gray-700 text-sm font-bold mb-2">Status</label>
+                <select
+                  name="status"
+                  value={editForm.status}
+                  onChange={handleEditFormChange}
+                  className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-600 text-black"
+                >
+                  <option value="Open">Open</option>
+                  <option value="Closed">Closed</option>
+                </select>
+              </div>
+              <div>
+                <label className="block text-gray-700 text-sm font-bold mb-2">Established Date</label>
+                <input
+                  type="date"
+                  name="establishedDate"
+                  value={editForm.establishedDate}
+                  onChange={handleEditFormChange}
+                  className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-600 text-black"
+                />
+              </div>
+              <div>
+                <label className="block text-gray-700 text-sm font-bold mb-2">Vendor Image</label>
+                <input
+                  type="file"
+                  name="image"
+                  accept="image/*"
+                  onChange={handleEditFormChange}
+                  className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-600 text-black"
+                />
+              </div>
+              <div>
+                <label className="block text-gray-700 text-sm font-bold mb-2">Google Pay Scanner</label>
+                <input
+                  type="file"
+                  name="scanner"
+                  accept="image/*"
+                  onChange={handleEditFormChange}
                   className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-600 text-black"
                 />
               </div>

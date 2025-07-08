@@ -376,7 +376,7 @@ export const getUserSubscriptions = async (req, res) => {
     const userId = req.user._id;
     let subs = await UserSubscription.find({ user: userId })
       .populate('subscriptionPlan')
-      .populate('vendor', 'name email');
+      .populate('vendor', 'name email scanner');
     // Auto-expire subscriptions
     const today = new Date();
     today.setHours(0,0,0,0);
@@ -394,7 +394,7 @@ export const getUserSubscriptions = async (req, res) => {
     // Re-fetch to get updated statuses
     subs = await UserSubscription.find({ user: userId })
       .populate('subscriptionPlan')
-      .populate('vendor', 'name email');
+      .populate('vendor', 'name email scanner');
     res.json({ success: true, data: subs });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });

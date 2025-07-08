@@ -36,6 +36,10 @@ const vendorSchema = new mongoose.Schema({
         type: String,
         trim: true
     },
+    scanner: {
+        type: String,
+        default: ''
+    },
     isApproved: {
         type: Boolean,
         default: false

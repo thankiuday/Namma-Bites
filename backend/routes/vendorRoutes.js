@@ -34,7 +34,8 @@ import {
   updateMySubscriptionPlan,
   getPendingUserSubscriptions,
   approveUserSubscription,
-  getApprovedUserSubscriptions
+  getApprovedUserSubscriptions,
+  getRejectedUserSubscriptions
 } from '../controllers/vendor/vendorController.js';
 import { authenticateAdmin, authenticateVendor, authenticateUser } from '../middleware/user/authMiddleware.js';
 
@@ -56,13 +57,19 @@ if (!fs.existsSync(itemImagesDir)) {
 
 // Configure multer for VENDOR image upload
 const vendorStorage = multer.diskStorage({
-    destination: function (req, file, cb) {
-        cb(null, vendorImagesDir);
-    },
-    filename: function (req, file, cb) {
-        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-        cb(null, uniqueSuffix + path.extname(file.originalname));
+  destination: function (req, file, cb) {
+    if (file.fieldname === 'image') {
+      cb(null, vendorImagesDir);
+    } else if (file.fieldname === 'scanner') {
+      cb(null, vendorScannerDir);
+    } else {
+      cb(new Error('Invalid field name'), null);
     }
+  },
+  filename: function (req, file, cb) {
+    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+    cb(null, uniqueSuffix + path.extname(file.originalname));
+  }
 });
 
 // Configure multer for MENU ITEM image upload
@@ -75,6 +82,22 @@ const itemStorage = multer.diskStorage({
         cb(null, uniqueSuffix + path.extname(file.originalname));
     }
 });
+
+// Configure multer for VENDOR SCANNER image upload
+const vendorScannerDir = path.join(__dirname, '../../uploads/vendor-scanner');
+if (!fs.existsSync(vendorScannerDir)) {
+  fs.mkdirSync(vendorScannerDir, { recursive: true });
+}
+const scannerStorage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    cb(null, vendorScannerDir);
+  },
+  filename: function (req, file, cb) {
+    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+    cb(null, uniqueSuffix + path.extname(file.originalname));
+  }
+});
+export const uploadVendorScanner = multer({ storage: scannerStorage });
 
 const fileFilter = (req, file, cb) => {
     // Accept images only
@@ -169,6 +192,7 @@ router.put('/subscription-plans/:id', authenticateVendor, updateMySubscriptionPl
 router.get('/user-subscriptions/pending', authenticateVendor, getPendingUserSubscriptions);
 router.post('/user-subscriptions/:subscriptionId/approve', authenticateVendor, approveUserSubscription);
 router.get('/user-subscriptions/approved', authenticateVendor, getApprovedUserSubscriptions);
+router.get('/user-subscriptions/rejected', authenticateVendor, getRejectedUserSubscriptions);
 
 // === ADMIN-ONLY ROUTES ===
 
@@ -179,10 +203,16 @@ router.get('/', authenticateAdmin, getAllVendors);
 router.get('/:id', authenticateAdmin, getVendorById);
 
 // Create vendor route (protected, admin only)
-router.post('/create', authenticateAdmin, uploadVendorImage.single('image'), createVendor);
+router.post('/create', authenticateAdmin, uploadVendorImage.fields([
+  { name: 'image', maxCount: 1 },
+  { name: 'scanner', maxCount: 1 }
+]), createVendor);
 
 // Update vendor route (protected, admin only)
-router.put('/:id', authenticateAdmin, updateVendor);
+router.put('/:id', authenticateAdmin, uploadVendorImage.fields([
+  { name: 'image', maxCount: 1 },
+  { name: 'scanner', maxCount: 1 }
+]), updateVendor);
 
 // Approve vendor route (protected, admin only)
 router.put('/:id/approve', authenticateAdmin, approveVendor);

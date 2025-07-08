@@ -22,17 +22,23 @@ import {
 import { authenticateAdmin, authenticateUser } from '../middleware/user/authMiddleware.js';
 import multer from 'multer';
 import fs from 'fs';
+import { fileURLToPath } from 'url';
 import path from 'path';
 
-// Ensure uploads/payment-proofs directory exists
-const paymentProofDir = path.join(process.cwd(), 'uploads/payment-proofs');
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+// Ensure uploads/payment-proofs directory exists at project root
+const paymentProofDir = path.join(__dirname, '../../uploads/payment-proofs');
 if (!fs.existsSync(paymentProofDir)) {
   fs.mkdirSync(paymentProofDir, { recursive: true });
 }
 
 const paymentProofStorage = multer.diskStorage({
   destination: function (req, file, cb) {
-    cb(null, path.join(process.cwd(), 'uploads/payment-proofs'));
+    const dest = paymentProofDir;
+    console.log('Multer saving payment proof to:', dest);
+    cb(null, dest);
   },
   filename: function (req, file, cb) {
     const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);

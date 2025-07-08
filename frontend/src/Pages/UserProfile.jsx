@@ -72,7 +72,7 @@ const UserProfile = () => {
       setLoading(true);
       setError('');
 
-      let response = await userApi.put('/update-profile', editedUser);
+      let response = await userApi.put('/profile', editedUser);
 
       if (response.data && response.data.success) {
         setEditedUser(response.data.data);
@@ -218,7 +218,7 @@ const UserProfile = () => {
         ) : subscriptions.length === 0 ? (
           <div className="text-center text-gray-500">No subscriptions found.</div>
         ) : (
-          <div className="space-y-4">
+          <div className="space-y-4 overflow-y-auto max-h-[400px] md:max-h-[600px] pr-2">
             {subscriptions.map(sub => (
               <div key={sub._id} className="border rounded-lg p-4 flex flex-col md:flex-row gap-4 items-start md:items-center bg-orange-50">
                 <div className="flex-1">

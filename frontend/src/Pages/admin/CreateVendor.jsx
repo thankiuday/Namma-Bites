@@ -16,6 +16,7 @@ const CreateVendor = () => {
         establishedDate: '',
         status: 'Closed', // Default to 'Closed' as per model
         image: null,
+        scanner: null,
         password: ''
     });
 
@@ -54,6 +55,10 @@ const CreateVendor = () => {
             if (formData.image) {
                 formDataToSend.append('image', formData.image);
             }
+            // Add scanner if it exists
+            if (formData.scanner) {
+                formDataToSend.append('scanner', formData.scanner);
+            }
             
             const response = await api.post('/vendor/create', formDataToSend, {
                 headers: {
@@ -63,7 +68,7 @@ const CreateVendor = () => {
 
             if (response.data.success) {
                 toast.success('Vendor created successfully');
-                navigate('/admin/vendors');
+                navigate('/admin/vendor');
             } else {
                 toast.error(response.data.message || 'Failed to create vendor');
             }
@@ -176,6 +181,21 @@ const CreateVendor = () => {
                             onChange={handleChange}
                             accept="image/*"
                             required
+                            className="mt-1 block w-full text-sm text-gray-500
+                              file:mr-4 file:py-2 file:px-4
+                              file:rounded-md file:border-0
+                              file:text-sm file:font-semibold
+                              file:bg-orange-50 file:text-orange-700
+                              hover:file:bg-orange-100"
+                        />
+                    </div>
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700">Google Pay Scanner (optional)</label>
+                        <input
+                            type="file"
+                            name="scanner"
+                            onChange={handleChange}
+                            accept="image/*"
                             className="mt-1 block w-full text-sm text-gray-500
                               file:mr-4 file:py-2 file:px-4
                               file:rounded-md file:border-0
