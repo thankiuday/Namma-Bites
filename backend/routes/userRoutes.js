@@ -13,9 +13,33 @@ import {
   addOrUpdateCartItem,
   updateCartItemQuantity,
   removeCartItem,
-  clearCart
+  clearCart,
+  createUserSubscription,
+  uploadPaymentProof,
+  getUserSubscriptions,
+  deleteUserSubscription
 } from '../controllers/user/userController.js';
 import { authenticateAdmin, authenticateUser } from '../middleware/user/authMiddleware.js';
+import multer from 'multer';
+import fs from 'fs';
+import path from 'path';
+
+// Ensure uploads/payment-proofs directory exists
+const paymentProofDir = path.join(process.cwd(), 'uploads/payment-proofs');
+if (!fs.existsSync(paymentProofDir)) {
+  fs.mkdirSync(paymentProofDir, { recursive: true });
+}
+
+const paymentProofStorage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    cb(null, path.join(process.cwd(), 'uploads/payment-proofs'));
+  },
+  filename: function (req, file, cb) {
+    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+    cb(null, uniqueSuffix + path.extname(file.originalname));
+  }
+});
+const upload = multer({ storage: paymentProofStorage });
 
 const router = express.Router();
 
@@ -30,11 +54,17 @@ router.delete('/cart/:itemId', authenticateUser, removeCartItem);
 router.post('/logout', authenticateUser, logoutUser);
 router.get('/me', authenticateUser, getMe);
 router.put('/profile', authenticateUser, updateProfile);
+router.get('/subscriptions', authenticateUser, getUserSubscriptions);
+router.delete('/subscriptions/:subscriptionId', authenticateUser, deleteUserSubscription);
 
 // --- Subscription plan routes (for users to browse) ---
 router.get('/subscription-plans', getAllSubscriptionPlans);
 router.get('/subscription-plans/vendor/:vendorId', getSubscriptionPlansByVendor);
 router.get('/subscription-plans/:id', getSubscriptionPlanById);
+
+// --- Subscription routes ---
+router.post('/subscriptions', authenticateUser, createUserSubscription);
+router.post('/subscriptions/:subscriptionId/payment-proof', authenticateUser, upload.single('paymentProof'), uploadPaymentProof);
 
 // --- Admin-only routes (generic, must come last) ---
 router.get('/', authenticateAdmin, getAllUsers);

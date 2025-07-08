@@ -4,6 +4,7 @@ import jwt from 'jsonwebtoken';
 import fs from 'fs';
 import path from 'path';
 import SubscriptionPlan from '../../models/SubscriptionPlan.js';
+import UserSubscription from '../../models/UserSubscription.js';
 
 // Create a new vendor
 export const createVendor = async (req, res) => {
@@ -680,6 +681,53 @@ export const updateMySubscriptionPlan = async (req, res) => {
     if (planType && ['veg', 'non-veg'].includes(planType)) plan.planType = planType;
     await plan.save();
     res.json({ success: true, message: 'Plan updated', data: plan });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+}; 
+
+// Get all pending user subscriptions for this vendor
+export const getPendingUserSubscriptions = async (req, res) => {
+  try {
+    const vendorId = req.vendor._id;
+    const pendingSubs = await UserSubscription.find({ vendor: vendorId, paymentStatus: 'pending' })
+      .populate('user', 'name email')
+      .populate('subscriptionPlan', 'duration price planType');
+    res.json({ success: true, data: pendingSubs });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// Approve or reject a user subscription payment
+export const approveUserSubscription = async (req, res) => {
+  try {
+    const vendorId = req.vendor._id;
+    const { subscriptionId } = req.params;
+    const { action } = req.body; // 'approved' or 'rejected'
+    if (!['approved', 'rejected'].includes(action)) {
+      return res.status(400).json({ success: false, message: 'Invalid action' });
+    }
+    const sub = await UserSubscription.findOne({ _id: subscriptionId, vendor: vendorId });
+    if (!sub) {
+      return res.status(404).json({ success: false, message: 'Subscription not found' });
+    }
+    sub.paymentStatus = action;
+    await sub.save();
+    res.json({ success: true, data: sub });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+}; 
+
+// Get all approved user subscriptions for this vendor
+export const getApprovedUserSubscriptions = async (req, res) => {
+  try {
+    const vendorId = req.vendor._id;
+    const approvedSubs = await UserSubscription.find({ vendor: vendorId, paymentStatus: 'approved' })
+      .populate('user', 'name email')
+      .populate('subscriptionPlan', 'duration price planType');
+    res.json({ success: true, data: approvedSubs });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }

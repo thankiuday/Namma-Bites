@@ -11,4 +11,7 @@ export const createSubscriptionPlan = (data) => vendorApi.post('/subscription-pl
 export const getSubscriptionPlans = () => vendorApi.get('/subscription-plans');
 export const getSubscriptionPlanById = (id) => vendorApi.get(`/subscription-plans/${id}`);
 export const updateSubscriptionPlan = (id, data) => vendorApi.put(`/subscription-plans/${id}`, data);
-export const deleteSubscriptionPlan = (id) => vendorApi.delete(`/subscription-plans/${id}`); 
+export const deleteSubscriptionPlan = (id) => vendorApi.delete(`/subscription-plans/${id}`);
+export const getPendingUserSubscriptions = () => vendorApi.get('/user-subscriptions/pending');
+export const approveUserSubscription = (subscriptionId, action) => vendorApi.post(`/user-subscriptions/${subscriptionId}/approve`, { action });
+export const getApprovedUserSubscriptions = () => vendorApi.get('/user-subscriptions/approved'); 

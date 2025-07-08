@@ -17,6 +17,7 @@ import Register from '../Pages/Register';
 import VendorDetails from '../Pages/VendorDetails';
 import UserSubscription from '../Pages/UserSubscription';
 import SubscriptionStart from '../Pages/SubscriptionStart';
+import PaymentStatus from '../Pages/PaymentStatus';
 
 // Protected Route Components
 import ProtectedRoute from './user/ProtectedRoute';
@@ -92,6 +93,7 @@ const AnimatedRoutes = () => {
           </ProtectedRoute>
         } />
         <Route path="/subscription/start/:planId" element={<SubscriptionStart />} />
+        <Route path="/subscription/payment/:subscriptionId" element={<PaymentStatus />} />
         <Route path="/cart" element={
           <ProtectedRoute>
             <PageTransition>

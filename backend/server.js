@@ -42,7 +42,7 @@ app.use('/uploads', (req, res, next) => {
   next();
 });
 
-// Serve static files from the /uploads directory
+// Serve uploads directory (must be before React catch-all)
 const uploadsDir = path.resolve(__dirname, '../uploads');
 app.use('/uploads', express.static(uploadsDir));
 

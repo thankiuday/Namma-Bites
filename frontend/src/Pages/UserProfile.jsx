@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { FaUser, FaShoppingCart, FaClipboardList, FaWallet, FaKey, FaHeadset, FaDownload, FaEdit } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import userApi from '../api/userApi';
+import userApi, { getUserSubscriptions, deleteUserSubscription } from '../api/userApi';
 
 const UserProfile = () => {
   const navigate = useNavigate();
@@ -11,6 +11,9 @@ const UserProfile = () => {
   const [editedUser, setEditedUser] = useState(null);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [subscriptions, setSubscriptions] = useState([]);
+  const [subsLoading, setSubsLoading] = useState(false);
+  const [subsError, setSubsError] = useState('');
 
   // Update editedUser when user data changes
   useEffect(() => {
@@ -18,6 +21,22 @@ const UserProfile = () => {
       setEditedUser(user);
     }
   }, [user]);
+
+  useEffect(() => {
+    const fetchSubs = async () => {
+      setSubsLoading(true);
+      setSubsError('');
+      try {
+        const res = await getUserSubscriptions();
+        setSubscriptions(res.data.data);
+      } catch (err) {
+        setSubsError('Failed to load subscriptions.');
+      } finally {
+        setSubsLoading(false);
+      }
+    };
+    fetchSubs();
+  }, []);
 
   const handleEdit = () => {
     setError('');
@@ -79,6 +98,16 @@ const UserProfile = () => {
       ...prev,
       [name]: value
     }));
+  };
+
+  const handleDeleteSubscription = async (id) => {
+    if (!window.confirm('Are you sure you want to delete this expired subscription?')) return;
+    try {
+      await deleteUserSubscription(id);
+      setSubscriptions(subscriptions.filter(sub => sub._id !== id));
+    } catch (err) {
+      alert('Failed to delete subscription.');
+    }
   };
 
   if (!user) {
@@ -179,7 +208,50 @@ const UserProfile = () => {
         </div>
       </section>
 
-     
+      {/* User Subscriptions Section */}
+      <section className="bg-white rounded-xl shadow-lg p-4 sm:p-6 mb-6 sm:mb-8">
+        <h2 className="text-xl sm:text-2xl font-bold text-gray-900 mb-4 sm:mb-6">My Subscriptions</h2>
+        {subsLoading ? (
+          <div className="text-center text-gray-500">Loading subscriptions...</div>
+        ) : subsError ? (
+          <div className="text-red-600 mb-2">{subsError}</div>
+        ) : subscriptions.length === 0 ? (
+          <div className="text-center text-gray-500">No subscriptions found.</div>
+        ) : (
+          <div className="space-y-4">
+            {subscriptions.map(sub => (
+              <div key={sub._id} className="border rounded-lg p-4 flex flex-col md:flex-row gap-4 items-start md:items-center bg-orange-50">
+                <div className="flex-1">
+                  <div className="font-semibold text-gray-800 mb-1">Plan: {sub.subscriptionPlan?.planType} ({sub.subscriptionPlan?.duration} days, ₹{sub.subscriptionPlan?.price})</div>
+                  <div className="text-gray-700 mb-1">Vendor: {sub.vendor?.name}</div>
+                  <div className="text-gray-700 mb-1">Start Date: {new Date(sub.startDate).toLocaleDateString()}</div>
+                  <div className="text-gray-700 mb-1">Duration: {sub.duration} days</div>
+                </div>
+                <div className="flex flex-col items-center gap-2">
+                  <span className={`px-3 py-1 rounded-full text-xs font-bold ${
+                    sub.paymentStatus === 'approved' ? 'bg-green-100 text-green-800 border border-green-200' :
+                    sub.paymentStatus === 'pending' ? 'bg-orange-100 text-orange-800 border border-orange-200' :
+                    sub.paymentStatus === 'rejected' ? 'bg-red-100 text-red-800 border border-red-200' :
+                    sub.paymentStatus === 'expired' ? 'bg-gray-300 text-gray-700 border border-gray-400' :
+                    'bg-gray-100 text-gray-800 border border-gray-200'
+                  }`}>
+                    {sub.paymentStatus.charAt(0).toUpperCase() + sub.paymentStatus.slice(1)}
+                  </span>
+                  {sub.paymentProof && (
+                    <a href={`http://localhost:5000${sub.paymentProof}`} target="_blank" rel="noopener noreferrer" className="text-xs text-orange-600 underline">View Payment Proof</a>
+                  )}
+                  {sub.paymentStatus === 'expired' && (
+                    <button
+                      onClick={() => handleDeleteSubscription(sub._id)}
+                      className="mt-2 px-3 py-1 rounded bg-red-500 hover:bg-red-600 text-white text-xs font-bold"
+                    >Delete</button>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </section>
 
       {/* Quick Actions Section */}
       <section className="bg-white rounded-xl shadow-lg p-4 sm:p-6 mb-6 sm:mb-8">

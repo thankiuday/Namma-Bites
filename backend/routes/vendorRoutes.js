@@ -31,7 +31,10 @@ import {
   createSubscriptionPlan,
   getMySubscriptionPlans,
   getMySubscriptionPlanById,
-  updateMySubscriptionPlan
+  updateMySubscriptionPlan,
+  getPendingUserSubscriptions,
+  approveUserSubscription,
+  getApprovedUserSubscriptions
 } from '../controllers/vendor/vendorController.js';
 import { authenticateAdmin, authenticateVendor, authenticateUser } from '../middleware/user/authMiddleware.js';
 
@@ -161,6 +164,11 @@ router.get('/subscription-plans/:id', authenticateVendor, getMySubscriptionPlanB
 
 // Update a subscription plan by ID
 router.put('/subscription-plans/:id', authenticateVendor, updateMySubscriptionPlan);
+
+// Vendor user subscription approval routes
+router.get('/user-subscriptions/pending', authenticateVendor, getPendingUserSubscriptions);
+router.post('/user-subscriptions/:subscriptionId/approve', authenticateVendor, approveUserSubscription);
+router.get('/user-subscriptions/approved', authenticateVendor, getApprovedUserSubscriptions);
 
 // === ADMIN-ONLY ROUTES ===
 

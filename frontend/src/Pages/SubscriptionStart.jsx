@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
-import { getSubscriptionPlanById } from '../api/userApi';
+import { getSubscriptionPlanById, createUserSubscription } from '../api/userApi';
 import { FaArrowLeft, FaCalendarAlt, FaClock, FaCheckCircle } from 'react-icons/fa';
 
 const SubscriptionStart = () => {
@@ -28,7 +28,7 @@ const SubscriptionStart = () => {
     fetchPlan();
   }, [planId]);
 
-  const handleSubscribe = () => {
+  const handleSubscribe = async () => {
     setDateError('');
     const today = new Date();
     const selected = new Date(startDate);
@@ -39,12 +39,20 @@ const SubscriptionStart = () => {
       return;
     }
     setSubscribing(true);
-    // TODO: Implement actual subscription logic here
-    setTimeout(() => {
+    try {
+      const res = await createUserSubscription({
+        subscriptionPlan: plan._id,
+        vendor: plan.vendor?._id || plan.vendor,
+        startDate,
+        duration: plan.duration
+      });
+      const subscriptionId = res.data.data._id;
+      navigate(`/subscription/payment/${subscriptionId}`);
+    } catch (err) {
+      setDateError('Failed to subscribe. Please try again.');
+    } finally {
       setSubscribing(false);
-      alert('Subscription started!');
-      navigate('/subscription');
-    }, 1200);
+    }
   };
 
   if (loading) {

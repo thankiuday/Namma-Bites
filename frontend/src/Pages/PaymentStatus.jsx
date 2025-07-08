@@ -1,0 +1,99 @@
+import React, { useState } from 'react';
+import { useParams, Link } from 'react-router-dom';
+import { FaArrowLeft, FaUpload, FaCheckCircle, FaHourglassHalf, FaTimesCircle } from 'react-icons/fa';
+import { uploadPaymentProof } from '../api/userApi';
+
+const PaymentStatus = () => {
+  const { subscriptionId } = useParams();
+  // Mocked status: 'un-paid', 'pending', 'approved', 'rejected'
+  const [status, setStatus] = useState('un-paid');
+  const [file, setFile] = useState(null);
+  const [uploading, setUploading] = useState(false);
+  const [error, setError] = useState('');
+
+  const handleFileChange = (e) => {
+    setFile(e.target.files[0]);
+    setError('');
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (!file) {
+      setError('Please upload a payment proof image.');
+      return;
+    }
+    setUploading(true);
+    setError('');
+    try {
+      await uploadPaymentProof(subscriptionId, file);
+      setStatus('pending');
+    } catch (err) {
+      setError('Failed to upload payment proof. Please try again.');
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const statusDisplay = {
+    'un-paid': { icon: <FaTimesCircle className="text-red-500 mr-2" />, text: 'Un-paid', color: 'text-red-600' },
+    'pending': { icon: <FaHourglassHalf className="text-orange-500 mr-2 animate-pulse" />, text: 'Pending Approval', color: 'text-orange-600' },
+    'approved': { icon: <FaCheckCircle className="text-green-500 mr-2" />, text: 'Approved', color: 'text-green-600' },
+    'rejected': { icon: <FaTimesCircle className="text-red-500 mr-2" />, text: 'Rejected', color: 'text-red-600' },
+  };
+
+  return (
+    <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-orange-50 to-white p-2 sm:p-6">
+      <div className="w-full max-w-md bg-white rounded-2xl shadow-xl border border-orange-100 p-4 sm:p-8 flex flex-col gap-6">
+        <Link to="/subscription" className="text-orange-600 font-semibold flex items-center mb-2 hover:underline w-fit"><FaArrowLeft className="mr-2" />Back to Subscription Page</Link>
+        <h2 className="text-2xl sm:text-3xl font-bold text-orange-800 mb-2 flex items-center">Payment Status</h2>
+        <div className="flex items-center mb-2">
+          {statusDisplay[status].icon}
+          <span className={`font-bold text-lg ${statusDisplay[status].color}`}>{statusDisplay[status].text}</span>
+        </div>
+        {status === 'un-paid' && (
+          <>
+            <div className="bg-orange-50 rounded-xl p-4 border border-orange-200 mb-2 text-orange-700 font-medium">
+              Please pay and wait for the vendor approval. Upload your payment proof below.
+            </div>
+            <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+              <label className="block text-orange-700 font-semibold mb-1">Upload Payment Proof (screenshot)</label>
+              <input
+                type="file"
+                accept="image/*"
+                onChange={handleFileChange}
+                className="w-full border-2 border-orange-200 rounded-lg px-3 py-2 bg-white text-gray-800 font-medium"
+                disabled={uploading}
+              />
+              {error && <div className="text-red-600 text-sm font-semibold mt-1">{error}</div>}
+              <button
+                type="submit"
+                disabled={uploading}
+                className="w-full bg-gradient-to-r from-orange-500 to-orange-600 text-white py-3 px-4 rounded-lg hover:from-orange-600 hover:to-orange-700 transition-all duration-200 font-bold flex items-center justify-center mt-2 disabled:opacity-60 disabled:cursor-not-allowed"
+              >
+                <FaUpload className="mr-2" />
+                {uploading ? 'Uploading...' : 'Submit Payment Proof'}
+              </button>
+            </form>
+          </>
+        )}
+        {status === 'pending' && (
+          <div className="bg-orange-50 rounded-xl p-4 border border-orange-200 text-orange-700 font-medium">
+            Payment proof submitted. Please wait for the vendor to approve your payment.
+          </div>
+        )}
+        {status === 'approved' && (
+          <div className="bg-green-50 rounded-xl p-4 border border-green-200 text-green-700 font-medium">
+            Payment approved! Your subscription is now active.
+          </div>
+        )}
+        {status === 'rejected' && (
+          <div className="bg-red-50 rounded-xl p-4 border border-red-200 text-red-700 font-medium">
+            Payment was rejected. Please contact support or try again.
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
+export default PaymentStatus; 

@@ -1,5 +1,6 @@
 import User from '../../models/User.js';
 import SubscriptionPlan from '../../models/SubscriptionPlan.js';
+import UserSubscription from '../../models/UserSubscription.js';
 
 // Get all users
 export const getAllUsers = async (req, res) => {
@@ -321,5 +322,100 @@ export const clearCart = async (req, res) => {
   } catch (error) {
     console.error('Error clearing cart:', error);
     res.status(500).json({ success: false, message: 'Error clearing cart', error: error.message });
+  }
+}; 
+
+// Create a new user subscription
+export const createUserSubscription = async (req, res) => {
+  try {
+    const { subscriptionPlan, vendor, startDate, duration } = req.body;
+    const user = req.user ? req.user._id : req.body.user; // Prefer authenticated user
+    if (!user || !subscriptionPlan || !vendor || !startDate || !duration) {
+      return res.status(400).json({ success: false, message: 'Missing required fields.' });
+    }
+    const newSub = await UserSubscription.create({
+      user,
+      subscriptionPlan,
+      vendor,
+      startDate,
+      duration,
+      paymentStatus: 'un-paid',
+    });
+    res.status(201).json({ success: true, data: newSub });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+}; 
+
+// Upload payment proof and update payment status
+export const uploadPaymentProof = async (req, res) => {
+  try {
+    const { subscriptionId } = req.params;
+    const subscription = await UserSubscription.findById(subscriptionId);
+    if (!subscription) {
+      return res.status(404).json({ success: false, message: 'Subscription not found' });
+    }
+    if (subscription.user.toString() !== req.user._id.toString()) {
+      return res.status(403).json({ success: false, message: 'Not authorized' });
+    }
+    if (!req.file) {
+      return res.status(400).json({ success: false, message: 'No file uploaded' });
+    }
+    subscription.paymentProof = `/uploads/payment-proofs/${req.file.filename}`;
+    subscription.paymentStatus = 'pending';
+    await subscription.save();
+    res.json({ success: true, data: subscription });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+}; 
+
+// Get all user subscriptions for the logged-in user
+export const getUserSubscriptions = async (req, res) => {
+  try {
+    const userId = req.user._id;
+    let subs = await UserSubscription.find({ user: userId })
+      .populate('subscriptionPlan')
+      .populate('vendor', 'name email');
+    // Auto-expire subscriptions
+    const today = new Date();
+    today.setHours(0,0,0,0);
+    for (let sub of subs) {
+      if (sub.paymentStatus === 'approved') {
+        const endDate = new Date(sub.startDate);
+        endDate.setDate(endDate.getDate() + sub.duration);
+        endDate.setHours(0,0,0,0);
+        if (endDate < today) {
+          sub.paymentStatus = 'expired';
+          await sub.save();
+        }
+      }
+    }
+    // Re-fetch to get updated statuses
+    subs = await UserSubscription.find({ user: userId })
+      .populate('subscriptionPlan')
+      .populate('vendor', 'name email');
+    res.json({ success: true, data: subs });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+}; 
+
+// Delete a user subscription if expired
+export const deleteUserSubscription = async (req, res) => {
+  try {
+    const userId = req.user._id;
+    const { subscriptionId } = req.params;
+    const sub = await UserSubscription.findOne({ _id: subscriptionId, user: userId });
+    if (!sub) {
+      return res.status(404).json({ success: false, message: 'Subscription not found' });
+    }
+    if (sub.paymentStatus !== 'expired') {
+      return res.status(400).json({ success: false, message: 'Only expired subscriptions can be deleted' });
+    }
+    await sub.deleteOne();
+    res.json({ success: true, message: 'Subscription deleted' });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
   }
 }; 

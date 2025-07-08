@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { FaHome, FaUtensils, FaClipboardList, FaUserCircle, FaSignOutAlt, FaMoneyCheckAlt } from 'react-icons/fa';
 import { useVendorAuth } from '../context/VendorAuthContext';
-import vendorApi from '../api/vendorApi';
+import vendorApi, { getPendingUserSubscriptions, approveUserSubscription, getApprovedUserSubscriptions } from '../api/vendorApi';
 import VendorNavbar from '../components/vendor/VendorNavbar';
 
 const vendorLinks = [
@@ -20,6 +20,44 @@ const VendorDashboard = () => {
   const [error, setError] = useState('');
   const [showConfirm, setShowConfirm] = useState(false);
   const [pendingStatus, setPendingStatus] = useState("");
+  const [pendingSubs, setPendingSubs] = useState([]);
+  const [pendingLoading, setPendingLoading] = useState(false);
+  const [pendingError, setPendingError] = useState('');
+  const [approvedSubs, setApprovedSubs] = useState([]);
+  const [approvedLoading, setApprovedLoading] = useState(false);
+  const [approvedError, setApprovedError] = useState('');
+
+  useEffect(() => {
+    const fetchPendingSubs = async () => {
+      setPendingLoading(true);
+      setPendingError('');
+      try {
+        const res = await getPendingUserSubscriptions();
+        setPendingSubs(res.data.data);
+      } catch (err) {
+        setPendingError('Failed to load pending subscriptions.');
+      } finally {
+        setPendingLoading(false);
+      }
+    };
+    fetchPendingSubs();
+  }, []);
+
+  useEffect(() => {
+    const fetchApprovedSubs = async () => {
+      setApprovedLoading(true);
+      setApprovedError('');
+      try {
+        const res = await getApprovedUserSubscriptions();
+        setApprovedSubs(res.data.data);
+      } catch (err) {
+        setApprovedError('Failed to load approved subscriptions.');
+      } finally {
+        setApprovedLoading(false);
+      }
+    };
+    fetchApprovedSubs();
+  }, []);
 
   const handleLogout = () => {
     logout();
@@ -68,13 +106,22 @@ const VendorDashboard = () => {
     setPendingStatus("");
   };
 
+  const handleApprove = async (id, action) => {
+    try {
+      await approveUserSubscription(id, action);
+      setPendingSubs(pendingSubs.filter(sub => sub._id !== id));
+    } catch (err) {
+      alert('Failed to update subscription status.');
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col">
       {/* Navbar */}
       <VendorNavbar />
       {/* Main Content */}
       <main className="flex-grow container mx-auto px-4 py-8">
-        <div className="bg-white rounded-lg shadow-md p-6 max-w-lg mx-auto">
+        <div className="bg-white rounded-lg shadow-md p-6 max-w-lg mx-auto mb-8">
           <h1 className="text-2xl font-bold text-gray-800 mb-4">Vendor Details</h1>
           {error && <div className="text-red-600 mb-2">{error}</div>}
           {loading ? (
@@ -126,6 +173,71 @@ const VendorDashboard = () => {
                   </button>
                 </div>
               </div>
+            </div>
+          )}
+        </div>
+        {/* Pending User Subscriptions Section */}
+        <div className="bg-white rounded-lg shadow-md p-6 max-w-3xl mx-auto mt-8">
+          <h2 className="text-xl font-bold text-orange-800 mb-4 flex items-center">Pending User Subscriptions</h2>
+          {pendingLoading ? (
+            <div className="text-center text-gray-500">Loading pending subscriptions...</div>
+          ) : pendingError ? (
+            <div className="text-red-600 mb-2">{pendingError}</div>
+          ) : pendingSubs.length === 0 ? (
+            <div className="text-center text-gray-500">No pending user subscriptions.</div>
+          ) : (
+            <div className="space-y-6">
+              {pendingSubs.map(sub => (
+                <div key={sub._id} className="border rounded-lg p-4 flex flex-col md:flex-row gap-4 items-start md:items-center bg-orange-50">
+                  <div className="flex-1">
+                    <div className="font-semibold text-gray-800 mb-1">User: {sub.user?.name} ({sub.user?.email})</div>
+                    <div className="text-gray-700 mb-1">Plan: {sub.subscriptionPlan?.planType} ({sub.subscriptionPlan?.duration} days, ₹{sub.subscriptionPlan?.price})</div>
+                    <div className="text-gray-700 mb-1">Start Date: {new Date(sub.startDate).toLocaleDateString()}</div>
+                    <div className="text-gray-700 mb-1">Duration: {sub.duration} days</div>
+                  </div>
+                  <div className="flex flex-col items-center gap-2">
+                    {sub.paymentProof && (
+                      <a href={`http://localhost:5000${sub.paymentProof}`} target="_blank" rel="noopener noreferrer">
+                        <img src={`http://localhost:5000${sub.paymentProof}`} alt="Payment Proof" className="w-24 h-24 object-cover rounded border" />
+                      </a>
+                    )}
+                    <div className="flex gap-2 mt-2">
+                      <button
+                        onClick={() => handleApprove(sub._id, 'approved')}
+                        className="px-4 py-2 rounded bg-green-500 hover:bg-green-600 text-white font-bold"
+                      >Approve</button>
+                      <button
+                        onClick={() => handleApprove(sub._id, 'rejected')}
+                        className="px-4 py-2 rounded bg-red-500 hover:bg-red-600 text-white font-bold"
+                      >Reject</button>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+        {/* Approved User Subscriptions Section */}
+        <div className="bg-white rounded-lg shadow-md p-6 max-w-3xl mx-auto mt-8">
+          <h2 className="text-xl font-bold text-green-800 mb-4 flex items-center">Approved User Subscriptions</h2>
+          {approvedLoading ? (
+            <div className="text-center text-gray-500">Loading approved subscriptions...</div>
+          ) : approvedError ? (
+            <div className="text-red-600 mb-2">{approvedError}</div>
+          ) : approvedSubs.length === 0 ? (
+            <div className="text-center text-gray-500">No approved user subscriptions.</div>
+          ) : (
+            <div className="space-y-6">
+              {approvedSubs.map(sub => (
+                <div key={sub._id} className="border rounded-lg p-4 flex flex-col md:flex-row gap-4 items-start md:items-center bg-green-50">
+                  <div className="flex-1">
+                    <div className="font-semibold text-gray-800 mb-1">User: {sub.user?.name} ({sub.user?.email})</div>
+                    <div className="text-gray-700 mb-1">Plan: {sub.subscriptionPlan?.planType} ({sub.subscriptionPlan?.duration} days, ₹{sub.subscriptionPlan?.price})</div>
+                    <div className="text-gray-700 mb-1">Start Date: {new Date(sub.startDate).toLocaleDateString()}</div>
+                    <div className="text-gray-700 mb-1">Duration: {sub.duration} days</div>
+                  </div>
+                </div>
+              ))}
             </div>
           )}
         </div>
