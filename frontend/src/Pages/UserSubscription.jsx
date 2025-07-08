@@ -16,6 +16,7 @@ import {
   FaCheckCircle,
   FaFilter
 } from 'react-icons/fa';
+import { useNavigate } from 'react-router-dom';
 
 // API base URL for images - uploads are served directly from the server root, not /api
 const API_BASE_URL = 'http://localhost:5000';
@@ -47,6 +48,7 @@ const UserSubscription = () => {
   const [showPlanDetails, setShowPlanDetails] = useState(false);
   const [filterType, setFilterType] = useState('all');
   const [filterDuration, setFilterDuration] = useState('all');
+  const navigate = useNavigate();
 
   useEffect(() => {
     fetchPlans();
@@ -276,29 +278,29 @@ const UserSubscription = () => {
 
       {/* Plan Details Modal */}
       {showPlanDetails && selectedPlan && (
-        <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-2xl max-w-5xl w-full max-h-[90vh] overflow-y-auto shadow-2xl border border-orange-100">
-            <div className="p-8">
-              <div className="flex justify-between items-start mb-8">
-                <div>
-                  <h2 className="text-3xl font-bold text-orange-800 mb-3 flex items-center">
-                    <FaUtensils className="mr-3 text-orange-600" />
+        <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center p-2 sm:p-4 z-50">
+          <div className="bg-white rounded-2xl w-full max-w-2xl sm:max-w-3xl md:max-w-4xl lg:max-w-5xl max-h-[95vh] overflow-y-auto shadow-2xl border border-orange-100">
+            <div className="p-4 sm:p-6 md:p-8">
+              <div className="flex flex-col sm:flex-row justify-between items-start mb-6 sm:mb-8 gap-4">
+                <div className="w-full">
+                  <h2 className="text-2xl sm:text-3xl font-bold text-orange-800 mb-2 sm:mb-3 flex items-center flex-wrap">
+                    <FaUtensils className="mr-2 sm:mr-3 text-orange-600 text-xl sm:text-2xl" />
                     {selectedPlan.vendor?.name} - Subscription Plan
                   </h2>
-                  <div className="flex items-center space-x-6 text-sm text-orange-700 font-medium">
+                  <div className="flex flex-wrap items-center gap-3 sm:space-x-6 text-xs sm:text-sm text-orange-700 font-medium">
                     <div className="flex items-center">
-                      <FaMapMarkerAlt className="mr-2 text-orange-500" />
+                      <FaMapMarkerAlt className="mr-1 sm:mr-2 text-orange-500" />
                       {selectedPlan.vendor?.location}
                     </div>
                     {selectedPlan.vendor?.phone && (
                       <div className="flex items-center">
-                        <FaPhone className="mr-2 text-orange-500" />
+                        <FaPhone className="mr-1 sm:mr-2 text-orange-500" />
                         {selectedPlan.vendor.phone}
                       </div>
                     )}
                     {selectedPlan.vendor?.email && (
                       <div className="flex items-center">
-                        <FaEnvelope className="mr-2 text-orange-500" />
+                        <FaEnvelope className="mr-1 sm:mr-2 text-orange-500" />
                         {selectedPlan.vendor.email}
                       </div>
                     )}
@@ -306,40 +308,41 @@ const UserSubscription = () => {
                 </div>
                 <button
                   onClick={closePlanDetails}
-                  className="text-orange-400 hover:text-orange-600 text-3xl font-bold p-2 hover:bg-orange-50 rounded-full transition-colors duration-200"
+                  className="text-orange-400 hover:text-orange-600 text-2xl sm:text-3xl font-bold p-2 hover:bg-orange-50 rounded-full transition-colors duration-200 self-end"
+                  aria-label="Close details modal"
                 >
                   <FaTimes />
                 </button>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-                <div className="bg-gradient-to-br from-orange-50 to-orange-100 rounded-xl p-6 border border-orange-200">
-                  <h3 className="font-bold text-orange-800 mb-4 flex items-center">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 mb-6 sm:mb-8">
+                <div className="bg-gradient-to-br from-orange-50 to-orange-100 rounded-xl p-4 sm:p-6 border border-orange-200">
+                  <h3 className="font-bold text-orange-800 mb-3 sm:mb-4 flex items-center text-base sm:text-lg">
                     <FaCheckCircle className="mr-2 text-orange-600" />
                     Plan Information
                   </h3>
-                  <div className="space-y-3">
-                    <div className="flex justify-between items-center">
+                  <div className="space-y-2 sm:space-y-3">
+                    <div className="flex justify-between items-center text-xs sm:text-sm">
                       <span className="text-orange-700 font-semibold flex items-center">
-                        <FaClock className="mr-2" />
+                        <FaClock className="mr-1 sm:mr-2" />
                         Duration:
                       </span>
                       <span className="font-bold text-orange-800">{selectedPlan.duration} days</span>
                     </div>
-                    <div className="flex justify-between items-center">
+                    <div className="flex justify-between items-center text-xs sm:text-sm">
                       <span className="text-orange-700 font-semibold flex items-center">
-                        <FaMoneyBillWave className="mr-2" />
+                        <FaMoneyBillWave className="mr-1 sm:mr-2" />
                         Total Price:
                       </span>
-                      <span className="text-2xl font-bold text-orange-600">₹{selectedPlan.price}</span>
+                      <span className="text-lg sm:text-2xl font-bold text-orange-600">₹{selectedPlan.price}</span>
                     </div>
-                    <div className="flex justify-between items-center">
+                    <div className="flex justify-between items-center text-xs sm:text-sm">
                       <span className="text-orange-700 font-semibold">Price per day:</span>
                       <span className="font-bold text-orange-800">₹{(selectedPlan.price / selectedPlan.duration).toFixed(2)}</span>
                     </div>
-                    <div className="flex justify-between items-center">
+                    <div className="flex justify-between items-center text-xs sm:text-sm">
                       <span className="text-orange-700 font-semibold">Plan Type:</span>
-                      <span className={`px-3 py-1 rounded-full text-xs font-bold flex items-center ${
+                      <span className={`px-2 sm:px-3 py-1 rounded-full text-xs font-bold flex items-center ${
                         selectedPlan.planType === 'veg' 
                           ? 'bg-green-100 text-green-800 border border-green-200' 
                           : 'bg-red-100 text-red-800 border border-red-200'
@@ -360,35 +363,35 @@ const UserSubscription = () => {
                   </div>
                 </div>
 
-                <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl p-6 border border-blue-200">
-                  <h3 className="font-bold text-blue-800 mb-4 flex items-center">
+                <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl p-4 sm:p-6 border border-blue-200">
+                  <h3 className="font-bold text-blue-800 mb-3 sm:mb-4 flex items-center text-base sm:text-lg">
                     <FaMapMarkerAlt className="mr-2 text-blue-600" />
                     Vendor Information
                   </h3>
-                  <div className="flex items-center space-x-4 mb-4">
+                  <div className="flex items-center gap-2 sm:space-x-4 mb-3 sm:mb-4">
                     <img
                       src={getVendorImageUrl(selectedPlan.vendor?.image)}
                       alt={selectedPlan.vendor?.name}
-                      className="w-20 h-20 rounded-full object-cover border-4 border-blue-200"
+                      className="w-14 h-14 sm:w-20 sm:h-20 rounded-full object-cover border-2 sm:border-4 border-blue-200"
                       onError={(e) => {
                         e.target.src = '/logo.png';
                       }}
                     />
                     <div>
-                      <h4 className="font-bold text-blue-800 text-lg">{selectedPlan.vendor?.name}</h4>
-                      <p className="text-blue-700 font-medium">{selectedPlan.vendor?.location}</p>
+                      <h4 className="font-bold text-blue-800 text-base sm:text-lg">{selectedPlan.vendor?.name}</h4>
+                      <p className="text-blue-700 font-medium text-xs sm:text-sm">{selectedPlan.vendor?.location}</p>
                     </div>
                   </div>
-                  <div className="space-y-2 text-sm">
+                  <div className="space-y-1 sm:space-y-2 text-xs sm:text-sm">
                     {selectedPlan.vendor?.phone && (
                       <div className="flex items-center text-blue-700 font-medium">
-                        <FaPhone className="mr-3 text-blue-500" />
+                        <FaPhone className="mr-2 sm:mr-3 text-blue-500" />
                         {selectedPlan.vendor.phone}
                       </div>
                     )}
                     {selectedPlan.vendor?.email && (
                       <div className="flex items-center text-blue-700 font-medium">
-                        <FaEnvelope className="mr-3 text-blue-500" />
+                        <FaEnvelope className="mr-2 sm:mr-3 text-blue-500" />
                         {selectedPlan.vendor.email}
                       </div>
                     )}
@@ -396,18 +399,18 @@ const UserSubscription = () => {
                 </div>
               </div>
 
-              <div className="mb-8">
-                <h3 className="font-bold text-orange-800 mb-6 flex items-center">
+              <div className="mb-6 sm:mb-8">
+                <h3 className="font-bold text-orange-800 mb-4 sm:mb-6 flex items-center text-base sm:text-lg">
                   <FaCalendarAlt className="mr-2 text-orange-600" />
                   Weekly Meal Schedule
                 </h3>
                 <div className="overflow-x-auto rounded-xl border-2 border-orange-200">
-                  <table className="min-w-full">
+                  <table className="min-w-full text-xs sm:text-sm">
                     <thead className="bg-gradient-to-r from-orange-500 to-orange-600">
                       <tr>
-                        <th className="px-6 py-4 text-left text-sm font-bold text-white">📅 Day</th>
+                        <th className="px-2 sm:px-6 py-2 sm:py-4 text-left font-bold text-white whitespace-nowrap">📅 Day</th>
                         {mealTypes.map(meal => (
-                          <th key={meal} className="px-6 py-4 text-left text-sm font-bold text-white capitalize">
+                          <th key={meal} className="px-2 sm:px-6 py-2 sm:py-4 text-left font-bold text-white capitalize whitespace-nowrap">
                             {meal === 'breakfast' ? '🌅 Breakfast' : 
                              meal === 'lunch' ? '🌞 Lunch' : 
                              meal === 'dinner' ? '🌙 Dinner' : '🍎 Snacks'}
@@ -417,14 +420,14 @@ const UserSubscription = () => {
                     </thead>
                     <tbody>
                       {days.map((day, index) => (
-                        <tr key={day} className={`hover:bg-orange-50 transition-colors duration-200 ${index % 2 === 0 ? 'bg-white' : 'bg-orange-50'}`}>
-                          <td className="border-b border-orange-200 px-6 py-4 font-bold text-orange-800 bg-orange-100">{day}</td>
+                        <tr key={day} className={`hover:bg-orange-50 transition-colors duration-200 ${index % 2 === 0 ? 'bg-white' : 'bg-orange-50'}`}> 
+                          <td className="border-b border-orange-200 px-2 sm:px-6 py-2 sm:py-4 font-bold text-orange-800 bg-orange-100 whitespace-nowrap">{day}</td>
                           {mealTypes.map(meal => {
                             const mealItem = selectedPlan.weekMeals[day][meal];
                             return (
-                              <td key={meal} className="border-b border-orange-200 px-6 py-4">
+                              <td key={meal} className="border-b border-orange-200 px-2 sm:px-6 py-2 sm:py-4">
                                 {mealItem ? (
-                                  <div className="bg-white rounded-lg p-3 border border-orange-200">
+                                  <div className="bg-white rounded-lg p-2 sm:p-3 border border-orange-200">
                                     <div className="font-bold text-gray-800 mb-1">{mealItem.name}</div>
                                     <div className="text-orange-600 font-semibold">₹{mealItem.price}</div>
                                   </div>
@@ -441,20 +444,19 @@ const UserSubscription = () => {
                 </div>
               </div>
 
-              <div className="flex justify-end space-x-4">
+              <div className="flex flex-col sm:flex-row justify-end gap-3 sm:space-x-4">
                 <button
                   onClick={closePlanDetails}
-                  className="px-8 py-3 border-2 border-orange-300 text-orange-700 rounded-lg hover:bg-orange-50 transition-all duration-200 font-bold flex items-center"
+                  className="w-full sm:w-auto px-6 sm:px-8 py-2 sm:py-3 border-2 border-orange-300 text-orange-700 rounded-lg hover:bg-orange-50 transition-all duration-200 font-bold flex items-center justify-center"
                 >
                   <FaTimes className="mr-2" />
                   Close
                 </button>
                 <button
                   onClick={() => {
-                    // TODO: Implement subscription purchase logic
-                    alert('Subscription purchase feature coming soon!');
+                    navigate(`/subscription/start/${selectedPlan._id}`);
                   }}
-                  className="px-8 py-3 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-lg hover:from-orange-600 hover:to-orange-700 transition-all duration-200 font-bold flex items-center shadow-lg"
+                  className="w-full sm:w-auto px-6 sm:px-8 py-2 sm:py-3 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-lg hover:from-orange-600 hover:to-orange-700 transition-all duration-200 font-bold flex items-center justify-center shadow-lg"
                 >
                   <FaCheckCircle className="mr-2" />
                   Subscribe Now

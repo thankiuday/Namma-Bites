@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { FaCheckCircle, FaTimesCircle, FaClock } from 'react-icons/fa';
 
 const Orders = () => {
@@ -39,6 +39,12 @@ const Orders = () => {
     }
   ];
 
+  const [statusFilter, setStatusFilter] = useState('all');
+
+  const filteredOrders = statusFilter === 'all'
+    ? orders
+    : orders.filter(order => order.status === statusFilter);
+
   const getStatusIcon = (status) => {
     switch (status) {
       case 'delivered':
@@ -68,14 +74,28 @@ const Orders = () => {
   return (
     <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
       <h1 className="text-2xl sm:text-3xl font-bold text-gray-800 mb-6 sm:mb-8">Your Orders</h1>
+      <div className="mb-6 flex flex-col sm:flex-row sm:items-center gap-3">
+        <label className="text-orange-700 font-semibold text-sm" htmlFor="order-status-filter">Filter by Status:</label>
+        <select
+          id="order-status-filter"
+          value={statusFilter}
+          onChange={e => setStatusFilter(e.target.value)}
+          className="w-full sm:w-60 border-2 border-orange-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-orange-300 focus:border-orange-500 bg-white text-gray-800 font-medium"
+        >
+          <option value="all">All</option>
+          <option value="processing">Processing</option>
+          <option value="delivered">Delivered</option>
+          <option value="cancelled">Cancelled</option>
+        </select>
+      </div>
       
-      {orders.length === 0 ? (
+      {filteredOrders.length === 0 ? (
         <div className="text-center py-8 sm:py-12">
           <p className="text-gray-600 text-base sm:text-lg">No orders found</p>
         </div>
       ) : (
         <div className="space-y-4 sm:space-y-6">
-          {orders.map((order) => (
+          {filteredOrders.map((order) => (
             <div key={order.id} className="bg-white rounded-lg shadow-lg p-4 sm:p-6">
               <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-3 sm:gap-0 mb-4">
                 <div>

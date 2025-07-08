@@ -77,7 +77,7 @@ const Navbar = ({ links = defaultStudentLinks, isAdmin = false }) => {
                 to={link.to}
                 className="text-black hover:text-orange-600 px-2 lg:px-3 py-2 rounded-md text-sm font-medium flex items-center gap-1 lg:gap-2 relative"
               >
-                {iconMap[link.icon]?.('text-base lg:text-lg')}
+                {iconMap[link.icon]?.('text-base lg:text-lg h-5 w-5')}
                 <span className="hidden lg:inline">{link.label}</span>
                 {/* Cart counter */}
                 {link.to === '/cart' && cartItemCount > 0 && (

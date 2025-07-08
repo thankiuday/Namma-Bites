@@ -43,7 +43,6 @@ const AppContent = () => {
           {/* Vendor and Admin Routes */}
           <Route path="/vendor/*" element={<VendorRoutes />} />
           <Route path="/admin/*" element={<AdminRoutes />} />
-          <Route path="/vendor-details/:id" element={<VendorDetails />} />
         </Routes>
       </main>
       {!isAdminRoute && !isVendorRoute && <Footer />}

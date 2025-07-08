@@ -131,7 +131,7 @@ const VendorDashboard = () => {
         </div>
       </main>
       {/* Footer */}
-      <footer className="bg-gray-900 text-white py-4 text-center">
+      <footer className="bg-white text-black py-4 text-center border-t border-gray-200">
         &copy; {new Date().getFullYear()} Namma Bites. All rights reserved.
       </footer>
     </div>

@@ -23,9 +23,9 @@ const CategorySection = ({ onCategoryClick }) => {
   ];
 
   return (
-    <div className="w-full max-w-6xl px-4 mt-16">
-      <h2 className="text-2xl font-semibold text-gray-800 mb-8 text-center">Food Categories</h2>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+    <div className="w-full max-w-6xl px-4 mt-8">
+      <h2 className="text-lg md:text-2xl font-semibold text-gray-800 mb-4 text-center">Food Categories</h2>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-8">
         {categories.map((category) => (
           <div 
             key={category.id} 
@@ -33,26 +33,26 @@ const CategorySection = ({ onCategoryClick }) => {
             onClick={() => onCategoryClick && onCategoryClick(category.scrollType)}
             style={{ cursor: 'pointer' }}
           >
-            <div className="relative h-64">
+            <div className="relative h-40 md:h-64">
               <img 
                 src={category.image} 
                 alt={category.name}
                 className="w-full h-full object-cover transform transition-transform duration-300 hover:scale-110"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent"></div>
-              <div className="absolute bottom-0 left-0 right-0 p-6">
-                <div className="flex items-center gap-3 mb-2">
-                  <div className={`w-8 h-8 rounded-full ${category.color} flex items-center justify-center`}>
+              <div className="absolute bottom-0 left-0 right-0 p-3 md:p-6">
+                <div className="flex items-center gap-2 md:gap-3 mb-1 md:mb-2">
+                  <div className={`w-6 h-6 md:w-8 md:h-8 rounded-full ${category.color} flex items-center justify-center`}>
                     <span className="text-white font-bold">{category.type}</span>
                   </div>
-                  <h3 className="text-2xl font-bold text-white">{category.name}</h3>
+                  <h3 className="text-xl md:text-2xl font-bold text-white">{category.name}</h3>
                 </div>
-                <p className="text-gray-200">
+                <p className="text-gray-200 text-xs md:text-base">
                   {category.name === "Vegetarian" 
                     ? "Explore our wide range of delicious vegetarian dishes"
                     : "Discover our selection of premium non-vegetarian delicacies"}
                 </p>
-                <p className="text-orange-500 font-semibold mt-2">{category.count}+ items</p>
+                <p className="text-orange-500 font-semibold mt-1 md:mt-2 text-xs md:text-base">{category.count}+ items</p>
               </div>
             </div>
           </div>

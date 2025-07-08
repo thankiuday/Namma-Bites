@@ -41,6 +41,13 @@ const VendorDetails = () => {
 
   return (
     <div className="max-w-4xl mx-auto px-4 py-8">
+      <div className="mb-4">
+        <a href="/" className="inline-flex items-center text-orange-600 hover:underline font-semibold">
+          {/* Left arrow icon */}
+          <svg className="h-5 w-5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" /></svg>
+          Back to Home
+        </a>
+      </div>
       <div className="bg-white rounded-lg shadow-md p-6 mb-8 flex flex-col items-center">
         <img
           src={`http://localhost:5000${vendor.image}`}

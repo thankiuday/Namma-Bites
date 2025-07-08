@@ -20,7 +20,7 @@ const VendorNavbar = () => {
   };
 
   return (
-    <nav className="bg-gray-900 text-white shadow-lg">
+    <nav className="bg-white text-black shadow-lg">
       <div className="container mx-auto px-4 flex justify-between items-center h-16">
         <div className="flex items-center space-x-2">
           <img src="/logo.png" alt="Namma Bites" className="h-8 w-auto" />
@@ -32,7 +32,7 @@ const VendorNavbar = () => {
             <button
               key={link.name}
               onClick={() => navigate(link.path)}
-              className="flex items-center space-x-2 text-gray-300 hover:text-white transition-colors duration-200"
+              className="flex items-center space-x-2 text-black hover:text-orange-600 transition-colors duration-200"
             >
               {link.icon}
               <span>{link.name}</span>
@@ -56,12 +56,12 @@ const VendorNavbar = () => {
       </div>
       {/* Mobile Menu */}
       {isMenuOpen && (
-        <div className="md:hidden py-4 space-y-4 bg-gray-900">
+        <div className="md:hidden py-4 space-y-4 bg-white">
           {vendorLinks.map(link => (
             <button
               key={link.name}
               onClick={() => { setIsMenuOpen(false); navigate(link.path); }}
-              className="flex items-center space-x-2 text-gray-300 hover:text-white transition-colors duration-200 px-4 py-2 text-base w-full text-left"
+              className="flex items-center space-x-2 text-black hover:text-orange-600 transition-colors duration-200 px-4 py-2 text-base w-full text-left"
             >
               {link.icon}
               <span>{link.name}</span>

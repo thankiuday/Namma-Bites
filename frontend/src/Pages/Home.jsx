@@ -103,7 +103,7 @@ const Home = () => {
   return (
     <main className="flex-grow">
       <div className="flex flex-col items-center justify-center">
-        <div className="w-full max-w-6xl px-4 mb-12 flex justify-center">
+        <div className="w-full max-w-7xl px-4 mb-12 flex justify-center">
           <img 
             src={logo} 
             alt="Namma Bites Logo" 
@@ -115,23 +115,23 @@ const Home = () => {
         <FoodCategories />
         
         {/* Search Section - Mobile First */}
-        <div className="w-full max-w-6xl px-4 mb-8 md:hidden">
-          <div className="flex gap-2">
+        <div className="w-full max-w-7xl px-4 mb-8 md:hidden">
+          <div className="flex gap-2 flex-wrap">
             <input
               type="text"
               placeholder="Search by food, vendor, or veg/non-veg..."
-              className="flex-1 px-4 py-3 rounded-lg border-2 border-gray-200 focus:border-orange-600 focus:outline-none text-gray-800 placeholder-gray-400"
+              className="flex-1 min-w-0 px-4 py-3 rounded-lg border-2 border-gray-200 focus:border-orange-600 focus:outline-none text-gray-800 placeholder-gray-400"
               value={searchTerm}
               onChange={e => setSearchTerm(e.target.value)}
             />
-            <button className="px-6 py-3 bg-orange-600 text-white rounded-lg hover:bg-orange-500 transition-colors duration-300">
+            <button className="w-auto min-w-fit px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-500 transition-colors duration-300">
               Search
             </button>
           </div>
         </div>
 
         {/* Search Section - Desktop */}
-        <div className="hidden md:block w-full max-w-6xl px-4 mt-12">
+        <div className="hidden md:block w-full max-w-7xl px-4 mt-12">
           <div className="flex gap-4 max-w-3xl mx-auto">
             <input
               type="text"

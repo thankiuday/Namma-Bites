@@ -179,6 +179,8 @@ const UserProfile = () => {
         </div>
       </section>
 
+     
+
       {/* Quick Actions Section */}
       <section className="bg-white rounded-xl shadow-lg p-4 sm:p-6 mb-6 sm:mb-8">
         <h2 className="text-xl sm:text-2xl font-bold text-gray-900 mb-4 sm:mb-6">Quick Actions</h2>
@@ -214,12 +216,14 @@ const UserProfile = () => {
           >
             <FaKey /> Change Password
           </button>
-          <button
-            onClick={() => navigate('/contact')}
+          <a
+            href="mailto:contact_namma_bites@gmail.com"
             className="flex items-center justify-center gap-2 px-6 py-3 bg-orange-600 text-white rounded-md hover:bg-orange-700 transition-colors"
+            target="_blank"
+            rel="noopener noreferrer"
           >
             <FaHeadset /> Contact Support
-          </button>
+          </a>
         </div>
       </section>
 
