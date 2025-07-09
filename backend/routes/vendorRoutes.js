@@ -156,7 +156,10 @@ router.get('/ping', (req, res) => {
 router.get('/me', authenticateVendor, getSelfVendor);
 
 // Update current vendor profile (protected, vendor only)
-router.put('/me', authenticateVendor, uploadVendorImage.single('logo'), updateCurrentVendorProfile);
+router.put('/me', authenticateVendor, uploadVendorImage.fields([
+  { name: 'logo', maxCount: 1 },
+  { name: 'scanner', maxCount: 1 }
+]), updateCurrentVendorProfile);
 
 // Update current vendor status (protected, vendor only)
 router.put('/me/status', authenticateVendor, updateCurrentVendorStatus);

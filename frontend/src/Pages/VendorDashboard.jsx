@@ -29,6 +29,7 @@ const VendorDashboard = () => {
   const [approvedError, setApprovedError] = useState('');
   const [modalImage, setModalImage] = useState(null);
   const [approvedFilter, setApprovedFilter] = useState('none');
+  const [rejectedFilter, setRejectedFilter] = useState('none');
   const [rejectedSubs, setRejectedSubs] = useState([]);
 
   const fetchApprovedSubs = async () => {
@@ -164,6 +165,24 @@ const VendorDashboard = () => {
       return [...approvedSubs].sort((a, b) => new Date(a.startDate) - new Date(b.startDate));
     }
     return approvedSubs;
+  };
+
+  // Sorting logic for rejected subscriptions
+  const getSortedRejectedSubs = () => {
+    if (rejectedFilter === 'user-az') {
+      return [...rejectedSubs].sort((a, b) => (a.user?.name || '').localeCompare(b.user?.name || ''));
+    } else if (rejectedFilter === 'user-za') {
+      return [...rejectedSubs].sort((a, b) => (b.user?.name || '').localeCompare(a.user?.name || ''));
+    } else if (rejectedFilter === 'duration-asc') {
+      return [...rejectedSubs].sort((a, b) => (a.duration || 0) - (b.duration || 0));
+    } else if (rejectedFilter === 'duration-desc') {
+      return [...rejectedSubs].sort((a, b) => (b.duration || 0) - (a.duration || 0));
+    } else if (rejectedFilter === 'start-newest') {
+      return [...rejectedSubs].sort((a, b) => new Date(b.startDate) - new Date(a.startDate));
+    } else if (rejectedFilter === 'start-oldest') {
+      return [...rejectedSubs].sort((a, b) => new Date(a.startDate) - new Date(b.startDate));
+    }
+    return rejectedSubs;
   };
 
   return (
@@ -346,15 +365,32 @@ const VendorDashboard = () => {
               </span>
               Rejected User Subscriptions
             </h2>
+            <div className="mb-4 flex flex-col sm:flex-row sm:items-center gap-3">
+              <label className="text-red-700 font-semibold text-sm" htmlFor="rejected-filter">Sort by:</label>
+              <select
+                id="rejected-filter"
+                value={rejectedFilter}
+                onChange={e => setRejectedFilter(e.target.value)}
+                className="w-full sm:w-60 border-2 border-red-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-red-300 focus:border-red-500 bg-white text-gray-800 font-medium"
+              >
+                <option value="none">None</option>
+                <option value="user-az">User Name (A-Z)</option>
+                <option value="user-za">User Name (Z-A)</option>
+                <option value="duration-asc">Plan Duration (Asc)</option>
+                <option value="duration-desc">Plan Duration (Desc)</option>
+                <option value="start-newest">Start Date (Newest)</option>
+                <option value="start-oldest">Start Date (Oldest)</option>
+              </select>
+            </div>
             {approvedLoading ? (
               <div className="text-center text-gray-500">Loading rejected subscriptions...</div>
             ) : approvedError ? (
               <div className="text-red-600 mb-2">{approvedError}</div>
-            ) : rejectedSubs.length === 0 ? (
+            ) : getSortedRejectedSubs().length === 0 ? (
               <div className="text-center text-gray-500">No rejected user subscriptions.</div>
             ) : (
               <div className="space-y-6 overflow-y-auto max-h-[400px] md:max-h-[600px] pr-2">
-                {rejectedSubs.map(sub => (
+                {getSortedRejectedSubs().map(sub => (
                   <div key={sub._id} className="border rounded-lg p-4 flex flex-col md:flex-row gap-4 items-start md:items-center bg-red-50 shadow-sm hover:shadow-md transition">
                     <div className="flex-1">
                       <div className="font-semibold text-gray-800 mb-1">User: {sub.user?.name} ({sub.user?.email})</div>

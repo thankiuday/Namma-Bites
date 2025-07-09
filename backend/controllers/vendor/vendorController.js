@@ -255,8 +255,23 @@ export const updateCurrentVendorProfile = async (req, res) => {
     if (!vendor) {
       return res.status(401).json({ success: false, message: 'Vendor not authenticated' });
     }
+    
+    // Update basic fields
     if (req.body.name) vendor.name = req.body.name;
-    if (req.file) vendor.image = `/uploads/vendor-images/${req.file.filename}`;
+    if (req.body.phone) vendor.phone = req.body.phone;
+    if (req.body.address) vendor.address = req.body.address;
+    if (req.body.cuisine) vendor.cuisine = req.body.cuisine;
+    
+    // Handle image upload
+    if (req.file) {
+      vendor.image = `/uploads/vendor-images/${req.file.filename}`;
+    }
+    
+    // Handle scanner upload (if provided)
+    if (req.files && req.files.scanner && req.files.scanner[0]) {
+      vendor.scanner = `/uploads/vendor-scanner/${req.files.scanner[0].filename}`;
+    }
+    
     await vendor.save();
     const vendorObj = vendor.toObject();
     delete vendorObj.password;

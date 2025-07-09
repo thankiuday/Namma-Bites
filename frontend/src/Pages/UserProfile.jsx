@@ -305,17 +305,63 @@ const UserProfile = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className="p-4 border border-gray-200 rounded-lg">
             <h3 className="text-lg font-semibold text-gray-900 mb-2">Current Plan</h3>
-            <p className="text-gray-600">No active subscription</p>
-            <button
-              onClick={() => navigate('/subscription')}
-              className="mt-4 px-4 py-2 bg-orange-600 text-white rounded-md hover:bg-orange-700 transition-colors duration-200"
-            >
-              Browse Plans
-            </button>
+            {(() => {
+              const activeSubscription = subscriptions.find(sub => sub.paymentStatus === 'approved');
+              if (activeSubscription) {
+                return (
+                  <div className="space-y-2">
+                    <p className="text-gray-800 font-medium">
+                      {activeSubscription.subscriptionPlan?.planType === 'veg' ? 'Vegetarian' : 'Non-Vegetarian'} Plan
+                    </p>
+                    <p className="text-gray-600 text-sm">
+                      Duration: {activeSubscription.duration} days
+                    </p>
+                    <p className="text-gray-600 text-sm">
+                      Start Date: {new Date(activeSubscription.startDate).toLocaleDateString()}
+                    </p>
+                    <p className="text-gray-600 text-sm">
+                      Price: ₹{activeSubscription.subscriptionPlan?.price}
+                    </p>
+                    <span className="inline-block px-2 py-1 bg-green-100 text-green-800 text-xs font-bold rounded-full">
+                      Active
+                    </span>
+                  </div>
+                );
+              } else {
+                return (
+                  <>
+                    <p className="text-gray-600">No active subscription</p>
+                    <button
+                      onClick={() => navigate('/subscription')}
+                      className="mt-4 px-4 py-2 bg-orange-600 text-white rounded-md hover:bg-orange-700 transition-colors duration-200"
+                    >
+                      Browse Plans
+                    </button>
+                  </>
+                );
+              }
+            })()}
           </div>
           <div className="p-4 border border-gray-200 rounded-lg">
             <h3 className="text-lg font-semibold text-gray-900 mb-2">Assigned Vendor</h3>
-            <p className="text-gray-600">No vendor assigned</p>
+            {(() => {
+              const activeSubscription = subscriptions.find(sub => sub.paymentStatus === 'approved');
+              if (activeSubscription && activeSubscription.vendor) {
+                return (
+                  <div className="space-y-2">
+                    <p className="text-gray-800 font-medium">{activeSubscription.vendor.name}</p>
+                    {activeSubscription.vendor.email && (
+                      <p className="text-gray-600 text-sm">Email: {activeSubscription.vendor.email}</p>
+                    )}
+                    <span className="inline-block px-2 py-1 bg-blue-100 text-blue-800 text-xs font-bold rounded-full">
+                      Assigned
+                    </span>
+                  </div>
+                );
+              } else {
+                return <p className="text-gray-600">No vendor assigned</p>;
+              }
+            })()}
           </div>
         </div>
       </section>
