@@ -17,7 +17,8 @@ import {
   createUserSubscription,
   uploadPaymentProof,
   getUserSubscriptions,
-  deleteUserSubscription
+  deleteUserSubscription,
+  getSubscriptionQrData
 } from '../controllers/user/userController.js';
 import { authenticateAdmin, authenticateUser } from '../middleware/user/authMiddleware.js';
 import multer from 'multer';
@@ -71,6 +72,7 @@ router.get('/subscription-plans/:id', getSubscriptionPlanById);
 // --- Subscription routes ---
 router.post('/subscriptions', authenticateUser, createUserSubscription);
 router.post('/subscriptions/:subscriptionId/payment-proof', authenticateUser, upload.single('paymentProof'), uploadPaymentProof);
+router.get('/subscriptions/:subscriptionId/qr', authenticateUser, getSubscriptionQrData);
 
 // --- Admin-only routes (generic, must come last) ---
 router.get('/', authenticateAdmin, getAllUsers);

@@ -35,7 +35,8 @@ import {
   getPendingUserSubscriptions,
   approveUserSubscription,
   getApprovedUserSubscriptions,
-  getRejectedUserSubscriptions
+  getRejectedUserSubscriptions,
+  scanSubscriptionQr
 } from '../controllers/vendor/vendorController.js';
 import { authenticateAdmin, authenticateVendor, authenticateUser } from '../middleware/user/authMiddleware.js';
 
@@ -196,6 +197,7 @@ router.get('/user-subscriptions/pending', authenticateVendor, getPendingUserSubs
 router.post('/user-subscriptions/:subscriptionId/approve', authenticateVendor, approveUserSubscription);
 router.get('/user-subscriptions/approved', authenticateVendor, getApprovedUserSubscriptions);
 router.get('/user-subscriptions/rejected', authenticateVendor, getRejectedUserSubscriptions);
+router.post('/scan-qr', authenticateVendor, scanSubscriptionQr);
 
 // === ADMIN-ONLY ROUTES ===
 

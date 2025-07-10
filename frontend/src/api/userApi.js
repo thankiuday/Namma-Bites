@@ -18,6 +18,7 @@ export const clearCart = () => userApi.delete('/cart');
 export const createUserSubscription = (data) => userApi.post('/subscriptions', data);
 export const getUserSubscriptions = () => userApi.get('/subscriptions');
 export const deleteUserSubscription = (subscriptionId) => userApi.delete(`/subscriptions/${subscriptionId}`);
+export const getUserSubscriptionQr = (subscriptionId) => userApi.get(`/subscriptions/${subscriptionId}/qr`);
 
 export const uploadPaymentProof = (subscriptionId, file) => {
   const formData = new FormData();

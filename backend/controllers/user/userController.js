@@ -1,6 +1,7 @@
 import User from '../../models/User.js';
 import SubscriptionPlan from '../../models/SubscriptionPlan.js';
 import UserSubscription from '../../models/UserSubscription.js';
+import jwt from 'jsonwebtoken';
 
 // Get all users
 export const getAllUsers = async (req, res) => {
@@ -339,7 +340,7 @@ export const createUserSubscription = async (req, res) => {
       vendor,
       startDate,
       duration,
-      paymentStatus: 'un-paid',
+      paymentStatus: 'pending',
     });
     res.status(201).json({ success: true, data: newSub });
   } catch (error) {
@@ -417,5 +418,30 @@ export const deleteUserSubscription = async (req, res) => {
     res.json({ success: true, message: 'Subscription deleted' });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
+  }
+}; 
+
+// Generate QR code data for a user subscription
+export const getSubscriptionQrData = async (req, res) => {
+  try {
+    const { subscriptionId } = req.params;
+    const userId = req.user._id;
+    const subscription = await UserSubscription.findById(subscriptionId);
+    if (!subscription) {
+      return res.status(404).json({ success: false, message: 'Subscription not found' });
+    }
+    if (String(subscription.user) !== String(userId)) {
+      return res.status(403).json({ success: false, message: 'Unauthorized' });
+    }
+    // Create a JWT payload for the QR code
+    const payload = {
+      subscriptionId: subscription._id,
+      userId: userId,
+      iat: Date.now(),
+    };
+    const qrToken = jwt.sign(payload, process.env.JWT_SECRET || 'your_jwt_secret', { expiresIn: '7d' });
+    res.json({ success: true, qrData: qrToken });
+  } catch (error) {
+    res.status(500).json({ success: false, message: 'Error generating QR code', error: error.message });
   }
 }; 

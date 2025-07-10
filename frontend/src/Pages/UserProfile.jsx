@@ -3,6 +3,7 @@ import { FaUser, FaShoppingCart, FaClipboardList, FaWallet, FaKey, FaHeadset, Fa
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import userApi, { getUserSubscriptions, deleteUserSubscription } from '../api/userApi';
+import ValidatedQrModal from '../components/ValidatedQrModal';
 
 const UserProfile = () => {
   const navigate = useNavigate();
@@ -14,6 +15,9 @@ const UserProfile = () => {
   const [subscriptions, setSubscriptions] = useState([]);
   const [subsLoading, setSubsLoading] = useState(false);
   const [subsError, setSubsError] = useState('');
+  const [showQrModal, setShowQrModal] = useState(false);
+  const [qrSubId, setQrSubId] = useState(null);
+  const [qrValidated, setQrValidated] = useState(false);
 
   // Update editedUser when user data changes
   useEffect(() => {
@@ -240,6 +244,20 @@ const UserProfile = () => {
                   {sub.paymentProof && (
                     <a href={`http://localhost:5000${sub.paymentProof}`} target="_blank" rel="noopener noreferrer" className="text-xs text-orange-600 underline">View Payment Proof</a>
                   )}
+                  {/* Validated QR Button */}
+                  {sub.paymentStatus !== 'expired' ? (
+                    <button
+                      className="text-xs text-blue-600 underline mt-1"
+                      onClick={() => {
+                        setQrSubId(sub._id);
+                        setShowQrModal(true);
+                      }}
+                    >
+                      Validated QR
+                    </button>
+                  ) : (
+                    <span className="text-xs text-gray-500 mt-1">QR disabled (expired)</span>
+                  )}
                   {sub.paymentStatus === 'expired' && (
                     <button
                       onClick={() => handleDeleteSubscription(sub._id)}
@@ -250,6 +268,13 @@ const UserProfile = () => {
               </div>
             ))}
           </div>
+        )}
+        {/* QR Modal */}
+        {showQrModal && qrSubId && (
+          <ValidatedQrModal
+            subscriptionId={qrSubId}
+            onClose={() => setShowQrModal(false)}
+          />
         )}
       </section>
 

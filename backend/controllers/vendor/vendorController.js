@@ -737,6 +737,12 @@ export const approveUserSubscription = async (req, res) => {
       return res.status(404).json({ success: false, message: 'Subscription not found' });
     }
     sub.paymentStatus = action;
+    // Set validated to true if approved, false if rejected
+    if (action === 'approved') {
+      sub.validated = true;
+    } else if (action === 'rejected') {
+      sub.validated = false;
+    }
     await sub.save();
     res.json({ success: true, data: sub });
   } catch (error) {
@@ -767,5 +773,79 @@ export const getRejectedUserSubscriptions = async (req, res) => {
     res.json({ success: true, data: rejectedSubs });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
+  }
+}; 
+
+// Scan and validate a QR code for a user subscription
+export const scanSubscriptionQr = async (req, res) => {
+  try {
+    const { qrData } = req.body;
+    if (!qrData) {
+      return res.status(400).json({ success: false, message: 'QR data is required' });
+    }
+    let decoded;
+    try {
+      decoded = jwt.verify(qrData, process.env.JWT_SECRET || 'your_jwt_secret');
+    } catch (err) {
+      return res.status(400).json({ success: false, message: 'Invalid or expired QR code' });
+    }
+    const { subscriptionId } = decoded;
+    const subscription = await UserSubscription.findById(subscriptionId)
+      .populate('user', 'name email')
+      .populate('subscriptionPlan')
+      .populate('vendor', 'name email');
+    if (!subscription) {
+      return res.status(404).json({ success: false, message: 'Subscription not found' });
+    }
+    // Defensive date handling
+    const startDate = new Date(subscription.startDate);
+    if (isNaN(startDate.getTime())) {
+      console.error('Invalid startDate:', subscription.startDate);
+      return res.status(500).json({ success: false, message: 'Invalid start date in subscription.' });
+    }
+    const duration = Number(subscription.duration);
+    if (!Number.isInteger(duration) || duration <= 0) {
+      console.error('Invalid duration:', subscription.duration);
+      return res.status(500).json({ success: false, message: 'Invalid duration in subscription.' });
+    }
+    let endDate;
+    try {
+      endDate = new Date(startDate);
+      endDate.setDate(endDate.getDate() + duration);
+    } catch (err) {
+      console.error('Error calculating endDate:', err);
+      return res.status(500).json({ success: false, message: 'Error calculating end date.' });
+    }
+    const today = new Date();
+    today.setHours(0,0,0,0);
+    endDate.setHours(0,0,0,0);
+    console.log('startDate:', startDate, 'duration:', duration, 'endDate:', endDate, 'today:', today);
+    let expired = false;
+    if (endDate < today) {
+      expired = true;
+      if (subscription.paymentStatus !== 'expired') {
+        subscription.paymentStatus = 'expired';
+        await subscription.save();
+      }
+    }
+    res.json({
+      success: true,
+      subscription: {
+        id: subscription._id,
+        user: subscription.user,
+        plan: subscription.subscriptionPlan,
+        vendor: subscription.vendor,
+        startDate: subscription.startDate,
+        duration: subscription.duration,
+        paymentStatus: subscription.paymentStatus,
+        validated: subscription.validated,
+        paymentProof: subscription.paymentProof,
+        expired,
+        endDate,
+      }
+    });
+  } catch (error) {
+    console.error('Error in scanSubscriptionQr:', error.stack || error);
+    res.status(500).json({ success: false, message: 'Error scanning QR code', error: error.message });
   }
 }; 

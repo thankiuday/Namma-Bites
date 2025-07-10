@@ -8,10 +8,11 @@ const userSubscriptionSchema = new mongoose.Schema({
   duration: { type: Number, required: true },
   paymentStatus: {
     type: String,
-    enum: ['un-paid', 'pending', 'approved', 'rejected'],
-    default: 'un-paid'
+    enum: ['pending', 'approved', 'rejected', 'expired'],
+    default: 'pending'
   },
   paymentProof: { type: String }, // file path or URL
+  validated: { type: Boolean, default: false }, // new field for QR validation
 }, { timestamps: true });
 
 const UserSubscription = mongoose.model('UserSubscription', userSubscriptionSchema);
