@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { QrReader } from 'react-qr-reader';
+import ZxingQrScanner from '../components/ZxingQrScanner';
 import axios from 'axios';
 import { format } from 'date-fns';
 
@@ -59,11 +59,29 @@ const VendorQrScanner = () => {
   };
 
   const handleError = (err) => {
-    // Suppress 'e2' and 'Dimensions could be not found.' errors
-    if (err && err.message && err.message !== 'e2' && err.message !== 'Dimensions could be not found.') {
-      setError('Camera error: ' + err.message);
-      console.error('Camera error:', err);
+    // Suppress 'No MultiFormat Readers were able to detect the code.' errors
+    if (
+      err &&
+      err.message &&
+      (
+        err.message === 'No MultiFormat Readers were able to detect the code.' ||
+        err.message.includes('No MultiFormat Readers')
+      )
+    ) {
+      return;
     }
+    setError('Camera error: ' + (err && err.message ? err.message : err));
+    console.error('Camera error:', err);
+  };
+
+  // Handler for react-html5-qrcode
+  const onScanSuccess = (decodedText, decodedResult) => {
+    handleScan(decodedText);
+  };
+
+  const onScanError = (errorMessage) => {
+    // Optionally handle scan errors
+    // handleError({ message: errorMessage });
   };
 
   return (
@@ -79,17 +97,12 @@ const VendorQrScanner = () => {
         </button>
         <div className="w-full flex justify-center mb-6">
           <div className="w-[90vw] max-w-xs aspect-square rounded-xl overflow-hidden border-4 border-orange-200 bg-orange-50 shadow-inner flex items-center justify-center">
-            <QrReader
-              constraints={{}}
-              onResult={(result, error) => {
-                if (!!result) {
-                  handleScan(result?.text);
-                }
-                if (!!error) {
-                  handleError(error);
-                }
-              }}
-              style={{ width: '100%', height: '100%' }}
+            <ZxingQrScanner
+              onResult={handleScan}
+              onError={handleError}
+              facingMode={facingMode === 'environment' ? 'environment' : 'user'}
+              width={300}
+              height={300}
             />
           </div>
         </div>
