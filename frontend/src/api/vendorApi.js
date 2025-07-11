@@ -14,4 +14,8 @@ export const updateSubscriptionPlan = (id, data) => vendorApi.put(`/subscription
 export const deleteSubscriptionPlan = (id) => vendorApi.delete(`/subscription-plans/${id}`);
 export const getPendingUserSubscriptions = () => vendorApi.get('/user-subscriptions/pending');
 export const approveUserSubscription = (subscriptionId, action) => vendorApi.post(`/user-subscriptions/${subscriptionId}/approve`, { action });
-export const getApprovedUserSubscriptions = () => vendorApi.get('/user-subscriptions/approved'); 
+export const getApprovedUserSubscriptions = () => vendorApi.get('/user-subscriptions/approved');
+export const acceptOrder = (orderId) => vendorApi.post(`/orders/${orderId}/accept`);
+export const rejectOrder = (orderId) => vendorApi.post(`/orders/${orderId}/reject`);
+export const markOrderReady = (orderId) => vendorApi.post(`/orders/${orderId}/ready`);
+export const completeOrder = (orderId) => vendorApi.post(`/orders/${orderId}/complete`); 

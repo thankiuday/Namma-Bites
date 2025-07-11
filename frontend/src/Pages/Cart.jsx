@@ -2,11 +2,13 @@ import React, { useEffect, useCallback, useState } from 'react';
 import { FaTrash, FaMinus, FaPlus } from 'react-icons/fa';
 import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
+import { useNavigate } from 'react-router-dom';
 
 const Cart = () => {
   const { cart, updateQuantity, removeFromCart, clearCart, loading, fetchCart } = useCart();
   const { user, handleAuthError } = useAuth();
   const [clearing, setClearing] = useState(false);
+  const navigate = useNavigate();
 
   const handleFetchCart = useCallback(() => {
     if (user) {
@@ -158,7 +160,11 @@ const Cart = () => {
                 <span>₹{total}</span>
               </div>
             </div>
-            <button className="w-full bg-orange-600 text-white py-2 sm:py-3 px-4 rounded-md hover:bg-orange-700 transition-colors text-sm sm:text-base font-medium">
+            <button
+              className="w-full bg-orange-600 text-white py-2 sm:py-3 px-4 rounded-md hover:bg-orange-700 transition-colors text-sm sm:text-base font-medium disabled:opacity-60 disabled:cursor-not-allowed"
+              onClick={() => navigate('/checkout')}
+              disabled={cart.length === 0}
+            >
               Proceed to Checkout
             </button>
           </div>

@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { getSubscriptionPlanById, createUserSubscription } from '../api/userApi';
-import { FaArrowLeft, FaCalendarAlt, FaClock, FaCheckCircle } from 'react-icons/fa';
+import { FaArrowLeft, FaCalendarAlt, FaClock, FaCheckCircle, FaExclamationTriangle } from 'react-icons/fa';
 
 const SubscriptionStart = () => {
   const { planId } = useParams();
@@ -12,6 +12,8 @@ const SubscriptionStart = () => {
   const [startDate, setStartDate] = useState('');
   const [subscribing, setSubscribing] = useState(false);
   const [dateError, setDateError] = useState('');
+  const [showTodayConfirm, setShowTodayConfirm] = useState(false);
+  const [pendingSubscribe, setPendingSubscribe] = useState(false);
 
   useEffect(() => {
     const fetchPlan = async () => {
@@ -38,6 +40,16 @@ const SubscriptionStart = () => {
       setDateError('Start date cannot be before today.');
       return;
     }
+    // Show custom modal if today is selected
+    if (startDate === new Date().toISOString().split('T')[0]) {
+      setShowTodayConfirm(true);
+      setPendingSubscribe(true);
+      return;
+    }
+    await doSubscribe();
+  };
+
+  const doSubscribe = async () => {
     setSubscribing(true);
     try {
       const res = await createUserSubscription({
@@ -52,6 +64,8 @@ const SubscriptionStart = () => {
       setDateError('Failed to subscribe. Please try again.');
     } finally {
       setSubscribing(false);
+      setShowTodayConfirm(false);
+      setPendingSubscribe(false);
     }
   };
 
@@ -85,6 +99,13 @@ const SubscriptionStart = () => {
           <div className="mb-2"><span className="font-semibold text-orange-700">Total Price:</span> <span className="font-bold text-orange-900">₹{plan.price}</span></div>
         </div>
         <form onSubmit={e => { e.preventDefault(); handleSubscribe(); }} className="flex flex-col gap-4">
+          {/* Notification about today being counted */}
+          {startDate === new Date().toISOString().split('T')[0] && (
+            <div className="flex items-center bg-orange-100 border border-orange-300 text-orange-800 rounded-lg px-3 py-2 mb-2 text-sm font-semibold">
+              <FaExclamationTriangle className="mr-2 text-orange-500" />
+              You have selected today as your start date. Today will be counted as your first day of subscription.
+            </div>
+          )}
           <label className="block text-orange-700 font-semibold mb-1">Select Start Date</label>
           <input
             type="date"
@@ -105,6 +126,36 @@ const SubscriptionStart = () => {
           </button>
         </form>
       </div>
+      {/* Custom confirmation modal for today as start date */}
+      {showTodayConfirm && (
+        <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
+          <div className="bg-white rounded-2xl shadow-2xl border-2 border-orange-200 max-w-sm w-full p-6 flex flex-col items-center">
+            <div className="flex items-center mb-4">
+              <FaExclamationTriangle className="text-3xl text-orange-500 mr-3" />
+              <span className="text-xl font-bold text-orange-800">Confirm Start Date</span>
+            </div>
+            <div className="text-orange-700 text-base font-medium mb-6 text-center">
+              You have selected <span className="font-bold text-orange-900">today</span> as your start date.<br />
+              <span className="font-semibold">Today will be counted as your first day of subscription.</span><br />
+              Do you want to continue?
+            </div>
+            <div className="flex gap-4 w-full">
+              <button
+                className="flex-1 py-2 rounded-lg bg-orange-500 text-white font-bold hover:bg-orange-600 transition-all"
+                onClick={async () => { setShowTodayConfirm(false); setPendingSubscribe(false); await doSubscribe(); }}
+              >
+                Yes, Continue
+              </button>
+              <button
+                className="flex-1 py-2 rounded-lg bg-gray-200 text-orange-700 font-bold hover:bg-gray-300 transition-all"
+                onClick={() => { setShowTodayConfirm(false); setPendingSubscribe(false); }}
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

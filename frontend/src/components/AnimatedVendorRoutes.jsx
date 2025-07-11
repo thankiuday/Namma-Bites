@@ -9,6 +9,7 @@ import VendorProfile from '../Pages/VendorProfile';
 import MenuEntry from '../Pages/MenuEntry';
 import Subscription from '../Pages/Subscription';
 import VendorQrScanner from '../Pages/VendorQrScanner';
+import VendorOrders from '../Pages/VendorOrders';
 
 // Protected Route Components
 import VendorProtectedRoute from './vendor/VendorProtectedRoute';
@@ -63,6 +64,13 @@ const AnimatedVendorRoutes = () => {
           <VendorProtectedRoute>
             <PageTransition>
               <VendorQrScanner />
+            </PageTransition>
+          </VendorProtectedRoute>
+        } />
+        <Route path="/orders" element={
+          <VendorProtectedRoute>
+            <PageTransition>
+              <VendorOrders />
             </PageTransition>
           </VendorProtectedRoute>
         } />

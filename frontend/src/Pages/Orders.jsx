@@ -1,142 +1,237 @@
-import React, { useState } from 'react';
-import { FaCheckCircle, FaTimesCircle, FaClock } from 'react-icons/fa';
+import React, { useEffect, useState } from 'react';
+import { FaCheckCircle, FaTimesCircle, FaClock, FaQrcode, FaUpload } from 'react-icons/fa';
+import axios from 'axios';
+
+const API_BASE_URL = 'http://localhost:5000/api';
+const SERVER_BASE_URL = 'http://localhost:5000';
 
 const Orders = () => {
-  // Sample orders data (replace with actual orders data)
-  const orders = [
-    {
-      id: 1,
-      date: "2024-03-15",
-      items: [
-        { name: "Butter Chicken", quantity: 2, price: 250 },
-        { name: "Veg Biryani", quantity: 1, price: 200 }
-      ],
-      total: 700,
-      status: "delivered",
-      deliveryAddress: "123 Main St, Bangalore, Karnataka"
-    },
-    {
-      id: 2,
-      date: "2024-03-14",
-      items: [
-        { name: "Masala Dosa", quantity: 2, price: 120 },
-        { name: "Idli Sambar", quantity: 1, price: 100 }
-      ],
-      total: 340,
-      status: "processing",
-      deliveryAddress: "123 Main St, Bangalore, Karnataka"
-    },
-    {
-      id: 3,
-      date: "2024-03-13",
-      items: [
-        { name: "Chicken Biryani", quantity: 1, price: 250 },
-        { name: "Veg Fried Rice", quantity: 1, price: 180 }
-      ],
-      total: 430,
-      status: "cancelled",
-      deliveryAddress: "123 Main St, Bangalore, Karnataka"
-    }
-  ];
+  const [orders, setOrders] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+  // Filtering state
+  const [sortBy, setSortBy] = useState('newest');
+  const [stateFilter, setStateFilter] = useState('');
+  const [vendorFilter, setVendorFilter] = useState('');
+  const [dateFrom, setDateFrom] = useState('');
+  const [dateTo, setDateTo] = useState('');
+  const [qrModalOpen, setQrModalOpen] = useState(false);
+  const [qrModalSrc, setQrModalSrc] = useState(null);
 
-  const [statusFilter, setStatusFilter] = useState('all');
+  useEffect(() => {
+    const fetchOrders = async () => {
+      setLoading(true);
+      setError('');
+      try {
+        const res = await axios.get(`${API_BASE_URL}/users/orders`, { withCredentials: true });
+        setOrders(res.data.data || []);
+      } catch (err) {
+        setError(err.response?.data?.message || 'Failed to fetch orders.');
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchOrders();
+  }, []);
 
-  const filteredOrders = statusFilter === 'all'
-    ? orders
-    : orders.filter(order => order.status === statusFilter);
+  // Extract unique states and vendors for filter dropdowns
+  const uniqueStates = Array.from(new Set(orders.map(o => o.state)));
+  const uniqueVendors = Array.from(new Set(orders.map(o => o.vendor?.name).filter(Boolean)));
 
-  const getStatusIcon = (status) => {
-    switch (status) {
-      case 'delivered':
+  // Filtering and sorting logic
+  const filteredOrders = orders
+    .filter(order => {
+      if (stateFilter && order.state !== stateFilter) return false;
+      return true;
+    })
+    .sort((a, b) => {
+      if (sortBy === 'newest') {
+        return new Date(b.createdAt) - new Date(a.createdAt);
+      } else if (sortBy === 'oldest') {
+        return new Date(a.createdAt) - new Date(b.createdAt);
+      } else if (sortBy === 'priceHigh') {
+        return (
+          b.items.reduce((sum, item) => sum + item.price * item.quantity, 0) -
+          a.items.reduce((sum, item) => sum + item.price * item.quantity, 0)
+        );
+      } else if (sortBy === 'priceLow') {
+        return (
+          a.items.reduce((sum, item) => sum + item.price * item.quantity, 0) -
+          b.items.reduce((sum, item) => sum + item.price * item.quantity, 0)
+        );
+      }
+      return 0;
+    });
+
+  const getStatusIcon = (state) => {
+    switch (state) {
+      case 'completed':
         return <FaCheckCircle className="text-green-500" />;
-      case 'processing':
+      case 'preparing':
         return <FaClock className="text-orange-500" />;
-      case 'cancelled':
+      case 'ready':
+        return <FaQrcode className="text-blue-500" />;
+      case 'pending':
+        return <FaClock className="text-orange-400" />;
+      case 'rejected':
         return <FaTimesCircle className="text-red-500" />;
       default:
         return null;
     }
   };
 
-  const getStatusText = (status) => {
-    switch (status) {
-      case 'delivered':
-        return 'Delivered';
-      case 'processing':
-        return 'Processing';
-      case 'cancelled':
-        return 'Cancelled';
+  const getStatusText = (state) => {
+    switch (state) {
+      case 'completed':
+        return 'Completed';
+      case 'preparing':
+        return 'Preparing';
+      case 'ready':
+        return 'Ready for Pickup';
+      case 'pending':
+        return 'Pending Approval';
+      case 'rejected':
+        return 'Rejected';
       default:
-        return status;
+        return state;
     }
   };
 
   return (
     <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
       <h1 className="text-2xl sm:text-3xl font-bold text-gray-800 mb-6 sm:mb-8">Your Orders</h1>
-      <div className="mb-6 flex flex-col sm:flex-row sm:items-center gap-3">
-        <label className="text-orange-700 font-semibold text-sm" htmlFor="order-status-filter">Filter by Status:</label>
-        <select
-          id="order-status-filter"
-          value={statusFilter}
-          onChange={e => setStatusFilter(e.target.value)}
-          className="w-full sm:w-60 border-2 border-orange-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-orange-300 focus:border-orange-500 bg-white text-gray-800 font-medium"
-        >
-          <option value="all">All</option>
-          <option value="processing">Processing</option>
-          <option value="delivered">Delivered</option>
-          <option value="cancelled">Cancelled</option>
-        </select>
+      {/* Filter UI */}
+      <div className="flex flex-col sm:flex-row gap-3 sm:gap-6 mb-6 bg-orange-100 p-4 rounded-lg shadow">
+        <div>
+          <label className="block text-xs font-semibold text-orange-900 mb-1">Sort By</label>
+          <select
+            className="border border-orange-300 rounded px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400 text-orange-900 bg-white"
+            value={sortBy}
+            onChange={e => setSortBy(e.target.value)}
+          >
+            <option value="newest">Newest</option>
+            <option value="oldest">Oldest</option>
+            <option value="priceHigh">Price: High to Low</option>
+            <option value="priceLow">Price: Low to High</option>
+          </select>
+        </div>
+        <div>
+          <label className="block text-xs font-semibold text-orange-900 mb-1">Order State</label>
+          <select
+            className="border border-orange-300 rounded px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400 text-orange-900 bg-white"
+            value={stateFilter}
+            onChange={e => setStateFilter(e.target.value)}
+          >
+            <option value="">All</option>
+            {uniqueStates.map(state => (
+              <option key={state} value={state}>
+                {getStatusText(state) === 'Ready for Pickup' ? 'Ready for Pickup' : getStatusText(state)}
+              </option>
+            ))}
+          </select>
+        </div>
+        {(sortBy !== 'newest' || stateFilter) && (
+          <button
+            className="self-end sm:self-center mt-2 sm:mt-0 bg-orange-500 hover:bg-orange-600 text-white text-xs font-semibold px-3 py-1 rounded shadow"
+            onClick={() => { setSortBy('newest'); setStateFilter(''); }}
+          >
+            Clear Filters
+          </button>
+        )}
       </div>
-      
-      {filteredOrders.length === 0 ? (
+      {/* End Filter UI */}
+      {loading ? (
+        <div className="text-center py-8 sm:py-12">
+          <p className="text-orange-600 text-base sm:text-lg">Loading orders...</p>
+        </div>
+      ) : error ? (
+        <div className="text-center py-8 sm:py-12">
+          <p className="text-red-600 text-base sm:text-lg">{error}</p>
+        </div>
+      ) : filteredOrders.length === 0 ? (
         <div className="text-center py-8 sm:py-12">
           <p className="text-gray-600 text-base sm:text-lg">No orders found</p>
         </div>
       ) : (
         <div className="space-y-4 sm:space-y-6">
           {filteredOrders.map((order) => (
-            <div key={order.id} className="bg-white rounded-lg shadow-lg p-4 sm:p-6">
+            <div key={order._id} className="bg-white rounded-lg shadow-lg p-4 sm:p-6">
               <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-3 sm:gap-0 mb-4">
                 <div>
-                  <h3 className="text-base sm:text-lg font-semibold text-gray-800">Order #{order.id}</h3>
-                  <p className="text-gray-600 text-sm sm:text-base">Placed on {order.date}</p>
+                  <h3 className="text-base sm:text-lg font-semibold text-gray-900">Order #{order.orderNumber}</h3>
+                  <p className="text-gray-700 text-sm sm:text-base">Placed on {new Date(order.createdAt).toLocaleString()}</p>
+                  <p className="text-xs text-orange-900 font-semibold mt-1">Vendor: {order.vendor?.name}</p>
                 </div>
                 <div className="flex items-center gap-2">
-                  {getStatusIcon(order.status)}
+                  {getStatusIcon(order.state)}
                   <span className={`font-medium text-sm sm:text-base ${
-                    order.status === 'delivered' ? 'text-green-500' :
-                    order.status === 'processing' ? 'text-orange-500' :
+                    order.state === 'completed' ? 'text-green-500' :
+                    order.state === 'preparing' ? 'text-orange-500' :
+                    order.state === 'ready' ? 'text-blue-500' :
+                    order.state === 'pending' ? 'text-orange-400' :
                     'text-red-500'
                   }`}>
-                    {getStatusText(order.status)}
+                    {getStatusText(order.state)}
                   </span>
                 </div>
               </div>
 
               <div className="border-t border-b py-3 sm:py-4 my-3 sm:my-4">
                 {order.items.map((item, index) => (
-                  <div key={index} className="flex justify-between items-center mb-2 last:mb-0">
-                    <span className="text-gray-600 text-sm sm:text-base">
-                      {item.quantity}x {item.name}
-                    </span>
-                    <span className="text-gray-800 text-sm sm:text-base">₹{item.price * item.quantity}</span>
+                  <div key={index} className="flex items-center gap-3 mb-2 last:mb-0">
+                    <img src={item.picture ? (item.picture.startsWith('http') ? item.picture : `${SERVER_BASE_URL}${item.picture}`) : '/default-food.png'} alt={item.name} className="w-10 h-10 object-cover rounded" />
+                    <span className="text-gray-700 text-sm sm:text-base flex-1">{item.quantity}x {item.name}</span>
+                    <span className="text-gray-900 text-sm sm:text-base">₹{item.price * item.quantity}</span>
                   </div>
                 ))}
               </div>
 
               <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 sm:gap-0">
-                <div>
-                  <p className="text-xs sm:text-sm text-gray-600">Delivery Address:</p>
-                  <p className="text-gray-800 text-sm sm:text-base">{order.deliveryAddress}</p>
+                <div className="flex flex-col gap-1">
+                  {order.paymentProof && (
+                    <a href={`${SERVER_BASE_URL}${order.paymentProof}`} target="_blank" rel="noopener noreferrer" className="flex items-center text-xs text-orange-600 underline"><FaUpload className="mr-1" />View Payment Proof</a>
+                  )}
+                  {order.qrCode && (order.state === 'preparing' || order.state === 'ready') && (
+                    <div className="flex items-center mt-2">
+                      <FaQrcode className="text-orange-600 mr-2" />
+                      <img
+                        src={`https://api.qrserver.com/v1/create-qr-code/?data=${encodeURIComponent(order.qrCode)}&size=100x100`}
+                        alt="Order QR"
+                        className="w-20 h-20 object-contain rounded border border-orange-200 bg-white cursor-pointer hover:scale-105 transition-transform"
+                        onClick={() => {
+                          setQrModalSrc(`https://api.qrserver.com/v1/create-qr-code/?data=${encodeURIComponent(order.qrCode)}&size=300x300`);
+                          setQrModalOpen(true);
+                        }}
+                      />
+                    </div>
+                  )}
                 </div>
                 <div className="text-left sm:text-right">
-                  <p className="text-xs sm:text-sm text-gray-600">Total Amount:</p>
-                  <p className="text-base sm:text-lg font-bold text-orange-600">₹{order.total}</p>
+                  <p className="text-xs sm:text-sm text-gray-700">Total Amount:</p>
+                  <p className="text-base sm:text-lg font-bold text-orange-700">₹{order.items.reduce((sum, item) => sum + item.price * item.quantity, 0)}</p>
                 </div>
               </div>
             </div>
           ))}
+        </div>
+      )}
+      {/* QR Modal */}
+      {qrModalOpen && (
+        <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-black bg-opacity-80">
+          <button
+            className="mt-8 mb-4 bg-white text-orange-600 font-bold rounded-full px-6 py-2 shadow hover:bg-orange-100 focus:outline-none text-lg"
+            style={{ position: 'fixed', top: '32px', left: '50%', transform: 'translateX(-50%)', zIndex: 60 }}
+            onClick={() => setQrModalOpen(false)}
+          >
+            Back
+          </button>
+          <div className="relative flex flex-col items-center justify-center">
+            <img
+              src={qrModalSrc}
+              alt="Order QR Large"
+              className="max-w-[90vw] max-h-[80vh] rounded-lg shadow-lg border-4 border-orange-500 bg-white"
+            />
+          </div>
         </div>
       )}
     </div>

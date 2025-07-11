@@ -18,6 +18,7 @@ import VendorDetails from '../Pages/VendorDetails';
 import UserSubscription from '../Pages/UserSubscription';
 import SubscriptionStart from '../Pages/SubscriptionStart';
 import PaymentStatus from '../Pages/PaymentStatus';
+import Checkout from '../Pages/Checkout';
 
 // Protected Route Components
 import ProtectedRoute from './user/ProtectedRoute';
@@ -98,6 +99,13 @@ const AnimatedRoutes = () => {
           <ProtectedRoute>
             <PageTransition>
               <Cart />
+            </PageTransition>
+          </ProtectedRoute>
+        } />
+        <Route path="/checkout" element={
+          <ProtectedRoute>
+            <PageTransition>
+              <Checkout />
             </PageTransition>
           </ProtectedRoute>
         } />

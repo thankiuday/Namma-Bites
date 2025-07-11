@@ -230,7 +230,14 @@ export const getSubscriptionPlanById = async (req, res) => {
 // Get current user's cart
 export const getCart = async (req, res) => {
   try {
-    const user = await User.findById(req.user._id).populate('cart.item');
+    const user = await User.findById(req.user._id)
+      .populate({
+        path: 'cart.item',
+        populate: {
+          path: 'vendor',
+          select: 'name scanner image email',
+        }
+      });
     if (!user) return res.status(404).json({ success: false, message: 'User not found' });
     res.json({ success: true, cart: user.cart });
   } catch (error) {
@@ -376,7 +383,40 @@ export const getUserSubscriptions = async (req, res) => {
   try {
     const userId = req.user._id;
     let subs = await UserSubscription.find({ user: userId })
-      .populate('subscriptionPlan')
+      .populate({
+        path: 'subscriptionPlan',
+        populate: [
+          { path: 'vendor', select: 'name image location phone email' },
+          { path: 'weekMeals.Monday.breakfast', model: 'MenuItem' },
+          { path: 'weekMeals.Monday.lunch', model: 'MenuItem' },
+          { path: 'weekMeals.Monday.dinner', model: 'MenuItem' },
+          { path: 'weekMeals.Monday.snacks', model: 'MenuItem' },
+          { path: 'weekMeals.Tuesday.breakfast', model: 'MenuItem' },
+          { path: 'weekMeals.Tuesday.lunch', model: 'MenuItem' },
+          { path: 'weekMeals.Tuesday.dinner', model: 'MenuItem' },
+          { path: 'weekMeals.Tuesday.snacks', model: 'MenuItem' },
+          { path: 'weekMeals.Wednesday.breakfast', model: 'MenuItem' },
+          { path: 'weekMeals.Wednesday.lunch', model: 'MenuItem' },
+          { path: 'weekMeals.Wednesday.dinner', model: 'MenuItem' },
+          { path: 'weekMeals.Wednesday.snacks', model: 'MenuItem' },
+          { path: 'weekMeals.Thursday.breakfast', model: 'MenuItem' },
+          { path: 'weekMeals.Thursday.lunch', model: 'MenuItem' },
+          { path: 'weekMeals.Thursday.dinner', model: 'MenuItem' },
+          { path: 'weekMeals.Thursday.snacks', model: 'MenuItem' },
+          { path: 'weekMeals.Friday.breakfast', model: 'MenuItem' },
+          { path: 'weekMeals.Friday.lunch', model: 'MenuItem' },
+          { path: 'weekMeals.Friday.dinner', model: 'MenuItem' },
+          { path: 'weekMeals.Friday.snacks', model: 'MenuItem' },
+          { path: 'weekMeals.Saturday.breakfast', model: 'MenuItem' },
+          { path: 'weekMeals.Saturday.lunch', model: 'MenuItem' },
+          { path: 'weekMeals.Saturday.dinner', model: 'MenuItem' },
+          { path: 'weekMeals.Saturday.snacks', model: 'MenuItem' },
+          { path: 'weekMeals.Sunday.breakfast', model: 'MenuItem' },
+          { path: 'weekMeals.Sunday.lunch', model: 'MenuItem' },
+          { path: 'weekMeals.Sunday.dinner', model: 'MenuItem' },
+          { path: 'weekMeals.Sunday.snacks', model: 'MenuItem' },
+        ]
+      })
       .populate('vendor', 'name email scanner');
     // Auto-expire subscriptions
     const today = new Date();
@@ -394,7 +434,40 @@ export const getUserSubscriptions = async (req, res) => {
     }
     // Re-fetch to get updated statuses
     subs = await UserSubscription.find({ user: userId })
-      .populate('subscriptionPlan')
+      .populate({
+        path: 'subscriptionPlan',
+        populate: [
+          { path: 'vendor', select: 'name image location phone email' },
+          { path: 'weekMeals.Monday.breakfast', model: 'MenuItem' },
+          { path: 'weekMeals.Monday.lunch', model: 'MenuItem' },
+          { path: 'weekMeals.Monday.dinner', model: 'MenuItem' },
+          { path: 'weekMeals.Monday.snacks', model: 'MenuItem' },
+          { path: 'weekMeals.Tuesday.breakfast', model: 'MenuItem' },
+          { path: 'weekMeals.Tuesday.lunch', model: 'MenuItem' },
+          { path: 'weekMeals.Tuesday.dinner', model: 'MenuItem' },
+          { path: 'weekMeals.Tuesday.snacks', model: 'MenuItem' },
+          { path: 'weekMeals.Wednesday.breakfast', model: 'MenuItem' },
+          { path: 'weekMeals.Wednesday.lunch', model: 'MenuItem' },
+          { path: 'weekMeals.Wednesday.dinner', model: 'MenuItem' },
+          { path: 'weekMeals.Wednesday.snacks', model: 'MenuItem' },
+          { path: 'weekMeals.Thursday.breakfast', model: 'MenuItem' },
+          { path: 'weekMeals.Thursday.lunch', model: 'MenuItem' },
+          { path: 'weekMeals.Thursday.dinner', model: 'MenuItem' },
+          { path: 'weekMeals.Thursday.snacks', model: 'MenuItem' },
+          { path: 'weekMeals.Friday.breakfast', model: 'MenuItem' },
+          { path: 'weekMeals.Friday.lunch', model: 'MenuItem' },
+          { path: 'weekMeals.Friday.dinner', model: 'MenuItem' },
+          { path: 'weekMeals.Friday.snacks', model: 'MenuItem' },
+          { path: 'weekMeals.Saturday.breakfast', model: 'MenuItem' },
+          { path: 'weekMeals.Saturday.lunch', model: 'MenuItem' },
+          { path: 'weekMeals.Saturday.dinner', model: 'MenuItem' },
+          { path: 'weekMeals.Saturday.snacks', model: 'MenuItem' },
+          { path: 'weekMeals.Sunday.breakfast', model: 'MenuItem' },
+          { path: 'weekMeals.Sunday.lunch', model: 'MenuItem' },
+          { path: 'weekMeals.Sunday.dinner', model: 'MenuItem' },
+          { path: 'weekMeals.Sunday.snacks', model: 'MenuItem' },
+        ]
+      })
       .populate('vendor', 'name email scanner');
     res.json({ success: true, data: subs });
   } catch (error) {

@@ -38,6 +38,7 @@ import {
   getRejectedUserSubscriptions,
   scanSubscriptionQr
 } from '../controllers/vendor/vendorController.js';
+import { getVendorOrders, acceptOrder, rejectOrder, markOrderReady, completeOrder, scanOrderQr } from '../controllers/vendor/orderController.js';
 import { authenticateAdmin, authenticateVendor, authenticateUser } from '../middleware/user/authMiddleware.js';
 
 const router = express.Router();
@@ -198,6 +199,14 @@ router.post('/user-subscriptions/:subscriptionId/approve', authenticateVendor, a
 router.get('/user-subscriptions/approved', authenticateVendor, getApprovedUserSubscriptions);
 router.get('/user-subscriptions/rejected', authenticateVendor, getRejectedUserSubscriptions);
 router.post('/scan-qr', authenticateVendor, scanSubscriptionQr);
+
+// --- Order routes ---
+router.get('/orders', authenticateVendor, getVendorOrders);
+router.post('/orders/:orderId/accept', authenticateVendor, acceptOrder);
+router.post('/orders/:orderId/reject', authenticateVendor, rejectOrder);
+router.post('/orders/:orderId/ready', authenticateVendor, markOrderReady);
+router.post('/orders/:orderId/complete', authenticateVendor, completeOrder);
+router.post('/orders/scan-qr', authenticateVendor, scanOrderQr);
 
 // === ADMIN-ONLY ROUTES ===
 

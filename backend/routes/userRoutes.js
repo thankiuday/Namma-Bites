@@ -20,6 +20,7 @@ import {
   deleteUserSubscription,
   getSubscriptionQrData
 } from '../controllers/user/userController.js';
+import { createOrder, uploadOrderPaymentProof, getUserOrders, getOrderQr } from '../controllers/user/orderController.js';
 import { authenticateAdmin, authenticateUser } from '../middleware/user/authMiddleware.js';
 import multer from 'multer';
 import fs from 'fs';
@@ -73,6 +74,12 @@ router.get('/subscription-plans/:id', getSubscriptionPlanById);
 router.post('/subscriptions', authenticateUser, createUserSubscription);
 router.post('/subscriptions/:subscriptionId/payment-proof', authenticateUser, upload.single('paymentProof'), uploadPaymentProof);
 router.get('/subscriptions/:subscriptionId/qr', authenticateUser, getSubscriptionQrData);
+
+// --- Order routes ---
+router.post('/orders', authenticateUser, createOrder);
+router.post('/orders/:orderId/payment-proof', authenticateUser, upload.single('paymentProof'), uploadOrderPaymentProof);
+router.get('/orders', authenticateUser, getUserOrders);
+router.get('/orders/:orderId/qr', authenticateUser, getOrderQr);
 
 // --- Admin-only routes (generic, must come last) ---
 router.get('/', authenticateAdmin, getAllUsers);
