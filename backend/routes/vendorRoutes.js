@@ -1,5 +1,3 @@
-console.log('vendorRoutes.js loaded at', new Date().toISOString());
-console.log('Vendor routes loaded');
 import express from 'express';
 import multer from 'multer';
 import path from 'path';
@@ -42,7 +40,6 @@ import { getVendorOrders, acceptOrder, rejectOrder, markOrderReady, completeOrde
 import { authenticateAdmin, authenticateVendor, authenticateUser } from '../middleware/user/authMiddleware.js';
 
 const router = express.Router();
-console.log('vendorRoutes.js router instance created at', new Date().toISOString());
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 

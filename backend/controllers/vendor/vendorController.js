@@ -9,9 +9,6 @@ import UserSubscription from '../../models/UserSubscription.js';
 // Create a new vendor
 export const createVendor = async (req, res) => {
   try {
-    console.log('Request body:', req.body);
-    console.log('Request file:', req.file);
-
     if (!req.files?.image?.[0]) {
       return res.status(400).json({
         success: false,
@@ -43,8 +40,6 @@ export const createVendor = async (req, res) => {
       createdBy: req.admin._id
     };
 
-    console.log('Creating vendor with data:', vendorData);
-
     const vendor = new Vendor(vendorData);
     await vendor.save();
 
@@ -58,7 +53,6 @@ export const createVendor = async (req, res) => {
       data: vendorResponse
     });
   } catch (error) {
-    console.error('Error creating vendor:', error);
     res.status(400).json({
       success: false,
       message: error.message || 'Error creating vendor',
@@ -70,23 +64,16 @@ export const createVendor = async (req, res) => {
 // Get all vendors
 export const getAllVendors = async (req, res) => {
   try {
-    console.log('Getting all vendors...');
-    console.log('Admin from request:', req.admin);
-    
     const vendors = await Vendor.find()
       .select('-password') // Exclude password from response
       .populate('createdBy', 'name email')
       .sort({ createdAt: -1 });
-
-    console.log('Found vendors:', vendors);
 
     res.status(200).json({
       success: true,
       data: vendors
     });
   } catch (error) {
-    console.error('Error in getAllVendors:', error);
-    console.error('Error stack:', error.stack);
     res.status(500).json({
       success: false,
       message: 'Error fetching vendors',
@@ -226,7 +213,6 @@ export const loginVendor = async (req, res) => {
       sameSite: 'Lax', // use Lax for localhost
       maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
     });
-    console.log('Set-Cookie: vendorToken');
     res.status(200).json({
       success: true,
       message: 'Login successful',
@@ -311,16 +297,13 @@ export const changeVendorPassword = async (req, res) => {
     await vendor.save();
     res.status(200).json({ success: true, message: 'Password changed successfully' });
   } catch (error) {
-    console.error("Error changing vendor password:", error);
     res.status(500).json({ success: false, message: 'Error changing password', error: error.message });
   }
 };
 
 // Get current vendor details (for vendor dashboard)
 export const getSelfVendor = async (req, res) => {
-  console.log('getSelfVendor called');
   try {
-    console.log('req.vendor in getSelfVendor:', req.vendor);
     if (!req.vendor) {
       return res.status(401).json({ success: false, message: 'Vendor not authenticated' });
     }
@@ -333,7 +316,6 @@ export const getSelfVendor = async (req, res) => {
     }
     res.status(200).json({ success: true, vendor: vendor });
   } catch (error) {
-    console.error('Error in getSelfVendor:', error);
     res.status(500).json({ success: false, message: 'Error fetching vendor details', error: error.message });
   }
 };
@@ -350,7 +332,6 @@ export const updateCurrentVendorStatus = async (req, res) => {
     }
     vendor.status = req.body.status;
     await vendor.save();
-    console.log('Vendor after status update:', vendor);
     const vendorObj = vendor.toObject();
     delete vendorObj.password;
     res.status(200).json({ success: true, message: 'Status updated', data: vendorObj });
@@ -399,7 +380,6 @@ export const getMenuItemsByVendor = async (req, res) => {
     const menuItems = await MenuItem.find({ vendor: vendorId }).sort({ createdAt: -1 });
     res.status(200).json({ success: true, data: menuItems });
   } catch (error) {
-    console.error("Error fetching menu items:", error);
     res.status(500).json({ success: false, message: 'Error fetching menu items' });
   }
 };
@@ -482,27 +462,22 @@ export const deleteMenuItem = async (req, res) => {
 
     res.status(200).json({ success: true, message: 'Menu item deleted successfully.' });
   } catch (error) {
-    console.error("Error deleting menu item:", error);
     res.status(500).json({ success: false, message: 'Error deleting menu item.' });
   }
 };
 
 // Get all vendors for public display
 export const getPublicVendors = async (req, res) => {
-  console.log('[Public] Attempting to fetch public vendors...');
   try {
     const vendors = await Vendor.find({ isApproved: true }) // Only show approved vendors
       .select('name image cuisine address') // Select only public-facing fields
       .sort({ name: 1 }); // Sort alphabetically by name
-
-    console.log('[Public] Successfully fetched vendors:', vendors.length);
 
     res.status(200).json({
       success: true,
       data: vendors,
     });
   } catch (error) {
-    console.error('!!! SERVER CRASH in getPublicVendors:', error);
     res.status(500).json({
       success: false,
       message: 'Error fetching vendors',
@@ -800,12 +775,10 @@ export const scanSubscriptionQr = async (req, res) => {
     // Defensive date handling
     const startDate = new Date(subscription.startDate);
     if (isNaN(startDate.getTime())) {
-      console.error('Invalid startDate:', subscription.startDate);
       return res.status(500).json({ success: false, message: 'Invalid start date in subscription.' });
     }
     const duration = Number(subscription.duration);
     if (!Number.isInteger(duration) || duration <= 0) {
-      console.error('Invalid duration:', subscription.duration);
       return res.status(500).json({ success: false, message: 'Invalid duration in subscription.' });
     }
     let endDate;
@@ -813,13 +786,11 @@ export const scanSubscriptionQr = async (req, res) => {
       endDate = new Date(startDate);
       endDate.setDate(endDate.getDate() + duration);
     } catch (err) {
-      console.error('Error calculating endDate:', err);
       return res.status(500).json({ success: false, message: 'Error calculating end date.' });
     }
     const today = new Date();
     today.setHours(0,0,0,0);
     endDate.setHours(0,0,0,0);
-    console.log('startDate:', startDate, 'duration:', duration, 'endDate:', endDate, 'today:', today);
     let expired = false;
     if (endDate < today) {
       expired = true;
@@ -845,7 +816,6 @@ export const scanSubscriptionQr = async (req, res) => {
       }
     });
   } catch (error) {
-    console.error('Error in scanSubscriptionQr:', error.stack || error);
     res.status(500).json({ success: false, message: 'Error scanning QR code', error: error.message });
   }
 }; 

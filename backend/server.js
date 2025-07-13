@@ -1,4 +1,3 @@
-console.log('server.js loaded at', new Date().toISOString());
 import express from 'express';
 import cors from 'cors';
 import path from 'path';
@@ -22,9 +21,6 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const app = express();
-console.log('server.js app instance created at', new Date().toISOString());
-
-console.log('Server starting...');
 
 // Security middleware
 app.use(helmet());
@@ -46,7 +42,6 @@ app.use('/uploads', (req, res, next) => {
 const uploadsDir = path.resolve(__dirname, '../uploads');
 app.use('/uploads', (req, res, next) => {
   const filePath = path.join(uploadsDir, req.path);
-  console.log('Static file requested:', filePath);
   next();
 });
 app.use('/uploads', express.static(uploadsDir));
@@ -106,13 +101,12 @@ if (process.env.NODE_ENV === 'development') {
 
 // Logging middleware
 app.use((req, res, next) => {
-  console.log('Request:', req.method, req.path);
   next();
 });
 
 // Database connection
 mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/namma_bites')
-  .then(() => console.log('Connected to MongoDB'))
+  .then(() => {/* Connected to MongoDB */})
   .catch(err => console.error('MongoDB connection error:', err));
 
 // Redis connection is handled by import
@@ -129,13 +123,11 @@ app.use('/api/auth', authRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/vendor', vendorRoutes);
 app.get('/api/test', (req, res) => {
-  console.log('Server test route hit');
   res.json({ success: true, message: 'Server test route works' });
 });
 
 // Global catch-all for debugging
 app.use((req, res, next) => {
-  console.log('GLOBAL catch-all:', req.method, req.originalUrl);
   next();
 });
 
@@ -147,7 +139,6 @@ app.use(express.static(path.join(path.resolve(), '../frontend/dist')));
 
 // Handle React routing, return all requests to React app
 app.get('*', (req, res) => {
-  console.log('Catch-all route hit:', req.path);
   res.sendFile(path.join(path.resolve(), '../frontend/dist', 'index.html'));
 });
 
@@ -162,7 +153,7 @@ app.use((err, req, res, next) => {
 });
 
 const PORT = process.env.PORT || 5000;
-console.log('JWT_SECRET:', process.env.JWT_SECRET);
+console.log(`Server is running on port ${PORT}`);
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
 }); 

@@ -69,7 +69,6 @@ api.interceptors.request.use(
 // Response interceptor
 api.interceptors.response.use(
   (response) => {
-    console.log('API Response:', response.status, response.data);
     return response;
   },
   async (error) => {

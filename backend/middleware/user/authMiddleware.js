@@ -3,8 +3,6 @@ import Admin from '../../models/Admin.js';
 import Vendor from '../../models/Vendor.js';
 import User from '../../models/User.js';
 
-console.log('authenticateVendor middleware loaded');
-
 export const authenticateAdmin = async (req, res, next) => {
   try {
     let token;
@@ -13,7 +11,6 @@ export const authenticateAdmin = async (req, res, next) => {
       token = authHeader.substring(7);
     } else if (req.cookies && req.cookies.adminToken) {
       token = req.cookies.adminToken;
-      console.log("cookies",req.cookies)
     }
     if (!token) {
       return res.status(401).json({
@@ -49,8 +46,6 @@ export const authenticateAdmin = async (req, res, next) => {
 };
 
 export const authenticateVendor = async (req, res, next) => {
-  console.log('Raw cookie header:', req.headers.cookie);
-  console.log('Cookies received:', req.cookies);
   try {
     let token;
     // Try to get token from Authorization header
@@ -89,41 +84,29 @@ export const authenticateVendor = async (req, res, next) => {
 };
 
 export const authenticateUser = async (req, res, next) => {
-  console.log('authenticateUser called for', req.method, req.originalUrl);
-  console.log('Cookies received:', req.cookies);
-  console.log('Headers:', req.headers);
-  console.log('Cookie header:', req.headers.cookie);
   try {
     let token = req.cookies.accessToken;
-    console.log('Token from cookies:', token);
     if (!token) {
       const authHeader = req.header('Authorization');
-      console.log('Authorization header:', authHeader);
       if (authHeader && authHeader.startsWith('Bearer ')) {
         token = authHeader.substring(7);
-        console.log('Token from Authorization header:', token);
       }
     }
     if (!token) {
-      console.log('No token found in cookies or headers');
       return res.status(401).json({ success: false, message: 'No authentication token, access denied' });
     }
     try {
       const decoded = jwt.verify(token, process.env.JWT_SECRET || 'your_jwt_secret');
-      console.log('Decoded JWT:', decoded);
       const user = await User.findById(decoded.userId).select('-password');
       if (!user) {
-        console.log('User not found for id:', decoded.userId);
         return res.status(401).json({ success: false, message: 'User not found' });
       }
       req.user = user;
       next();
     } catch (jwtError) {
-      console.log('JWT verification error:', jwtError);
       return res.status(401).json({ success: false, message: 'Invalid or expired token' });
     }
   } catch (error) {
-    console.log('Auth middleware error:', error);
     res.status(401).json({ success: false, message: 'Authentication failed' });
   }
 }; 

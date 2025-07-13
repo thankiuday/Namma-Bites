@@ -2,6 +2,9 @@ import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { getSubscriptionPlanById, createUserSubscription } from '../api/userApi';
 import { FaArrowLeft, FaCalendarAlt, FaClock, FaCheckCircle, FaExclamationTriangle } from 'react-icons/fa';
+import DatePicker from 'react-datepicker';
+import 'react-datepicker/dist/react-datepicker.css';
+import { format } from 'date-fns';
 
 const SubscriptionStart = () => {
   const { planId } = useParams();
@@ -10,6 +13,7 @@ const SubscriptionStart = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [startDate, setStartDate] = useState('');
+  const [startDateObj, setStartDateObj] = useState(null);
   const [subscribing, setSubscribing] = useState(false);
   const [dateError, setDateError] = useState('');
   const [showTodayConfirm, setShowTodayConfirm] = useState(false);
@@ -33,7 +37,11 @@ const SubscriptionStart = () => {
   const handleSubscribe = async () => {
     setDateError('');
     const today = new Date();
-    const selected = new Date(startDate);
+    const selected = startDateObj;
+    if (!selected) {
+      setDateError('Please select a start date.');
+      return;
+    }
     today.setHours(0,0,0,0);
     selected.setHours(0,0,0,0);
     if (selected < today) {
@@ -41,7 +49,7 @@ const SubscriptionStart = () => {
       return;
     }
     // Show custom modal if today is selected
-    if (startDate === new Date().toISOString().split('T')[0]) {
+    if (format(selected, 'yyyy-MM-dd') === format(today, 'yyyy-MM-dd')) {
       setShowTodayConfirm(true);
       setPendingSubscribe(true);
       return;
@@ -55,7 +63,7 @@ const SubscriptionStart = () => {
       const res = await createUserSubscription({
         subscriptionPlan: plan._id,
         vendor: plan.vendor?._id || plan.vendor,
-        startDate,
+        startDate: format(startDateObj, 'yyyy-MM-dd'),
         duration: plan.duration
       });
       const subscriptionId = res.data.data._id;
@@ -107,12 +115,18 @@ const SubscriptionStart = () => {
             </div>
           )}
           <label className="block text-orange-700 font-semibold mb-1">Select Start Date</label>
-          <input
-            type="date"
+          <DatePicker
+            selected={startDateObj}
+            onChange={date => {
+              setStartDateObj(date);
+              setStartDate(date ? format(date, 'yyyy-MM-dd') : '');
+              setDateError('');
+            }}
+            minDate={new Date()}
+            dateFormat="yyyy-MM-dd"
+            placeholderText="Select a start date"
             className="w-full border-2 border-orange-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-orange-300 focus:border-orange-500 bg-white text-gray-800 font-medium"
-            value={startDate}
-            onChange={e => { setStartDate(e.target.value); setDateError(''); }}
-            min={new Date().toISOString().split('T')[0]}
+            aria-label="Select start date using calendar"
             required
           />
           {dateError && <div className="text-red-600 text-sm font-semibold mt-1">{dateError}</div>}

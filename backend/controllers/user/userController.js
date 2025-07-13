@@ -171,16 +171,6 @@ export const getAllSubscriptionPlans = async (req, res) => {
       })
       .sort({ createdAt: -1 });
     
-    console.log('Subscription plans with vendors:', plans.map(plan => ({
-      planId: plan._id,
-      vendor: plan.vendor ? {
-        id: plan.vendor._id,
-        name: plan.vendor.name,
-        image: plan.vendor.image,
-        location: plan.vendor.location
-      } : null
-    })));
-    
     res.json({ success: true, data: plans });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
@@ -312,20 +302,16 @@ export const removeCartItem = async (req, res) => {
 
 // Clear the cart
 export const clearCart = async (req, res) => {
-  console.log('clearCart called for user:', req.user._id);
   try {
     const user = await User.findById(req.user._id);
     if (!user) {
-      console.log('User not found:', req.user._id);
       return res.status(404).json({ success: false, message: 'User not found' });
     }
-    console.log('Clearing cart for user:', user._id);
     user.cart = [];
     await user.save();
     
     // Populate cart items before sending response
     const populatedUser = await User.findById(req.user._id).populate('cart.item');
-    console.log('Cart cleared successfully for user:', user._id);
     res.json({ success: true, cart: populatedUser.cart });
   } catch (error) {
     console.error('Error clearing cart:', error);

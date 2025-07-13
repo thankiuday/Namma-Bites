@@ -39,7 +39,6 @@ if (!fs.existsSync(paymentProofDir)) {
 const paymentProofStorage = multer.diskStorage({
   destination: function (req, file, cb) {
     const dest = paymentProofDir;
-    console.log('Multer saving payment proof to:', dest);
     cb(null, dest);
   },
   filename: function (req, file, cb) {
@@ -88,7 +87,6 @@ router.put('/:id', authenticateAdmin, updateUser);
 
 // --- Catch-all for debugging ---
 router.use((req, res, next) => {
-  console.log('userRoutes catch-all:', req.method, req.originalUrl);
   next();
 });
 

@@ -714,7 +714,7 @@ const UserSubscription = () => {
                 </div>
               </div>
               {/* Payment Proof and Scanner Section */}
-              <div className="mb-6 sm:mb-8 flex flex-col md:flex-row gap-4 items-start">
+              <div className="mb-6 sm:mb-8 flex flex-col md:flex-row gap-4 items-center md:items-start">
                 {/* Payment Proof */}
                 {selectedUserSub.paymentProof && (
                   <div className="flex-1 bg-gradient-to-br from-orange-50 to-orange-100 rounded-xl p-4 border border-orange-200 flex flex-col items-center justify-center">
@@ -724,7 +724,7 @@ const UserSubscription = () => {
                     <img
                       src={selectedUserSub.paymentProof.startsWith('http') ? selectedUserSub.paymentProof : `${API_BASE_URL}${selectedUserSub.paymentProof}`}
                       alt="Payment Proof"
-                      className="w-40 h-40 object-contain rounded-lg border border-orange-200 mb-2"
+                      className="w-40 h-40 object-contain rounded-lg border border-orange-200 mb-2 mx-auto"
                       style={{ background: '#fff' }}
                     />
                     <button
@@ -747,7 +747,7 @@ const UserSubscription = () => {
                       <img
                         src={`https://api.qrserver.com/v1/create-qr-code/?data=${encodeURIComponent(qrData)}&size=180x180`}
                         alt="Subscription QR"
-                        className="w-40 h-40 object-contain rounded-lg border border-blue-200 mb-2"
+                        className="w-40 h-40 object-contain rounded-lg border border-blue-200 mb-2 mx-auto"
                         style={{ background: '#fff' }}
                       />
                     ) : (

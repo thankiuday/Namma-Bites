@@ -42,6 +42,10 @@ export const CartProvider = ({ children }) => {
     try {
       const res = await apiAddOrUpdateCartItem(item._id, quantity);
       setCart(flattenCart(res.data.cart));
+      toast.success('Added to cart!', {
+        position: 'top-right',
+        autoClose: 1500,
+      });
       return true;
     } catch (err) {
       console.error('Error adding to cart:', err);

@@ -9,6 +9,7 @@ const CreateVendor = () => {
     const navigate = useNavigate();
     const [loading, setLoading] = useState(false);
     const [showPassword, setShowPassword] = useState(false);
+    const [error, setError] = useState(''); // Add error state
     const [formData, setFormData] = useState({
         name: '',
         email: '',
@@ -30,6 +31,7 @@ const CreateVendor = () => {
             ...prev,
             [name]: files ? files[0] : value
         }));
+        if (error) setError(''); // Clear error on input change
     };
 
     const togglePasswordVisibility = () => {
@@ -39,6 +41,7 @@ const CreateVendor = () => {
     const handleSubmit = async (e) => {
         e.preventDefault();
         setLoading(true);
+        setError(''); // Clear error on submit
         
         try {
             const formDataToSend = new FormData();
@@ -70,10 +73,12 @@ const CreateVendor = () => {
                 toast.success('Vendor created successfully');
                 navigate('/admin/vendor');
             } else {
+                setError(response.data.message || 'Failed to create vendor');
                 toast.error(response.data.message || 'Failed to create vendor');
             }
         } catch (error) {
             const errorMessage = error.response?.data?.message || error.message || 'Failed to create vendor';
+            setError(errorMessage); // Set error for display
             toast.error(errorMessage);
         } finally {
             setLoading(false);
@@ -84,6 +89,11 @@ const CreateVendor = () => {
         <AdminLayout>
             <div className="bg-white rounded-lg shadow-md p-6">
                 <h1 className="text-2xl font-bold text-gray-800 mb-6">Create New Vendor</h1>
+                {error && (
+                  <div className="bg-red-50 text-red-600 p-3 rounded-lg mb-4 font-medium text-center">
+                    {error}
+                  </div>
+                )}
                 <form onSubmit={handleSubmit} className="space-y-4">
                     <div>
                         <label className="block text-sm font-medium text-gray-700">Vendor Name</label>
@@ -190,7 +200,7 @@ const CreateVendor = () => {
                         />
                     </div>
                     <div>
-                        <label className="block text-sm font-medium text-gray-700">Google Pay Scanner (optional)</label>
+                        <label className="block text-sm font-medium text-gray-700">Google Pay Scanner </label>
                         <input
                             type="file"
                             name="scanner"

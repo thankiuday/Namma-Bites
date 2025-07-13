@@ -2,10 +2,12 @@ import React, { useState } from 'react';
 import ZxingQrScanner from '../components/ZxingQrScanner';
 import axios from 'axios';
 import { format } from 'date-fns';
+import { useNavigate } from 'react-router-dom';
 
 const API_BASE_URL = 'http://localhost:5000';
 
 const VendorQrScanner = () => {
+  const navigate = useNavigate();
   const [scanResult, setScanResult] = useState('');
   const [subscriptionInfo, setSubscriptionInfo] = useState(null);
   const [orderInfo, setOrderInfo] = useState(null);
@@ -86,6 +88,12 @@ const VendorQrScanner = () => {
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-orange-50 to-orange-100 px-2 py-6">
+      <button
+        className="self-start mb-4 px-4 py-2 bg-orange-200 text-orange-800 rounded-lg hover:bg-orange-300 font-semibold flex items-center"
+        onClick={() => navigate(-1)}
+      >
+        &#8592; Back
+      </button>
       <div className="w-full max-w-lg bg-white rounded-2xl shadow-2xl p-6 md:p-10 flex flex-col items-center border border-orange-200">
         <h1 className="text-3xl md:text-4xl font-extrabold text-orange-700 mb-2 text-center tracking-tight drop-shadow-sm">Vendor QR Scanner</h1>
         <p className="text-orange-600 text-base md:text-lg mb-6 text-center font-medium">Scan a user's subscription QR code to validate their plan and view details.</p>
