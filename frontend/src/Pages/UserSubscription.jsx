@@ -333,10 +333,17 @@ const UserSubscription = () => {
             <div className="animate-spin rounded-full h-10 w-10 border-4 border-orange-200 border-t-orange-600"></div>
           </div>
         ) : userSubs.length === 0 ? (
-          <div className="text-center py-8 bg-white rounded-xl shadow-lg border border-orange-100">
-            <FaCalendarAlt className="mx-auto h-12 w-12 text-orange-300 mb-4" />
+          <div className="flex flex-col items-center justify-center py-8 bg-white rounded-xl shadow-lg border border-orange-100">
+            <svg width="100" height="100" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg" className="mb-4">
+              <rect x="10" y="40" width="80" height="40" rx="12" fill="#FFEDD5" />
+              <rect x="25" y="55" width="50" height="15" rx="7" fill="#FDBA74" />
+              <rect x="40" y="70" width="20" height="5" rx="2.5" fill="#F59E42" />
+              <circle cx="50" cy="50" r="8" fill="#FDBA74" />
+              <ellipse cx="50" cy="90" rx="25" ry="4" fill="#FDE68A" />
+            </svg>
             <h3 className="text-lg font-bold text-orange-800 mb-2">No active subscriptions</h3>
-            <p className="text-orange-600 font-medium">You have not subscribed to any plans yet.</p>
+            <p className="text-orange-600 font-medium mb-1">You have not subscribed to any plans yet.</p>
+            <p className="text-gray-400 text-sm">Browse our plans above and start your first subscription!</p>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">

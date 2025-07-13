@@ -4,6 +4,7 @@ import { FaLeaf, FaDrumstickBite, FaMinus, FaPlus, FaShoppingCart, FaStar, FaClo
 import apiClient from '../api/apiClient';
 import { useAuth } from '../context/AuthContext';
 import { useCart } from '../context/CartContext';
+import AnimatedButton from '../components/AnimatedButton';
 
 const FoodDetails = () => {
   const { id } = useParams();
@@ -268,21 +269,19 @@ const FoodDetails = () => {
                   </div>
                 </div>
               </div>
-              <button
+              <AnimatedButton
                 onClick={handleAddToCart}
-                className={`w-full py-3 px-6 rounded-lg transition-colors flex items-center justify-center gap-2 ${
-                  food.isAvailable
-                    ? 'bg-orange-600 text-white hover:bg-orange-700'
-                    : 'bg-gray-400 text-white cursor-not-allowed'
-                }`}
+                className="w-full py-3 px-6 flex items-center justify-center gap-2"
                 disabled={!food.isAvailable}
+                variant={food.isAvailable ? 'primary' : 'secondary'}
+                size="md"
               >
                 <FaShoppingCart />
                 {food.isAvailable 
                   ? `Add to Cart - ₹${food.price * quantity}`
                   : 'Currently Unavailable'
                 }
-              </button>
+              </AnimatedButton>
               {cartMsg && <div className="mt-2 text-green-600 text-center">{cartMsg}</div>}
             </div>
           </div>

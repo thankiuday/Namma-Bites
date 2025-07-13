@@ -5,6 +5,7 @@ import { useVendorAuth } from '../context/VendorAuthContext';
 import vendorApi, { getPendingUserSubscriptions, approveUserSubscription, getApprovedUserSubscriptions } from '../api/vendorApi';
 import api from '../api/config';
 import VendorNavbar from '../components/vendor/VendorNavbar';
+import { getGreeting } from '../utils/greetings';
 
 const vendorLinks = [
   { name: 'Home', path: '/vendor/dashboard', icon: <FaHome className="w-5 h-5" /> },
@@ -185,10 +186,48 @@ const VendorDashboard = () => {
     return rejectedSubs;
   };
 
+  if (pendingLoading || approvedLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-green-50 via-white to-green-100 flex flex-col">
+        <VendorNavbar />
+        <main className="flex-grow container mx-auto px-2 sm:px-6 py-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            {/* Vendor Details Skeleton */}
+            <div className="bg-white rounded-2xl shadow-xl p-8 flex flex-col items-center border border-green-100 mb-8 animate-pulse">
+              <div className="h-8 w-48 bg-green-100 rounded mb-4" />
+              <div className="h-4 w-32 bg-green-200 rounded mb-2" />
+              <div className="h-4 w-24 bg-green-100 rounded mb-2" />
+              <div className="h-4 w-20 bg-green-100 rounded" />
+            </div>
+            {/* Subscriptions Skeleton */}
+            <div className="bg-white rounded-2xl shadow-xl p-8 border border-green-100 animate-pulse">
+              <div className="h-6 w-40 bg-green-100 rounded mb-6" />
+              <div className="space-y-4">
+                {[...Array(2)].map((_, i) => (
+                  <div key={i} className="p-4 border border-green-100 rounded-lg flex flex-col gap-2">
+                    <div className="h-4 w-1/2 bg-green-200 rounded mb-2" />
+                    <div className="h-3 w-1/3 bg-green-100 rounded mb-1" />
+                    <div className="h-3 w-1/4 bg-green-100 rounded" />
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </main>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-green-50 via-white to-green-100 flex flex-col">
       {/* Navbar */}
       <VendorNavbar />
+      {/* Personalized Greeting */}
+      <div className="container mx-auto px-2 sm:px-6 mt-6 animate-fade-in-down">
+        <h2 className="text-2xl font-bold text-green-700 drop-shadow-sm">
+          {getGreeting(vendor?.name || vendor?.username || 'Vendor')}
+        </h2>
+      </div>
       {/* Main Content */}
       <main className="flex-grow container mx-auto px-2 sm:px-6 py-8">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">

@@ -4,6 +4,8 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import userApi, { getUserSubscriptions, deleteUserSubscription } from '../api/userApi';
 import ValidatedQrModal from '../components/ValidatedQrModal';
+import { getGreeting } from '../utils/greetings';
+import Joyride from 'react-joyride';
 
 const UserProfile = () => {
   const navigate = useNavigate();
@@ -18,6 +20,36 @@ const UserProfile = () => {
   const [showQrModal, setShowQrModal] = useState(false);
   const [qrSubId, setQrSubId] = useState(null);
   const [qrValidated, setQrValidated] = useState(false);
+  const [runTour, setRunTour] = useState(false);
+
+  React.useEffect(() => {
+    if (!localStorage.getItem('onboardingProfileTourCompleted')) {
+      setRunTour(true);
+    }
+  }, []);
+
+  const handleTourCallback = (data) => {
+    if (data.status === 'finished' || data.status === 'skipped') {
+      setRunTour(false);
+      localStorage.setItem('onboardingProfileTourCompleted', 'true');
+    }
+  };
+
+  const tourSteps = [
+    {
+      target: '.onboard-profile-info',
+      content: 'This is your profile hub. View and update your personal information here.',
+      disableBeacon: true,
+    },
+    {
+      target: '.onboard-profile-edit',
+      content: 'Click here to edit your profile details.',
+    },
+    {
+      target: '.onboard-profile-actions',
+      content: 'Quick actions for orders, cart, and wallet are available here.',
+    },
+  ];
 
   // Update editedUser when user data changes
   useEffect(() => {
@@ -114,12 +146,58 @@ const UserProfile = () => {
     }
   };
 
-  if (!user) {
-    return <div className="flex justify-center items-center min-h-screen">Loading...</div>;
+  if (!user || subsLoading) {
+    return (
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
+        {/* Profile Skeleton */}
+        <section className="bg-white rounded-xl shadow-lg p-4 sm:p-6 mb-6 sm:mb-8 animate-pulse">
+          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 sm:gap-0 mb-6">
+            <div className="h-6 w-40 bg-orange-100 rounded mb-2" />
+            <div className="h-8 w-32 bg-orange-200 rounded" />
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
+            {[...Array(4)].map((_, i) => (
+              <div key={i}>
+                <div className="h-4 w-24 bg-orange-100 rounded mb-2" />
+                <div className="h-5 w-full bg-orange-200 rounded" />
+              </div>
+            ))}
+          </div>
+        </section>
+        {/* Subscriptions Skeleton */}
+        <section className="bg-white rounded-xl shadow-lg p-4 sm:p-6 animate-pulse">
+          <div className="h-6 w-32 bg-orange-100 rounded mb-4" />
+          <div className="space-y-4">
+            {[...Array(2)].map((_, i) => (
+              <div key={i} className="p-4 border border-orange-100 rounded-lg flex flex-col gap-2">
+                <div className="h-4 w-1/2 bg-orange-200 rounded mb-2" />
+                <div className="h-3 w-1/3 bg-orange-100 rounded mb-1" />
+                <div className="h-3 w-1/4 bg-orange-100 rounded" />
+              </div>
+            ))}
+          </div>
+        </section>
+      </div>
+    );
   }
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
+    <div className="profile-page-root">
+      <Joyride
+        steps={tourSteps}
+        run={runTour}
+        continuous
+        showSkipButton
+        showProgress
+        styles={{ options: { zIndex: 10000, primaryColor: '#ea580c' } }}
+        callback={handleTourCallback}
+      />
+      {/* Personalized Greeting */}
+      <div className="mb-6 animate-fade-in-down">
+        <h2 className="text-2xl font-bold text-orange-700 drop-shadow-sm">
+          {getGreeting(user?.username || user?.name || 'User')}
+        </h2>
+      </div>
       {/* Profile Hub Section */}
       <section className="bg-white rounded-xl shadow-lg p-4 sm:p-6 mb-6 sm:mb-8">
         <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 sm:gap-0 mb-6">

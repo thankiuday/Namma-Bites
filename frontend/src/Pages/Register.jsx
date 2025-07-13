@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { FaLock, FaEnvelope, FaUser, FaUserPlus } from 'react-icons/fa';
+import { FaLock, FaEnvelope, FaUser, FaUserPlus, FaEye, FaEyeSlash } from 'react-icons/fa';
 import { toast } from 'react-toastify';
 import axios from 'axios';
+import AnimatedButton from '../components/AnimatedButton';
+import { motion } from 'framer-motion';
 
 const Register = () => {
   const [formData, setFormData] = useState({
@@ -12,6 +14,9 @@ const Register = () => {
     confirmPassword: '',
   });
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const navigate = useNavigate();
 
   const handleChange = (e) => {
@@ -19,15 +24,17 @@ const Register = () => {
       ...formData,
       [e.target.name]: e.target.value,
     });
+    if (error) setError('');
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (formData.password !== formData.confirmPassword) {
-      toast.error('Passwords do not match');
+      setError('Passwords do not match');
       return;
     }
     setLoading(true);
+    setError('');
     try {
       const response = await axios.post('/api/auth/register', {
         name: formData.name,
@@ -38,16 +45,23 @@ const Register = () => {
         toast.success('Account created successfully!');
         navigate('/login');
       }
-    } catch (error) {
-      toast.error(error.response?.data?.message || 'Registration failed');
+    } catch (err) {
+      setError(err.response?.data?.message || 'Registration failed');
     } finally {
       setLoading(false);
     }
   };
 
+  const passwordMatch = formData.password && formData.confirmPassword && formData.password === formData.confirmPassword;
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-orange-500 to-orange-600 flex items-center justify-center p-4">
-      <div className="max-w-md w-full space-y-8 bg-white/10 backdrop-blur-lg p-8 rounded-2xl shadow-2xl">
+      <motion.div
+        className="max-w-md w-full space-y-8 bg-white/10 backdrop-blur-lg p-8 rounded-2xl shadow-2xl"
+        initial={{ opacity: 0, y: 40 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, ease: 'easeOut' }}
+      >
         <div className="text-center">
           <div className="flex justify-center">
             <img
@@ -64,7 +78,13 @@ const Register = () => {
           </p>
         </div>
 
-        <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
+        {error && (
+          <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded relative text-center font-medium">
+            {error}
+          </div>
+        )}
+
+        <form className="mt-8 space-y-6" onSubmit={handleSubmit} autoComplete="off">
           <div className="space-y-4">
             <div className="relative">
               <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -76,8 +96,9 @@ const Register = () => {
                 required
                 value={formData.name}
                 onChange={handleChange}
-                className="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg bg-white/90 text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                className="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg bg-white/90 text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-400 hover:border-orange-400 transition-all duration-150"
                 placeholder="Full Name"
+                aria-label="Full Name"
               />
             </div>
 
@@ -91,8 +112,9 @@ const Register = () => {
                 required
                 value={formData.email}
                 onChange={handleChange}
-                className="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg bg-white/90 text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                className="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg bg-white/90 text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-400 hover:border-orange-400 transition-all duration-150"
                 placeholder="Email Address"
+                aria-label="Email Address"
               />
             </div>
 
@@ -101,14 +123,24 @@ const Register = () => {
                 <FaLock className="h-5 w-5 text-gray-400" />
               </div>
               <input
-                type="password"
+                type={showPassword ? 'text' : 'password'}
                 name="password"
                 required
                 value={formData.password}
                 onChange={handleChange}
-                className="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg bg-white/90 text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                className="block w-full pl-10 pr-10 py-3 border border-gray-300 rounded-lg bg-white/90 text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-400 hover:border-orange-400 transition-all duration-150"
                 placeholder="Password"
+                aria-label="Password"
               />
+              <button
+                type="button"
+                tabIndex={-1}
+                className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-orange-500 focus:outline-none"
+                onClick={() => setShowPassword((v) => !v)}
+                aria-label={showPassword ? 'Hide password' : 'Show password'}
+              >
+                {showPassword ? <FaEyeSlash className="h-5 w-5" /> : <FaEye className="h-5 w-5" />}
+              </button>
             </div>
 
             <div className="relative">
@@ -116,22 +148,37 @@ const Register = () => {
                 <FaLock className="h-5 w-5 text-gray-400" />
               </div>
               <input
-                type="password"
+                type={showConfirmPassword ? 'text' : 'password'}
                 name="confirmPassword"
                 required
                 value={formData.confirmPassword}
                 onChange={handleChange}
-                className="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg bg-white/90 text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                className={`block w-full pl-10 pr-10 py-3 border rounded-lg bg-white/90 text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-400 hover:border-orange-400 transition-all duration-150 ${formData.confirmPassword && (passwordMatch ? 'border-green-400' : 'border-red-400')}`}
                 placeholder="Confirm Password"
+                aria-label="Confirm Password"
               />
+              <button
+                type="button"
+                tabIndex={-1}
+                className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-orange-500 focus:outline-none"
+                onClick={() => setShowConfirmPassword((v) => !v)}
+                aria-label={showConfirmPassword ? 'Hide password' : 'Show password'}
+              >
+                {showConfirmPassword ? <FaEyeSlash className="h-5 w-5" /> : <FaEye className="h-5 w-5" />}
+              </button>
+              {formData.confirmPassword && (
+                <span className={`absolute -bottom-6 left-0 text-xs font-medium ${passwordMatch ? 'text-green-600' : 'text-red-600'}`}>{passwordMatch ? 'Passwords match' : 'Passwords do not match'}</span>
+              )}
             </div>
           </div>
 
           <div>
-            <button
+            <AnimatedButton
               type="submit"
               disabled={loading}
-              className="group relative w-full flex justify-center py-3 px-4 border border-transparent text-sm font-medium rounded-lg text-white bg-orange-600 hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500 transition-colors duration-200"
+              className="group relative w-full flex justify-center py-3 px-4 text-sm font-medium rounded-lg"
+              variant="primary"
+              size="md"
             >
               {loading ? (
                 <span className="flex items-center">
@@ -147,7 +194,7 @@ const Register = () => {
                   Create Account
                 </span>
               )}
-            </button>
+            </AnimatedButton>
           </div>
 
           <div className="text-center">
@@ -159,7 +206,7 @@ const Register = () => {
             </Link>
           </div>
         </form>
-      </div>
+      </motion.div>
     </div>
   );
 };

@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import logo from '../../public/logo.png';
+import AnimatedButton from '../components/AnimatedButton';
 
 const Login = () => {
   const navigate = useNavigate();
@@ -143,15 +144,15 @@ const Login = () => {
           </div>
 
           <div>
-            <button
+            <AnimatedButton
               type="submit"
               disabled={loading}
-              className={`w-full flex justify-center py-2 sm:py-3 px-4 border border-transparent rounded-md shadow-sm text-sm sm:text-base font-medium text-white bg-orange-600 hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500 transition-colors ${
-                loading ? 'opacity-50 cursor-not-allowed' : ''
-              }`}
+              className="w-full flex justify-center py-2 sm:py-3 px-4 shadow-sm text-sm sm:text-base font-medium"
+              variant="primary"
+              size="md"
             >
               {loading ? 'Signing in...' : 'Sign in'}
-            </button>
+            </AnimatedButton>
           </div>
 
           {/* Forgot Password Link */}

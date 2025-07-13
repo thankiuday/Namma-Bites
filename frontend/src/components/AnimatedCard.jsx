@@ -25,12 +25,18 @@ const AnimatedCard = ({
       }
     },
     hover: hover ? {
-      y: -5,
-      scale: 1.02,
+      y: -8,
+      scale: 1.04,
+      boxShadow: '0 8px 32px 0 rgba(255,140,0,0.15), 0 1.5px 8px 0 rgba(255,140,0,0.10)',
       transition: {
-        duration: 0.2,
+        duration: 0.18,
         ease: "easeOut"
       }
+    } : {},
+    tap: hover ? {
+      scale: 0.97,
+      boxShadow: '0 4px 16px 0 rgba(255,140,0,0.10)',
+      transition: { duration: 0.12 }
     } : {}
   };
 
@@ -41,6 +47,7 @@ const AnimatedCard = ({
       initial="initial"
       animate="animate"
       whileHover="hover"
+      whileTap="tap"
       onClick={onClick}
       style={{ cursor: onClick ? 'pointer' : 'default' }}
       {...props}

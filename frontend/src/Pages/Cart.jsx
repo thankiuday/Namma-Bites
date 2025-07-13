@@ -3,12 +3,43 @@ import { FaTrash, FaMinus, FaPlus } from 'react-icons/fa';
 import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
+import Joyride from 'react-joyride';
 
 const Cart = () => {
   const { cart, updateQuantity, removeFromCart, clearCart, loading, fetchCart } = useCart();
   const { user, handleAuthError } = useAuth();
   const [clearing, setClearing] = useState(false);
   const navigate = useNavigate();
+  const [runTour, setRunTour] = useState(false);
+
+  React.useEffect(() => {
+    if (!localStorage.getItem('onboardingCartTourCompleted')) {
+      setRunTour(true);
+    }
+  }, []);
+
+  const handleTourCallback = (data) => {
+    if (data.status === 'finished' || data.status === 'skipped') {
+      setRunTour(false);
+      localStorage.setItem('onboardingCartTourCompleted', 'true');
+    }
+  };
+
+  const tourSteps = [
+    {
+      target: '.onboard-cart-items',
+      content: 'Here are the items you’ve added to your cart. Review them before checkout!',
+      disableBeacon: true,
+    },
+    {
+      target: '.onboard-cart-qty',
+      content: 'Adjust the quantity of each item as needed.',
+    },
+    {
+      target: '.onboard-cart-checkout',
+      content: 'Ready to order? Click here to proceed to checkout!',
+    },
+  ];
 
   const handleFetchCart = useCallback(() => {
     if (user) {
@@ -92,9 +123,26 @@ const Cart = () => {
   return (
     <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
       <h1 className="text-2xl sm:text-3xl font-bold text-gray-800 mb-6 sm:mb-8">Your Cart</h1>
+      <Joyride
+        steps={tourSteps}
+        run={runTour}
+        continuous
+        showSkipButton
+        showProgress
+        styles={{ options: { zIndex: 10000, primaryColor: '#ea580c' } }}
+        callback={handleTourCallback}
+      />
       {cart.length === 0 ? (
-        <div className="text-center py-8 sm:py-12">
-          <p className="text-gray-600 text-base sm:text-lg">Your cart is empty</p>
+        <div className="flex flex-col items-center justify-center py-8 sm:py-12">
+          <svg width="120" height="120" viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg" className="mb-4">
+            <rect x="20" y="50" width="80" height="40" rx="12" fill="#FFEDD5" />
+            <rect x="35" y="65" width="50" height="15" rx="7" fill="#FDBA74" />
+            <rect x="50" y="80" width="20" height="5" rx="2.5" fill="#F59E42" />
+            <circle cx="60" cy="60" r="8" fill="#FDBA74" />
+            <ellipse cx="60" cy="105" rx="30" ry="5" fill="#FDE68A" />
+          </svg>
+          <p className="text-gray-600 text-base sm:text-lg font-semibold mb-2">Your cart is empty</p>
+          <p className="text-gray-400 text-sm">Looks like you haven't added anything yet. Explore our menu and add your favorite dishes!</p>
         </div>
       ) : (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-8">

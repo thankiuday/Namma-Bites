@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { FaCheckCircle, FaTimesCircle, FaClock, FaQrcode, FaUpload } from 'react-icons/fa';
 import axios from 'axios';
+import Joyride from 'react-joyride';
 
 const API_BASE_URL = 'http://localhost:5000/api';
 const SERVER_BASE_URL = 'http://localhost:5000';
@@ -17,6 +18,36 @@ const Orders = () => {
   const [dateTo, setDateTo] = useState('');
   const [qrModalOpen, setQrModalOpen] = useState(false);
   const [qrModalSrc, setQrModalSrc] = useState(null);
+  const [runTour, setRunTour] = useState(false);
+
+  React.useEffect(() => {
+    if (!localStorage.getItem('onboardingOrdersTourCompleted')) {
+      setRunTour(true);
+    }
+  }, []);
+
+  const handleTourCallback = (data) => {
+    if (data.status === 'finished' || data.status === 'skipped') {
+      setRunTour(false);
+      localStorage.setItem('onboardingOrdersTourCompleted', 'true');
+    }
+  };
+
+  const tourSteps = [
+    {
+      target: '.onboard-orders-list',
+      content: 'This is your order history. See all your past and current orders here.',
+      disableBeacon: true,
+    },
+    {
+      target: '.onboard-orders-status',
+      content: 'Check the status of each order at a glance.',
+    },
+    {
+      target: '.onboard-orders-details',
+      content: 'Click on an order to view more details and track its progress.',
+    },
+  ];
 
   useEffect(() => {
     const fetchOrders = async () => {
@@ -141,16 +172,51 @@ const Orders = () => {
       </div>
       {/* End Filter UI */}
       {loading ? (
-        <div className="text-center py-8 sm:py-12">
-          <p className="text-orange-600 text-base sm:text-lg">Loading orders...</p>
+        <div className="space-y-4 sm:space-y-6">
+          {[...Array(3)].map((_, i) => (
+            <div key={i} className="animate-pulse bg-orange-50 rounded-lg shadow-lg p-4 sm:p-6">
+              <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-3 sm:gap-0 mb-4">
+                <div>
+                  <div className="h-4 w-32 bg-orange-200 rounded mb-2" />
+                  <div className="h-3 w-24 bg-orange-100 rounded mb-1" />
+                  <div className="h-3 w-20 bg-orange-100 rounded" />
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="h-5 w-5 bg-orange-200 rounded-full" />
+                  <div className="h-3 w-16 bg-orange-100 rounded" />
+                </div>
+              </div>
+              <div className="border-t border-b py-3 sm:py-4 my-3 sm:my-4">
+                {[...Array(2)].map((_, j) => (
+                  <div key={j} className="flex items-center gap-3 mb-2 last:mb-0">
+                    <div className="w-10 h-10 bg-orange-100 rounded" />
+                    <div className="h-3 w-24 bg-orange-200 rounded flex-1" />
+                    <div className="h-3 w-10 bg-orange-100 rounded" />
+                  </div>
+                ))}
+              </div>
+              <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 sm:gap-0">
+                <div className="h-3 w-32 bg-orange-100 rounded mb-2" />
+                <div className="h-3 w-16 bg-orange-200 rounded" />
+              </div>
+            </div>
+          ))}
         </div>
       ) : error ? (
         <div className="text-center py-8 sm:py-12">
           <p className="text-red-600 text-base sm:text-lg">{error}</p>
         </div>
       ) : filteredOrders.length === 0 ? (
-        <div className="text-center py-8 sm:py-12">
-          <p className="text-gray-600 text-base sm:text-lg">No orders found</p>
+        <div className="flex flex-col items-center justify-center py-8 sm:py-12">
+          <svg width="120" height="120" viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg" className="mb-4">
+            <rect x="10" y="40" width="100" height="60" rx="12" fill="#FFEDD5" />
+            <rect x="25" y="55" width="70" height="30" rx="8" fill="#FDBA74" />
+            <rect x="40" y="70" width="40" height="10" rx="5" fill="#F59E42" />
+            <circle cx="60" cy="50" r="8" fill="#FDBA74" />
+            <ellipse cx="60" cy="105" rx="30" ry="5" fill="#FDE68A" />
+          </svg>
+          <p className="text-gray-600 text-base sm:text-lg font-semibold mb-2">No orders found</p>
+          <p className="text-gray-400 text-sm">Looks like you haven't placed any orders yet. Start exploring our menu and enjoy your first meal!</p>
         </div>
       ) : (
         <div className="space-y-4 sm:space-y-6">
@@ -234,6 +300,15 @@ const Orders = () => {
           </div>
         </div>
       )}
+      <Joyride
+        steps={tourSteps}
+        run={runTour}
+        continuous
+        showSkipButton
+        showProgress
+        styles={{ options: { zIndex: 10000, primaryColor: '#ea580c' } }}
+        callback={handleTourCallback}
+      />
     </div>
   );
 };

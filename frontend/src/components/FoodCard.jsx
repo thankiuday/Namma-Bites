@@ -2,6 +2,7 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { FaCheckCircle, FaTimesCircle, FaTag, FaLeaf, FaDrumstickBite } from 'react-icons/fa';
 import AnimatedCard from './AnimatedCard';
+import { motion } from 'framer-motion';
 
 const FoodCard = ({ food }) => {
   const navigate = useNavigate();
@@ -16,11 +17,13 @@ const FoodCard = ({ food }) => {
       onClick={handleClick}
     >
       {/* Food Image */}
-      <div className="relative h-32 md:h-48 w-full overflow-hidden">
-        <img
+      <div className="relative h-32 md:h-48 w-full overflow-hidden group">
+        <motion.img
           src={food.image ? `http://localhost:5000${food.image}` : '/default-food.png'}
           alt={food.name}
-          className="w-full h-full object-cover transition-transform duration-300 hover:scale-110"
+          className="w-full h-full object-cover transition-transform duration-300"
+          whileHover={{ scale: 1.10 }}
+          transition={{ type: 'spring', stiffness: 200, damping: 18 }}
         />
         {/* Availability Badge */}
         <div className={`absolute top-2 right-2 px-2 py-0.5 rounded-full text-xs md:text-sm font-medium flex items-center gap-1 ${
