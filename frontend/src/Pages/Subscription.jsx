@@ -202,17 +202,14 @@ const Subscription = () => {
   };
 
   return (
-    <div className="max-w-5xl mx-auto p-6 bg-gradient-to-br from-orange-50 to-white min-h-screen rounded-2xl shadow-2xl border border-orange-100">
-      {/* Back Button */}
-      <div className="mb-6">
-        <button
-          onClick={() => navigate('/vendor/dashboard')}
-          className="flex items-center space-x-2 px-4 py-2 bg-orange-100 text-orange-700 rounded-lg hover:bg-orange-200 transition-all duration-200 font-semibold border border-orange-200"
-        >
-          <FaArrowLeft className="text-sm" />
-          <span>Back to Dashboard</span>
-        </button>
-      </div>
+    <div className="max-w-4xl mx-auto px-4 py-8">
+      <button
+        onClick={() => navigate(-1)}
+        className="flex items-center gap-2 mb-4 px-4 py-2 bg-white text-orange-700 rounded-lg hover:bg-orange-50 transition-colors duration-200 shadow-sm border border-orange-200"
+      >
+        <FaArrowLeft className="w-4 h-4" />
+        Back
+      </button>
       
       <h2 className="text-3xl font-extrabold mb-6 text-orange-700 drop-shadow">Create Subscription Plan</h2>
       <form onSubmit={handleSubmit} className="bg-white rounded-2xl shadow-lg p-6 mb-10 border border-orange-100">

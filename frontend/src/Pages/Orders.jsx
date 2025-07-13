@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from 'react';
-import { FaCheckCircle, FaTimesCircle, FaClock, FaQrcode, FaUpload } from 'react-icons/fa';
+import { FaCheckCircle, FaTimesCircle, FaClock, FaQrcode, FaUpload, FaArrowLeft } from 'react-icons/fa';
 import axios from 'axios';
 import Joyride from 'react-joyride';
+import { useNavigate } from 'react-router-dom';
 
 const API_BASE_URL = 'http://localhost:5000/api';
 const SERVER_BASE_URL = 'http://localhost:5000';
@@ -19,6 +20,7 @@ const Orders = () => {
   const [qrModalOpen, setQrModalOpen] = useState(false);
   const [qrModalSrc, setQrModalSrc] = useState(null);
   const [runTour, setRunTour] = useState(false);
+  const navigate = useNavigate();
 
   React.useEffect(() => {
     if (!localStorage.getItem('onboardingOrdersTourCompleted')) {
@@ -130,6 +132,13 @@ const Orders = () => {
 
   return (
     <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+      <button
+        onClick={() => navigate(-1)}
+        className="flex items-center gap-2 mb-4 px-4 py-2 bg-white text-orange-700 rounded-lg hover:bg-orange-50 transition-colors duration-200 shadow-sm border border-orange-200"
+      >
+        <FaArrowLeft className="w-4 h-4" />
+        Back
+      </button>
       <h1 className="text-2xl sm:text-3xl font-bold text-gray-800 mb-6 sm:mb-8">Your Orders</h1>
       {/* Filter UI */}
       <div className="flex flex-col sm:flex-row gap-3 sm:gap-6 mb-6 bg-orange-100 p-4 rounded-lg shadow">
