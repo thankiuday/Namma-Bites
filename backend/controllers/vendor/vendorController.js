@@ -188,38 +188,78 @@ export const deleteVendor = async (req, res) => {
 export const loginVendor = async (req, res) => {
   try {
     const { email, password } = req.body;
+    
+    // Validate input
     if (!email || !password) {
-      return res.status(400).json({ success: false, message: 'Email and password are required' });
+      return res.status(400).json({ 
+        success: false, 
+        message: 'Please provide both email and password' 
+      });
     }
+
+    // Check if email is valid format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      return res.status(400).json({ 
+        success: false, 
+        message: 'Please enter a valid email address' 
+      });
+    }
+
+    // Find vendor by email
     const vendor = await Vendor.findOne({ email });
     if (!vendor) {
-      return res.status(401).json({ success: false, message: 'Invalid email or password' });
+      return res.status(401).json({ 
+        success: false, 
+        message: 'Invalid email or password. Please check your credentials and try again.' 
+      });
     }
+
+    // Check if vendor is approved
+    if (!vendor.isApproved) {
+      return res.status(401).json({ 
+        success: false, 
+        message: 'Your account is pending approval. Please contact the administrator.' 
+      });
+    }
+
+    // Verify password
     const isMatch = await vendor.comparePassword(password);
     if (!isMatch) {
-      return res.status(401).json({ success: false, message: 'Invalid email or password' });
+      return res.status(401).json({ 
+        success: false, 
+        message: 'Invalid email or password. Please check your credentials and try again.' 
+      });
     }
+
     // Generate JWT
     const token = jwt.sign(
       { vendorId: vendor._id, email: vendor.email, role: 'vendor' },
       process.env.JWT_SECRET || 'your_jwt_secret',
       { expiresIn: '7d' }
     );
+    
     const vendorObj = vendor.toObject();
     delete vendorObj.password;
+    
     res.cookie('vendorToken', token, {
       httpOnly: true,
       secure: false, // for localhost development
       sameSite: 'Lax', // use Lax for localhost
       maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
     });
+    
     res.status(200).json({
       success: true,
       message: 'Login successful',
       vendor: vendorObj
     });
   } catch (error) {
-    res.status(500).json({ success: false, message: 'Server error', error: error.message });
+    console.error('Vendor login error:', error);
+    res.status(500).json({ 
+      success: false, 
+      message: 'Server error. Please try again later.' 
+    });
   }
 };
 
@@ -758,47 +798,64 @@ export const scanSubscriptionQr = async (req, res) => {
     if (!qrData) {
       return res.status(400).json({ success: false, message: 'QR data is required' });
     }
+
+    // Decode JWT token
     let decoded;
     try {
       decoded = jwt.verify(qrData, process.env.JWT_SECRET || 'your_jwt_secret');
     } catch (err) {
       return res.status(400).json({ success: false, message: 'Invalid or expired QR code' });
     }
+
     const { subscriptionId } = decoded;
+    if (!subscriptionId) {
+      return res.status(400).json({ success: false, message: 'Invalid QR code format' });
+    }
+
+    // Single optimized query with all necessary data
     const subscription = await UserSubscription.findById(subscriptionId)
       .populate('user', 'name email')
-      .populate('subscriptionPlan')
-      .populate('vendor', 'name email');
+      .populate('subscriptionPlan', 'duration price planType')
+      .populate('vendor', 'name email')
+      .lean(); // Use lean() for better performance since we don't need to modify the document
+
     if (!subscription) {
       return res.status(404).json({ success: false, message: 'Subscription not found' });
     }
-    // Defensive date handling
+
+    // Validate vendor ownership
+    if (subscription.vendor._id.toString() !== req.vendor._id.toString()) {
+      return res.status(403).json({ success: false, message: 'Not authorized to scan this subscription' });
+    }
+
+    // Optimized date calculations
     const startDate = new Date(subscription.startDate);
     if (isNaN(startDate.getTime())) {
-      return res.status(500).json({ success: false, message: 'Invalid start date in subscription.' });
+      return res.status(500).json({ success: false, message: 'Invalid start date in subscription' });
     }
+
     const duration = Number(subscription.duration);
     if (!Number.isInteger(duration) || duration <= 0) {
-      return res.status(500).json({ success: false, message: 'Invalid duration in subscription.' });
+      return res.status(500).json({ success: false, message: 'Invalid duration in subscription' });
     }
-    let endDate;
-    try {
-      endDate = new Date(startDate);
-      endDate.setDate(endDate.getDate() + duration);
-    } catch (err) {
-      return res.status(500).json({ success: false, message: 'Error calculating end date.' });
-    }
+
+    // Calculate end date efficiently
+    const endDate = new Date(startDate);
+    endDate.setDate(endDate.getDate() + duration - 1); // Subtract 1 since start date is inclusive
+    endDate.setHours(23, 59, 59, 999); // Set to end of day
+
+    // Check if expired
     const today = new Date();
-    today.setHours(0,0,0,0);
-    endDate.setHours(0,0,0,0);
-    let expired = false;
-    if (endDate < today) {
-      expired = true;
-      if (subscription.paymentStatus !== 'expired') {
-        subscription.paymentStatus = 'expired';
-        await subscription.save();
-      }
+    today.setHours(0, 0, 0, 0);
+    const isExpired = endDate < today;
+
+    // Only update database if status needs to change
+    if (isExpired && subscription.paymentStatus !== 'expired') {
+      await UserSubscription.findByIdAndUpdate(subscriptionId, { paymentStatus: 'expired' });
+      subscription.paymentStatus = 'expired';
     }
+
+    // Return optimized response
     res.json({
       success: true,
       subscription: {
@@ -811,11 +868,15 @@ export const scanSubscriptionQr = async (req, res) => {
         paymentStatus: subscription.paymentStatus,
         validated: subscription.validated,
         paymentProof: subscription.paymentProof,
-        expired,
-        endDate,
+        expired: isExpired,
+        endDate: endDate.toISOString(),
       }
     });
   } catch (error) {
-    res.status(500).json({ success: false, message: 'Error scanning QR code', error: error.message });
+    console.error('QR scan error:', error);
+    res.status(500).json({ 
+      success: false, 
+      message: 'Error scanning QR code. Please try again.' 
+    });
   }
 }; 

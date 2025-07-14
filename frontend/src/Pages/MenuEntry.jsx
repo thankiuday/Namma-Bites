@@ -297,6 +297,7 @@ const MenuEntry = () => {
                   onChange={(e) => setItemName(e.target.value)}
                   className="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm text-black"
                   required
+                  placeholder="e.g. Paneer Butter Masala"
                 />
               </div>
 
@@ -309,6 +310,7 @@ const MenuEntry = () => {
                   onChange={(e) => setItemPrice(e.target.value)}
                   className="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm text-black"
                   required
+                  placeholder="e.g. 120"
                 />
               </div>
 
@@ -319,6 +321,7 @@ const MenuEntry = () => {
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
                   className="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm text-black"
+                  placeholder="Short description of the dish (optional)"
                 />
               </div>
               <div>
@@ -329,6 +332,7 @@ const MenuEntry = () => {
                   value={ingredients}
                   onChange={(e) => setIngredients(e.target.value)}
                   className="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm text-black"
+                  placeholder="e.g. Paneer, Tomato, Butter, Spices"
                 />
               </div>
               <div>
@@ -339,6 +343,7 @@ const MenuEntry = () => {
                   value={allergens}
                   onChange={(e) => setAllergens(e.target.value)}
                   className="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm text-black"
+                  placeholder="e.g. Dairy, Nuts (optional)"
                 />
               </div>
               <div>
@@ -349,6 +354,7 @@ const MenuEntry = () => {
                   value={preparationTime}
                   onChange={(e) => setPreparationTime(e.target.value)}
                   className="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm text-black"
+                  placeholder="e.g. 20 mins"
                 />
               </div>
               <div>
@@ -359,6 +365,7 @@ const MenuEntry = () => {
                   value={calories}
                   onChange={(e) => setCalories(e.target.value)}
                   className="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm text-black"
+                  placeholder="e.g. 350 (optional)"
                 />
               </div>
 

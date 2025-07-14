@@ -24,6 +24,28 @@ const VendorLogin = () => {
     e.preventDefault();
     setLoading(true);
     setError('');
+
+    // Client-side validation
+    if (!formData.email.trim()) {
+      setError('Please enter your email address');
+      setLoading(false);
+      return;
+    }
+
+    if (!formData.password.trim()) {
+      setError('Please enter your password');
+      setLoading(false);
+      return;
+    }
+
+    // Basic email validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(formData.email.trim())) {
+      setError('Please enter a valid email address');
+      setLoading(false);
+      return;
+    }
+
     try {
       const response = await vendorApi.post('/login', formData);
       console.log('Vendor login response:', response.data);
@@ -34,7 +56,18 @@ const VendorLogin = () => {
         setError(response.data.message || 'Invalid credentials');
       }
     } catch (err) {
-      setError('Failed to connect to the server');
+      // Handle different types of errors
+      if (err.response) {
+        // Server responded with error status
+        const errorMessage = err.response.data?.message || 'Login failed';
+        setError(errorMessage);
+      } else if (err.request) {
+        // Network error - no response received
+        setError('Network error. Please check your internet connection and try again.');
+      } else {
+        // Other errors
+        setError('An unexpected error occurred. Please try again.');
+      }
     } finally {
       setLoading(false);
     }
@@ -54,15 +87,24 @@ const VendorLogin = () => {
           </p>
         </div>
         {error && (
-          <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded relative" role="alert">
-            <span className="block sm:inline">{error}</span>
+          <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-md relative" role="alert">
+            <div className="flex">
+              <div className="flex-shrink-0">
+                <svg className="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
+                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                </svg>
+              </div>
+              <div className="ml-3">
+                <p className="text-sm font-medium">{error}</p>
+              </div>
+            </div>
           </div>
         )}
         <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
           <div className="space-y-4">
             <div>
-              <label htmlFor="email" className="block text-sm font-medium text-black">
-                Email
+              <label htmlFor="email" className="block text-sm font-medium text-gray-700">
+                Email Address
               </label>
               <input
                 id="email"
@@ -71,12 +113,12 @@ const VendorLogin = () => {
                 required
                 value={formData.email}
                 onChange={handleChange}
-                placeholder="Enter your vendor email"
+                placeholder="Enter your registered email address"
                 className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-orange-500 focus:border-orange-500 text-gray-900"
               />
             </div>
             <div>
-              <label htmlFor="password" className="block text-sm font-medium text-black">
+              <label htmlFor="password" className="block text-sm font-medium text-gray-700">
                 Password
               </label>
               <input
@@ -99,6 +141,11 @@ const VendorLogin = () => {
             >
               {loading ? 'Signing in...' : 'Sign in'}
             </button>
+          </div>
+          <div className="text-center">
+            <p className="text-xs text-gray-500">
+              Having trouble logging in? Contact the administrator if your account is pending approval.
+            </p>
           </div>
         </form>
       </div>

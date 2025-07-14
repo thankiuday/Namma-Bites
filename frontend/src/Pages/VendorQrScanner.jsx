@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useCallback } from 'react';
 import ZxingQrScanner from '../components/ZxingQrScanner';
 import axios from 'axios';
 import { format } from 'date-fns';
@@ -15,50 +15,77 @@ const VendorQrScanner = () => {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [facingMode, setFacingMode] = useState('user');
+  
+  // Add request deduplication
+  const processingRef = useRef(false);
+  const lastScanRef = useRef('');
 
-  const handleScan = async (data) => {
+  // Optimized scan handler with request deduplication and parallel API calls
+  const handleScan = useCallback(async (data) => {
     console.log('handleScan called with data:', data);
-    if (data && data !== scanResult) {
-      setScanResult(data);
-      setLoading(true);
-      setError('');
-      setSubscriptionInfo(null);
-      setOrderInfo(null);
-      setOrderScanMessage('');
-      try {
-        // Try subscription QR first
-        const res = await axios.post(
+    
+    // Prevent duplicate processing
+    if (data === lastScanRef.current || processingRef.current) {
+      return;
+    }
+    
+    lastScanRef.current = data;
+    processingRef.current = true;
+    
+    setScanResult(data);
+    setLoading(true);
+    setError('');
+    setSubscriptionInfo(null);
+    setOrderInfo(null);
+    setOrderScanMessage('');
+
+    try {
+      // Make parallel API calls to both endpoints
+      const [subscriptionResponse, orderResponse] = await Promise.allSettled([
+        axios.post(
           `${API_BASE_URL}/api/vendor/scan-qr`,
           { qrData: data },
           { withCredentials: true }
-        );
-        console.log('Backend response (subscription):', res.data);
-        setSubscriptionInfo(res.data.subscription);
-      } catch (err) {
-        // If subscription scan fails, try order QR
-        console.error('Error from backend (subscription):', err);
-        try {
-          const res2 = await axios.post(
-            `${API_BASE_URL}/api/vendor/orders/scan-qr`,
-            { qrData: data },
-            { withCredentials: true }
-          );
-          console.log('Backend response (order):', res2.data);
-          setOrderInfo(res2.data.data);
-          setOrderScanMessage(res2.data.message || '');
-        } catch (err2) {
-          console.error('Error from backend (order):', err2);
-          setError(
-            err2.response?.data?.message ||
-            err.response?.data?.message ||
-            'Failed to validate QR code'
-          );
-        }
-      } finally {
-        setLoading(false);
+        ),
+        axios.post(
+          `${API_BASE_URL}/api/vendor/orders/scan-qr`,
+          { qrData: data },
+          { withCredentials: true }
+        )
+      ]);
+
+      // Check subscription response first
+      if (subscriptionResponse.status === 'fulfilled' && subscriptionResponse.value.data.success) {
+        console.log('Backend response (subscription):', subscriptionResponse.value.data);
+        setSubscriptionInfo(subscriptionResponse.value.data.subscription);
       }
+      // Check order response
+      else if (orderResponse.status === 'fulfilled' && orderResponse.value.data.success) {
+        console.log('Backend response (order):', orderResponse.value.data);
+        setOrderInfo(orderResponse.value.data.data);
+        setOrderScanMessage(orderResponse.value.data.message || '');
+      }
+      // Handle errors
+      else {
+        const subscriptionError = subscriptionResponse.status === 'rejected' ? subscriptionResponse.reason : null;
+        const orderError = orderResponse.status === 'rejected' ? orderResponse.reason : null;
+        
+        // Show the most relevant error message
+        const errorMessage = 
+          subscriptionError?.response?.data?.message ||
+          orderError?.response?.data?.message ||
+          'Failed to validate QR code';
+        
+        setError(errorMessage);
+      }
+    } catch (err) {
+      console.error('Unexpected error:', err);
+      setError('An unexpected error occurred. Please try again.');
+    } finally {
+      setLoading(false);
+      processingRef.current = false;
     }
-  };
+  }, []);
 
   const handleError = (err) => {
     // Suppress 'No MultiFormat Readers were able to detect the code.' errors
@@ -97,6 +124,23 @@ const VendorQrScanner = () => {
       <div className="w-full max-w-lg bg-white rounded-2xl shadow-2xl p-6 md:p-10 flex flex-col items-center border border-orange-200">
         <h1 className="text-3xl md:text-4xl font-extrabold text-orange-700 mb-2 text-center tracking-tight drop-shadow-sm">Vendor QR Scanner</h1>
         <p className="text-orange-600 text-base md:text-lg mb-6 text-center font-medium">Scan a user's subscription QR code to validate their plan and view details.</p>
+        
+        {/* Scanning Tips */}
+        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
+          <h3 className="text-blue-800 font-semibold mb-2 flex items-center">
+            <svg className="h-5 w-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+              <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+            </svg>
+            Scanning Tips
+          </h3>
+          <ul className="text-blue-700 text-sm space-y-1">
+            <li>• Hold the QR code steady and well-lit</li>
+            <li>• Ensure the entire QR code is visible in the frame</li>
+            <li>• Keep the camera at a distance of 10-20 cm from the QR code</li>
+            <li>• Works with both subscription and order QR codes</li>
+          </ul>
+        </div>
+        
         <button
           className="mb-4 px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors font-semibold shadow-md"
           onClick={() => setFacingMode(facingMode === 'environment' ? 'user' : 'environment')}
@@ -114,8 +158,32 @@ const VendorQrScanner = () => {
             />
           </div>
         </div>
-        {loading && <div className="text-orange-600 font-semibold mb-4 animate-pulse">Validating QR code...</div>}
-        {error && <div className="text-red-600 font-semibold mb-4 text-center">{error}</div>}
+        {loading && (
+          <div className="flex items-center justify-center mb-4">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-600 mr-3"></div>
+            <div className="text-orange-600 font-semibold">Validating QR code...</div>
+          </div>
+        )}
+        {error && (
+          <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-md mb-4 text-center">
+            <div className="flex items-center justify-center">
+              <svg className="h-5 w-5 text-red-400 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+              </svg>
+              <span className="font-medium">{error}</span>
+            </div>
+          </div>
+        )}
+        {(subscriptionInfo || orderInfo) && !loading && (
+          <div className="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-md mb-4 text-center">
+            <div className="flex items-center justify-center">
+              <svg className="h-5 w-5 text-green-400 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+              </svg>
+              <span className="font-medium">QR Code scanned successfully!</span>
+            </div>
+          </div>
+        )}
         {subscriptionInfo && (
           <div className="w-full bg-gradient-to-br from-orange-100 to-orange-50 rounded-xl shadow-lg p-5 mt-2 border border-orange-200">
             <h2 className="text-xl md:text-2xl font-bold mb-3 text-orange-700 text-center flex items-center justify-center gap-2">

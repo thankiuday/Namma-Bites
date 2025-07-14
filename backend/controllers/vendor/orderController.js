@@ -106,22 +106,72 @@ export const completeOrder = async (req, res) => {
 export const scanOrderQr = async (req, res) => {
   try {
     const { qrData } = req.body;
-    const decoded = jwt.verify(qrData, process.env.JWT_SECRET || 'your_jwt_secret');
-    const order = await Order.findById(decoded.orderId).populate('user', 'name email');
-    if (!order) return res.status(404).json({ success: false, message: 'Order not found' });
+    if (!qrData) {
+      return res.status(400).json({ success: false, message: 'QR data is required' });
+    }
+
+    // Decode JWT token
+    let decoded;
+    try {
+      decoded = jwt.verify(qrData, process.env.JWT_SECRET || 'your_jwt_secret');
+    } catch (err) {
+      return res.status(400).json({ success: false, message: 'Invalid or expired QR code' });
+    }
+
+    const { orderId } = decoded;
+    if (!orderId) {
+      return res.status(400).json({ success: false, message: 'Invalid QR code format' });
+    }
+
+    // Optimized query with lean() for better performance
+    const order = await Order.findById(orderId)
+      .populate('user', 'name email')
+      .populate('items.menuItem')
+      .lean();
+
+    if (!order) {
+      return res.status(404).json({ success: false, message: 'Order not found' });
+    }
+
+    // Validate vendor ownership
     if (order.vendor.toString() !== req.vendor._id.toString()) {
-      return res.status(403).json({ success: false, message: 'Not authorized' });
+      return res.status(403).json({ success: false, message: 'Not authorized to scan this order' });
     }
+
+    // Check order state
     if (order.state === 'completed') {
-      return res.status(200).json({ success: false, message: 'Order already completed/collected', data: order });
+      return res.status(200).json({ 
+        success: false, 
+        message: 'Order already completed/collected', 
+        data: order 
+      });
     }
+
     if (order.state !== 'ready') {
-      return res.status(400).json({ success: false, message: 'Order is not ready for completion', data: order });
+      return res.status(400).json({ 
+        success: false, 
+        message: 'Order is not ready for completion', 
+        data: order 
+      });
     }
-    order.state = 'completed';
-    await order.save();
-    res.json({ success: true, data: order });
+
+    // Update order state efficiently
+    const updatedOrder = await Order.findByIdAndUpdate(
+      orderId,
+      { state: 'completed' },
+      { new: true }
+    ).populate('user', 'name email').populate('items.menuItem');
+
+    res.json({ 
+      success: true, 
+      message: 'Order completed successfully',
+      data: updatedOrder 
+    });
   } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
+    console.error('Order QR scan error:', error);
+    res.status(500).json({ 
+      success: false, 
+      message: 'Error scanning order QR code. Please try again.' 
+    });
   }
 }; 
