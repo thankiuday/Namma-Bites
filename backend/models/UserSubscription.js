@@ -13,6 +13,13 @@ const userSubscriptionSchema = new mongoose.Schema({
   },
   paymentProof: { type: String }, // file path or URL
   validated: { type: Boolean, default: false }, // new field for QR validation
+  prebookings: [
+    {
+      date: { type: String, required: true }, // YYYY-MM-DD
+      mealType: { type: String, enum: ['breakfast', 'lunch', 'dinner', 'snacks'], required: true },
+      status: { type: String, enum: ['booked', 'cancelled'], default: 'booked' }
+    }
+  ],
 }, { timestamps: true });
 
 const UserSubscription = mongoose.model('UserSubscription', userSubscriptionSchema);

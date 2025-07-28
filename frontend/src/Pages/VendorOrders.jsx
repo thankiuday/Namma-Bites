@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import vendorApi, { acceptOrder, rejectOrder, markOrderReady, completeOrder } from '../api/vendorApi';
 import { toast } from 'react-toastify';
 import { FaArrowLeft, FaCheckCircle, FaTimesCircle, FaClock, FaQrcode, FaUpload } from 'react-icons/fa';
+import { useNavigate } from 'react-router-dom';
 
 const SERVER_BASE_URL = 'http://localhost:5000';
 
@@ -61,6 +62,7 @@ const VendorOrders = () => {
   const [actionLoading, setActionLoading] = useState('');
   const [sortBy, setSortBy] = useState('newest');
   const [stateFilter, setStateFilter] = useState('');
+  const navigate = useNavigate();
 
   const fetchOrders = async () => {
     setLoading(true);
@@ -258,13 +260,22 @@ const VendorOrders = () => {
                       <a href={`${SERVER_BASE_URL}${order.paymentProof}`} target="_blank" rel="noopener noreferrer" className="flex items-center text-xs text-orange-600 underline"><FaUpload className="mr-1" />View Payment Proof</a>
                     )}
                     {order.qrCode && (order.state === 'preparing' || order.state === 'ready') && (
-                      <div className="flex items-center mt-2">
-                        <FaQrcode className="text-orange-600 mr-2" />
-                        <img
-                          src={`https://api.qrserver.com/v1/create-qr-code/?data=${encodeURIComponent(order.qrCode)}&size=100x100`}
-                          alt="Order QR"
-                          className="w-20 h-20 object-contain rounded border border-orange-200 bg-white cursor-pointer hover:scale-105 transition-transform"
-                        />
+                      <div className="flex items-center mt-2 gap-4">
+                        <span className="flex items-center">
+                          <FaQrcode className="text-orange-600 mr-2" />
+                          <img
+                            src={`https://api.qrserver.com/v1/create-qr-code/?data=${encodeURIComponent(order.qrCode)}&size=100x100`}
+                            alt="Order QR"
+                            className="w-20 h-20 object-contain rounded border border-orange-200 bg-white cursor-pointer hover:scale-105 transition-transform"
+                          />
+                        </span>
+                        <button
+                          className="ml-2 px-3 py-2 bg-orange-500 hover:bg-orange-600 text-white rounded font-semibold text-xs flex items-center gap-1"
+                          onClick={() => navigate('/vendor/qr-scanner', { state: { qrData: order.qrCode, orderId: order._id } })}
+                          title="Go to QR Scanner"
+                        >
+                          <FaQrcode className="inline mr-1" /> Scan QR
+                        </button>
                       </div>
                     )}
                   </div>

@@ -9,6 +9,7 @@ import AdminDashboard from '../Pages/AdminDashboard';
 import AdminUsers from '../Pages/AdminUsers';
 import AdminVendors from '../Pages/AdminVendors';
 import CreateVendor from '../Pages/admin/CreateVendor';
+import AdminProfile from '../Pages/AdminProfile';
 
 // Protected Route Components
 import AdminProtectedRoute from './admin/AdminProtectedRoute';
@@ -54,6 +55,13 @@ const AnimatedAdminRoutes = () => {
           <AdminProtectedRoute>
             <PageTransition>
               <CreateVendor />
+            </PageTransition>
+          </AdminProtectedRoute>
+        } />
+        <Route path="/profile" element={
+          <AdminProtectedRoute>
+            <PageTransition>
+              <AdminProfile />
             </PageTransition>
           </AdminProtectedRoute>
         } />

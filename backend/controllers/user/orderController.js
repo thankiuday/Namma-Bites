@@ -70,6 +70,23 @@ export const getUserOrders = async (req, res) => {
   }
 };
 
+// Get a single order for the logged-in user
+export const getUserOrderById = async (req, res) => {
+  try {
+    const userId = req.user._id;
+    const { orderId } = req.params;
+    const order = await Order.findOne({ _id: orderId, user: userId })
+      .populate('vendor', 'name image location')
+      .populate('items.menuItem');
+    if (!order) {
+      return res.status(404).json({ success: false, message: 'Order not found' });
+    }
+    res.json({ success: true, data: order });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
 // Get order QR code (after vendor accepts)
 export const getOrderQr = async (req, res) => {
   try {

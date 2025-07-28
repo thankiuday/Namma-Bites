@@ -15,7 +15,7 @@ const VendorQrScanner = () => {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [facingMode, setFacingMode] = useState('user');
-  
+
   // Add request deduplication
   const processingRef = useRef(false);
   const lastScanRef = useRef('');
@@ -32,14 +32,14 @@ const VendorQrScanner = () => {
     lastScanRef.current = data;
     processingRef.current = true;
     
-    setScanResult(data);
-    setLoading(true);
-    setError('');
-    setSubscriptionInfo(null);
-    setOrderInfo(null);
-    setOrderScanMessage('');
+      setScanResult(data);
+      setLoading(true);
+      setError('');
+      setSubscriptionInfo(null);
+      setOrderInfo(null);
+      setOrderScanMessage('');
 
-    try {
+      try {
       // Make parallel API calls to both endpoints
       const [subscriptionResponse, orderResponse] = await Promise.allSettled([
         axios.post(
@@ -48,9 +48,9 @@ const VendorQrScanner = () => {
           { withCredentials: true }
         ),
         axios.post(
-          `${API_BASE_URL}/api/vendor/orders/scan-qr`,
-          { qrData: data },
-          { withCredentials: true }
+            `${API_BASE_URL}/api/vendor/orders/scan-qr`,
+            { qrData: data },
+            { withCredentials: true }
         )
       ]);
 
@@ -77,12 +77,12 @@ const VendorQrScanner = () => {
           'Failed to validate QR code';
         
         setError(errorMessage);
-      }
+        }
     } catch (err) {
       console.error('Unexpected error:', err);
       setError('An unexpected error occurred. Please try again.');
-    } finally {
-      setLoading(false);
+      } finally {
+        setLoading(false);
       processingRef.current = false;
     }
   }, []);
@@ -210,6 +210,32 @@ const VendorQrScanner = () => {
                 <a href={`http://localhost:5000${subscriptionInfo.paymentProof}`} target="_blank" rel="noopener noreferrer" className="text-xs text-orange-600 underline">View Payment Proof</a>
               )}
             </div>
+            {/* Today's Meal Section */}
+            {subscriptionInfo.todaysMeals && (
+              <div className="mt-6 bg-white rounded-xl shadow p-4 border border-orange-100">
+                <h3 className="text-lg font-bold text-orange-700 mb-3 text-center">Today's Meal</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {['breakfast', 'lunch', 'dinner', 'snacks'].map(mealType => {
+                    const meal = subscriptionInfo.todaysMeals[mealType];
+                    return meal && meal.name ? (
+                      <div key={mealType} className="flex items-center gap-3 bg-orange-50 rounded-lg p-3 border border-orange-100">
+                        {meal.image && <img src={`http://localhost:5000${meal.image}`} alt={meal.name} className="w-14 h-14 object-cover rounded-lg border border-orange-200" />}
+                        <div>
+                          <div className="font-semibold capitalize text-orange-800">{mealType}</div>
+                          <div className="font-bold text-gray-900">{meal.name}</div>
+                          <div className="text-xs text-gray-600">{meal.description}</div>
+                        </div>
+                      </div>
+                    ) : (
+                      <div key={mealType} className="flex items-center gap-3 bg-orange-50 rounded-lg p-3 border border-orange-100 opacity-60">
+                        <div className="font-semibold capitalize text-orange-800">{mealType}</div>
+                        <div className="text-gray-500">Not set</div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
           </div>
         )}
         {orderInfo && (

@@ -129,6 +129,13 @@ const SubscriptionStart = () => {
             aria-label="Select start date using calendar"
             required
           />
+          {/* End Date Display */}
+          {startDateObj && plan?.duration && (
+            <div className="mt-2 text-orange-700 font-semibold flex items-center gap-2">
+              <FaCalendarAlt className="text-orange-500" />
+              End Date: <span className="font-bold text-orange-900">{format(new Date(new Date(startDateObj).setDate(startDateObj.getDate() + plan.duration - 1)), 'yyyy-MM-dd')}</span>
+            </div>
+          )}
           {dateError && <div className="text-red-600 text-sm font-semibold mt-1">{dateError}</div>}
           <button
             type="submit"

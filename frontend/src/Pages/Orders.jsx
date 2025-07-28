@@ -141,7 +141,7 @@ const Orders = () => {
       </button>
       <h1 className="text-2xl sm:text-3xl font-bold text-gray-800 mb-6 sm:mb-8">Your Orders</h1>
       {/* Filter UI */}
-      <div className="flex flex-col sm:flex-row gap-3 sm:gap-6 mb-6 bg-orange-100 p-4 rounded-lg shadow">
+      <div className="flex flex-col sm:flex-row sm:justify-end gap-3 sm:gap-6 mb-6 bg-orange-100 p-4 rounded-lg shadow flex-row-reverse sm:flex-row">
         <div>
           <label className="block text-xs font-semibold text-orange-900 mb-1">Sort By</label>
           <select

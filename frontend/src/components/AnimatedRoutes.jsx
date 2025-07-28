@@ -19,6 +19,7 @@ import UserSubscription from '../Pages/UserSubscription';
 import SubscriptionStart from '../Pages/SubscriptionStart';
 import PaymentStatus from '../Pages/PaymentStatus';
 import Checkout from '../Pages/Checkout';
+import OrderConfirmation from '../Pages/OrderConfirmation';
 
 // Protected Route Components
 import ProtectedRoute from './user/ProtectedRoute';
@@ -68,6 +69,11 @@ const AnimatedRoutes = () => {
         <Route path="/vendor-details/:id" element={
           <PageTransition>
             <VendorDetails />
+          </PageTransition>
+        } />
+        <Route path="/order-confirmation/:orderId" element={
+          <PageTransition>
+            <OrderConfirmation />
           </PageTransition>
         } />
 

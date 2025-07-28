@@ -156,46 +156,48 @@ const Cart = () => {
           {/* Cart Items */}
           <div className="lg:col-span-2 bg-white rounded-lg shadow-lg p-4 sm:p-6">
             {cart.map((item) => (
-              <div key={item._id} className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4 py-4 border-b last:border-b-0">
+              <div key={item._id} className="flex flex-row items-center gap-3 sm:gap-4 py-4 border-b last:border-b-0 flex-wrap">
                 <img
                   src={item.image ? (item.image.startsWith('http') ? item.image : `http://localhost:5000${item.image}`) : '/default-food.png'}
                   alt={item.name}
-                  className="w-16 h-16 sm:w-20 sm:h-20 object-cover rounded-md self-start sm:self-center"
+                  className="w-16 h-16 sm:w-20 sm:h-20 object-cover rounded-md"
                 />
                 <div className="flex-grow min-w-0">
                   <h3 className="text-base sm:text-lg font-semibold text-gray-800 truncate">{item.name}</h3>
-                  <p className="text-orange-600 font-semibold text-sm sm:text-base">₹{item.price}</p>
+                  <p className="text-orange-600 font-semibold text-sm sm:text-base"> ₹{item.price}</p>
                 </div>
-                <div className="flex items-center gap-2 self-end sm:self-center">
+                <div className="flex flex-col items-end gap-2 ml-auto">
+                  <div className="flex items-center gap-2">
+                    <button 
+                      className="p-1 sm:p-2 text-gray-600 hover:text-orange-600 rounded-full hover:bg-gray-100" 
+                      onClick={() => updateQuantity(item._id, Math.max(1, item.quantity - 1))}
+                    >
+                      <FaMinus className="w-3 h-3 sm:w-4 sm:h-4" />
+                    </button>
+                    <span className="w-6 sm:w-8 text-center text-black text-sm sm:text-base font-medium">{item.quantity}</span>
+                    <button 
+                      className="p-1 sm:p-2 text-gray-600 hover:text-orange-600 rounded-full hover:bg-gray-100" 
+                      onClick={() => updateQuantity(item._id, item.quantity + 1)}
+                    >
+                      <FaPlus className="w-3 h-3 sm:w-4 sm:h-4" />
+                    </button>
+                    <button 
+                      className="p-1 sm:p-2 text-red-600 hover:text-red-700 rounded-full hover:bg-red-50" 
+                      onClick={() => removeFromCart(item._id)}
+                    >
+                      <FaTrash className="w-3 h-3 sm:w-4 sm:h-4" />
+                    </button>
+                  </div>
                   <button 
-                    className="p-1 sm:p-2 text-gray-600 hover:text-orange-600 rounded-full hover:bg-gray-100" 
-                    onClick={() => updateQuantity(item._id, Math.max(1, item.quantity - 1))}
+                    className="mt-2 text-xs sm:text-sm text-red-500 hover:underline disabled:opacity-50 disabled:cursor-not-allowed" 
+                    onClick={handleClearCart}
+                    disabled={clearing}
                   >
-                    <FaMinus className="w-3 h-3 sm:w-4 sm:h-4" />
-                  </button>
-                  <span className="w-6 sm:w-8 text-center text-black text-sm sm:text-base font-medium">{item.quantity}</span>
-                  <button 
-                    className="p-1 sm:p-2 text-gray-600 hover:text-orange-600 rounded-full hover:bg-gray-100" 
-                    onClick={() => updateQuantity(item._id, item.quantity + 1)}
-                  >
-                    <FaPlus className="w-3 h-3 sm:w-4 sm:h-4" />
+                    {clearing ? 'Clearing...' : 'Clear Cart'}
                   </button>
                 </div>
-                <button 
-                  className="p-1 sm:p-2 text-red-600 hover:text-red-700 rounded-full hover:bg-red-50 self-end sm:self-center" 
-                  onClick={() => removeFromCart(item._id)}
-                >
-                  <FaTrash className="w-3 h-3 sm:w-4 sm:h-4" />
-                </button>
               </div>
             ))}
-            <button 
-              className="mt-4 text-xs sm:text-sm text-red-500 hover:underline disabled:opacity-50 disabled:cursor-not-allowed" 
-              onClick={handleClearCart}
-              disabled={clearing}
-            >
-              {clearing ? 'Clearing...' : 'Clear Cart'}
-            </button>
           </div>
 
           {/* Order Summary */}

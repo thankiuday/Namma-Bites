@@ -219,8 +219,8 @@ const Home = () => {
         
         {/* Search Section - Mobile First */}
         <div className="w-full max-w-7xl px-4 mb-8 md:hidden relative onboard-search">
-          <div className="flex gap-2 flex-wrap">
-            <div className="relative w-full">
+          <div className="flex gap-2 flex-nowrap">
+            <div className="relative flex-1 min-w-0">
               <input
                 type="text"
                 placeholder="Search by food, vendor, or veg/non-veg..."
@@ -240,7 +240,7 @@ const Home = () => {
                 visible={showSuggestions && searchTerm.length > 0}
               />
             </div>
-            <button className="w-auto min-w-fit px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-500 transition-colors duration-300">
+            <button className="flex-shrink-0 px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-500 transition-colors duration-300 h-full">
               Search
             </button>
           </div>

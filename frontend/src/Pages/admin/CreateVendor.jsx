@@ -104,6 +104,7 @@ const CreateVendor = () => {
                             onChange={handleChange}
                             required
                             className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-orange-500 focus:ring-orange-500 text-gray-900 py-3 px-4 text-base"
+                            placeholder="e.g. Anand Sweets"
                         />
                     </div>
 
@@ -116,6 +117,7 @@ const CreateVendor = () => {
                             onChange={handleChange}
                             required
                             className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-orange-500 focus:ring-orange-500 text-gray-900 py-3 px-4 text-base"
+                            placeholder="e.g. vendor@email.com"
                         />
                     </div>
 
@@ -155,6 +157,7 @@ const CreateVendor = () => {
                             onChange={handleChange}
                             required
                             className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-orange-500 focus:ring-orange-500 text-gray-900 py-3 px-4 text-base"
+                            placeholder="e.g. 9876543210"
                         />
                     </div>
 
@@ -167,6 +170,7 @@ const CreateVendor = () => {
                             onChange={handleChange}
                             required
                             className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-orange-500 focus:ring-orange-500 text-gray-900 py-3 px-4 text-base"
+                            placeholder="Select date"
                         />
                     </div>
 
@@ -177,6 +181,7 @@ const CreateVendor = () => {
                             value={formData.status}
                             onChange={handleChange}
                             className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-orange-500 focus:ring-orange-500 text-gray-900 py-3 px-4 text-base"
+                            placeholder="Select status"
                         >
                             <option value="Open">Open</option>
                             <option value="Closed">Closed</option>
@@ -197,6 +202,7 @@ const CreateVendor = () => {
                               file:text-sm file:font-semibold
                               file:bg-orange-50 file:text-orange-700
                               hover:file:bg-orange-100"
+                            placeholder="Upload vendor image"
                         />
                     </div>
                     <div>
@@ -212,6 +218,7 @@ const CreateVendor = () => {
                               file:text-sm file:font-semibold
                               file:bg-orange-50 file:text-orange-700
                               hover:file:bg-orange-100"
+                            placeholder="Upload scanner image (optional)"
                         />
                     </div>
 

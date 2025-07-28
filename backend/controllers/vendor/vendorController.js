@@ -812,12 +812,44 @@ export const scanSubscriptionQr = async (req, res) => {
       return res.status(400).json({ success: false, message: 'Invalid QR code format' });
     }
 
-    // Single optimized query with all necessary data
+    // Populate all weekMeals for the subscription plan
     const subscription = await UserSubscription.findById(subscriptionId)
       .populate('user', 'name email')
-      .populate('subscriptionPlan', 'duration price planType')
+      .populate({
+        path: 'subscriptionPlan',
+        populate: [
+          { path: 'weekMeals.Monday.breakfast', model: 'MenuItem' },
+          { path: 'weekMeals.Monday.lunch', model: 'MenuItem' },
+          { path: 'weekMeals.Monday.dinner', model: 'MenuItem' },
+          { path: 'weekMeals.Monday.snacks', model: 'MenuItem' },
+          { path: 'weekMeals.Tuesday.breakfast', model: 'MenuItem' },
+          { path: 'weekMeals.Tuesday.lunch', model: 'MenuItem' },
+          { path: 'weekMeals.Tuesday.dinner', model: 'MenuItem' },
+          { path: 'weekMeals.Tuesday.snacks', model: 'MenuItem' },
+          { path: 'weekMeals.Wednesday.breakfast', model: 'MenuItem' },
+          { path: 'weekMeals.Wednesday.lunch', model: 'MenuItem' },
+          { path: 'weekMeals.Wednesday.dinner', model: 'MenuItem' },
+          { path: 'weekMeals.Wednesday.snacks', model: 'MenuItem' },
+          { path: 'weekMeals.Thursday.breakfast', model: 'MenuItem' },
+          { path: 'weekMeals.Thursday.lunch', model: 'MenuItem' },
+          { path: 'weekMeals.Thursday.dinner', model: 'MenuItem' },
+          { path: 'weekMeals.Thursday.snacks', model: 'MenuItem' },
+          { path: 'weekMeals.Friday.breakfast', model: 'MenuItem' },
+          { path: 'weekMeals.Friday.lunch', model: 'MenuItem' },
+          { path: 'weekMeals.Friday.dinner', model: 'MenuItem' },
+          { path: 'weekMeals.Friday.snacks', model: 'MenuItem' },
+          { path: 'weekMeals.Saturday.breakfast', model: 'MenuItem' },
+          { path: 'weekMeals.Saturday.lunch', model: 'MenuItem' },
+          { path: 'weekMeals.Saturday.dinner', model: 'MenuItem' },
+          { path: 'weekMeals.Saturday.snacks', model: 'MenuItem' },
+          { path: 'weekMeals.Sunday.breakfast', model: 'MenuItem' },
+          { path: 'weekMeals.Sunday.lunch', model: 'MenuItem' },
+          { path: 'weekMeals.Sunday.dinner', model: 'MenuItem' },
+          { path: 'weekMeals.Sunday.snacks', model: 'MenuItem' },
+        ]
+      })
       .populate('vendor', 'name email')
-      .lean(); // Use lean() for better performance since we don't need to modify the document
+      .lean();
 
     if (!subscription) {
       return res.status(404).json({ success: false, message: 'Subscription not found' });
@@ -852,8 +884,17 @@ export const scanSubscriptionQr = async (req, res) => {
     // Only update database if status needs to change
     if (isExpired && subscription.paymentStatus !== 'expired') {
       await UserSubscription.findByIdAndUpdate(subscriptionId, { paymentStatus: 'expired' });
-      subscription.paymentStatus = 'expired';
+        subscription.paymentStatus = 'expired';
     }
+
+    // Get today's weekday name
+    const weekdays = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+    const todayName = weekdays[new Date().getDay()];
+    const plan = subscription.subscriptionPlan;
+    let todaysMeals = null;
+    if (plan && plan.weekMeals && plan.weekMeals[todayName]) {
+      todaysMeals = plan.weekMeals[todayName];
+      }
 
     // Return optimized response
     res.json({
@@ -861,7 +902,7 @@ export const scanSubscriptionQr = async (req, res) => {
       subscription: {
         id: subscription._id,
         user: subscription.user,
-        plan: subscription.subscriptionPlan,
+        plan: plan,
         vendor: subscription.vendor,
         startDate: subscription.startDate,
         duration: subscription.duration,
@@ -870,6 +911,7 @@ export const scanSubscriptionQr = async (req, res) => {
         paymentProof: subscription.paymentProof,
         expired: isExpired,
         endDate: endDate.toISOString(),
+        todaysMeals: todaysMeals || null
       }
     });
   } catch (error) {
@@ -878,5 +920,31 @@ export const scanSubscriptionQr = async (req, res) => {
       success: false, 
       message: 'Error scanning QR code. Please try again.' 
     });
+  }
+}; 
+
+// Get all pre-bookings for a vendor for a given date and meal type
+export const getMealPrebookings = async (req, res) => {
+  try {
+    const vendorId = req.vendor._id;
+    const { date, mealType } = req.query;
+    if (!date || !mealType) {
+      return res.status(400).json({ success: false, message: 'Date and mealType are required' });
+    }
+    // Find all active subscriptions for this vendor
+    const subs = await UserSubscription.find({
+      vendor: vendorId,
+      paymentStatus: 'approved',
+      validated: true,
+      prebookings: { $elemMatch: { date, mealType, status: 'booked' } }
+    }).populate('user', 'name email');
+    // Map to user info
+    const users = subs.map(sub => ({
+      user: sub.user,
+      subscriptionId: sub._id
+    }));
+    res.json({ success: true, data: users });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
   }
 }; 

@@ -20,9 +20,13 @@ import {
 } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
 import { format } from 'date-fns';
+import axios from 'axios';
+import DatePicker from 'react-datepicker';
+import 'react-datepicker/dist/react-datepicker.css';
 
 // API base URL for images - uploads are served directly from the server root, not /api
 const API_BASE_URL = 'http://localhost:5000';
+const BACKEND_API_URL = 'http://localhost:5000/api';
 
 // Helper function to get vendor image URL
 const getVendorImageUrl = (imagePath) => {
@@ -43,6 +47,17 @@ const getVendorImageUrl = (imagePath) => {
 const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
 const mealTypes = ['breakfast', 'lunch', 'dinner', 'snacks'];
 
+// Add this helper to get YYYY-MM-DD for a given day name in the current week
+function getDateForDay(day) {
+  const today = new Date();
+  const currentDay = today.getDay(); // 0 (Sun) - 6 (Sat)
+  const targetDay = days.indexOf(day) + 1; // 1 (Mon) - 7 (Sun)
+  const diff = targetDay - (currentDay === 0 ? 7 : currentDay);
+  const date = new Date(today);
+  date.setDate(today.getDate() + diff);
+  return date.toISOString().slice(0, 10);
+}
+
 const UserSubscription = () => {
   const [plans, setPlans] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -61,10 +76,22 @@ const UserSubscription = () => {
   const [qrData, setQrData] = useState(null);
   const [loadingQr, setLoadingQr] = useState(false);
 
+  // Add state for calendar and selected date
+  const [selectedDate, setSelectedDate] = useState(new Date());
+  const [prebookLoading, setPrebookLoading] = useState(false);
+  const [prebookError, setPrebookError] = useState('');
+
   useEffect(() => {
     fetchPlans();
     fetchUserSubs();
   }, []);
+
+  // Refetch user subscriptions when the user closes the details modal (after pre-booking)
+  useEffect(() => {
+    if (!showUserSubDetails) {
+      fetchUserSubs();
+    }
+  }, [showUserSubDetails]);
 
   useEffect(() => {
     // Fetch QR code data when modal opens for an active subscription
@@ -159,6 +186,11 @@ const UserSubscription = () => {
     setSelectedPlan(null);
   };
 
+  // Helper to get YYYY-MM-DD from Date
+  function formatDate(date) {
+    return date.toISOString().slice(0, 10);
+  }
+
   if (loading) {
     return (
       <div className="max-w-6xl mx-auto p-6 bg-gradient-to-br from-orange-50 to-white min-h-screen">
@@ -247,7 +279,7 @@ const UserSubscription = () => {
           {filteredPlans.map((plan) => {
             console.log('Plan vendor data:', plan.vendor);
             return (
-              <div key={plan._id} className="bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition-all duration-300 border border-orange-100 hover:border-orange-200">
+              <div key={plan._id} className="bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition-all duration-300 border border-orange-100 hover:border-orange-200 max-w-md sm:max-w-lg w-full mx-auto">
                 <div className="p-6">
                   <div className="flex items-center justify-between mb-4">
                     <div className="flex items-center space-x-3">
@@ -268,7 +300,7 @@ const UserSubscription = () => {
                       </div>
                     </div>
                   </div>
-                  <span className={`px-3 py-1 rounded-full text-xs font-bold flex items-center ${
+                  {/* <span className={`px-3 py-1 rounded-full text-xs font-bold flex items-center ${
                     plan.planType === 'veg' 
                       ? 'bg-green-100 text-green-800 border border-green-200' 
                       : 'bg-red-100 text-red-800 border border-red-200'
@@ -284,7 +316,7 @@ const UserSubscription = () => {
                         Non-Veg
                       </>
                     )}
-                  </span>
+                  </span> */}
                 </div>
 
                 <div className="space-y-4 bg-orange-50 rounded-lg p-4 mb-4">
@@ -297,10 +329,26 @@ const UserSubscription = () => {
                   </div>
                   <div className="flex justify-between items-center">
                     <span className="text-sm text-orange-700 font-semibold flex items-center">
-                      <FaMoneyBillWave className="mr-2" />
-                      Total Price:
+                      <FaLeaf className="mr-2" />
+                      Subscription Type:
                     </span>
-                    <span className="text-2xl font-bold text-orange-600">₹{plan.price}</span>
+                    <span className={`px-3 py-1 rounded-full text-xs font-bold flex items-center ${
+                      plan.planType === 'veg' 
+                        ? 'bg-green-100 text-green-800 border border-green-200' 
+                        : 'bg-red-100 text-red-800 border border-red-200'
+                    }`}>
+                      {plan.planType === 'veg' ? (
+                        <>
+                          <FaLeaf className="mr-1" />
+                          Vegetarian
+                        </>
+                      ) : (
+                        <>
+                          <FaDrumstickBite className="mr-1" />
+                          Non-Veg
+                        </>
+                      )}
+                    </span>
                   </div>
                   <div className="flex justify-between items-center">
                     <span className="text-sm text-orange-700 font-semibold">Price per day:</span>
@@ -356,7 +404,7 @@ const UserSubscription = () => {
               return (
                 <div
                   key={sub._id}
-                  className={`rounded-xl overflow-hidden border transition-all duration-300 \
+                  className={`rounded-xl overflow-hidden border transition-all duration-300 max-w-sm sm:max-w-md w-full mx-auto \
                     ${isExpired
                       ? 'bg-gray-100 border-gray-300 opacity-60 grayscale pointer-events-none'
                       : 'bg-white shadow-lg border-orange-100 hover:shadow-xl hover:border-orange-200'}
@@ -488,17 +536,9 @@ const UserSubscription = () => {
                     </div>
                     <div className="flex justify-between items-center text-xs sm:text-sm">
                       <span className="text-orange-700 font-semibold flex items-center">
-                        <FaMoneyBillWave className="mr-1 sm:mr-2" />
-                        Total Price:
+                        <FaLeaf className="mr-1 sm:mr-2" />
+                        Subscription Type:
                       </span>
-                      <span className="text-lg sm:text-2xl font-bold text-orange-600">₹{selectedPlan.price}</span>
-                    </div>
-                    <div className="flex justify-between items-center text-xs sm:text-sm">
-                      <span className="text-orange-700 font-semibold">Price per day:</span>
-                      <span className="font-bold text-orange-800">₹{(selectedPlan.price / selectedPlan.duration).toFixed(2)}</span>
-                    </div>
-                    <div className="flex justify-between items-center text-xs sm:text-sm">
-                      <span className="text-orange-700 font-semibold">Plan Type:</span>
                       <span className={`px-2 sm:px-3 py-1 rounded-full text-xs font-bold flex items-center ${
                         selectedPlan.planType === 'veg' 
                           ? 'bg-green-100 text-green-800 border border-green-200' 
@@ -516,6 +556,17 @@ const UserSubscription = () => {
                           </>
                         )}
                       </span>
+                    </div>
+                    <div className="flex justify-between items-center text-xs sm:text-sm">
+                      <span className="text-orange-700 font-semibold flex items-center">
+                        <FaMoneyBillWave className="mr-1 sm:mr-2" />
+                        Total Price:
+                      </span>
+                      <span className="text-lg sm:text-2xl font-bold text-orange-600">₹{selectedPlan.price}</span>
+                    </div>
+                    <div className="flex justify-between items-center text-xs sm:text-sm">
+                      <span className="text-orange-700 font-semibold">Price per day:</span>
+                      <span className="font-bold text-orange-800">₹{(selectedPlan.price / selectedPlan.duration).toFixed(2)}</span>
                     </div>
                   </div>
                 </div>
@@ -770,6 +821,69 @@ const UserSubscription = () => {
                     <span className="text-gray-500 font-medium">QR not available for expired subscriptions</span>
                   </div>
                 )}
+              </div>
+              {/* Pre-booking Calendar */}
+              <div className="mb-8">
+                <h3 className="font-bold text-orange-800 mb-3 flex items-center text-base">
+                  Pre-Book Your Meals
+                </h3>
+                <div className="flex flex-col items-center w-full">
+                  <div className="w-full">
+                    <DatePicker
+                      selected={selectedDate}
+                      onChange={date => setSelectedDate(date)}
+                      inline
+                      calendarClassName="w-full text-lg big-calendar"
+                      minDate={new Date(selectedUserSub.startDate)}
+                      maxDate={(() => {
+                        const d = new Date(selectedUserSub.startDate);
+                        d.setDate(d.getDate() + selectedUserSub.duration - 1);
+                        return d;
+                      })()}
+                    />
+                  </div>
+                  <div className="mt-6 w-full max-w-md mx-auto">
+                    <h4 className="font-semibold text-orange-700 mb-2 text-center">Select meals for {selectedDate.toLocaleDateString()}</h4>
+                    <div className="grid grid-cols-2 gap-4">
+                      {mealTypes.map(meal => {
+                        const dateStr = formatDate(selectedDate);
+                        const prebooked = selectedUserSub.prebookings?.find(pb => pb.date === dateStr && pb.mealType === meal && pb.status === 'booked');
+                        const isExpired = selectedUserSub.paymentStatus === 'expired';
+                        return (
+                          <button
+                            key={meal}
+                            disabled={isExpired || prebookLoading}
+                            className={`px-4 py-3 rounded-xl font-bold text-base transition-all duration-200 shadow text-center ${prebooked ? 'bg-green-500 text-white' : 'bg-gray-200 text-gray-700'} ${isExpired ? 'opacity-50 cursor-not-allowed' : 'hover:bg-orange-500 hover:text-white'}`}
+                            onClick={async () => {
+                              if (isExpired) return;
+                              setPrebookLoading(true);
+                              setPrebookError('');
+                              try {
+                                const status = prebooked ? 'cancelled' : 'booked';
+                                const res = await axios.post(
+                                  `${BACKEND_API_URL}/users/subscriptions/${selectedUserSub._id}/prebook`,
+                                  { date: dateStr, mealType: meal, status },
+                                  { withCredentials: true }
+                                );
+                                setSelectedUserSub(sub => ({
+                                  ...sub,
+                                  prebookings: res.data.data
+                                }));
+                              } catch (err) {
+                                setPrebookError('Failed to update pre-booking.');
+                              } finally {
+                                setPrebookLoading(false);
+                              }
+                            }}
+                          >
+                            {meal.charAt(0).toUpperCase() + meal.slice(1)}<br/>{prebooked ? 'Booked' : 'Not Booked'}
+                          </button>
+                        );
+                      })}
+                    </div>
+                    {prebookError && <div className="text-red-600 text-center mt-2">{prebookError}</div>}
+                  </div>
+                </div>
               </div>
               <div className="flex flex-col sm:flex-row justify-end gap-3 sm:space-x-4">
                 <button

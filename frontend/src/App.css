@@ -135,3 +135,27 @@
 .animate-fade-in-down {
   animation: fade-in-down 0.7s cubic-bezier(0.23, 1, 0.32, 1);
 }
+
+.big-calendar.react-datepicker {
+  width: 100% !important;
+  min-width: 0 !important;
+  max-width: 100% !important;
+  font-size: 1.25rem;
+  display: block;
+}
+.big-calendar.react-datepicker .react-datepicker__month-container {
+  width: 100% !important;
+}
+.big-calendar.react-datepicker .react-datepicker__month {
+  width: 100% !important;
+}
+.big-calendar.react-datepicker table {
+  width: 100% !important;
+}
+
+@media (min-width: 1024px) {
+  .big-calendar.react-datepicker {
+    min-width: 0 !important;
+    max-width: 100% !important;
+  }
+}

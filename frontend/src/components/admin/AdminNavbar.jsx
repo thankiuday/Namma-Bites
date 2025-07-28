@@ -21,13 +21,13 @@ const AdminNavbar = () => {
   ];
 
   return (
-    <nav className="bg-gray-900 text-white shadow-lg">
+    <nav className="bg-white text-gray-900 shadow-lg border-b border-orange-100">
       <div className="container mx-auto px-4">
         <div className="flex justify-between items-center h-16">
           {/* Logo and Brand */}
           <Link to="/admin/dashboard" className="flex items-center space-x-2">
             <img src="/logo.png" alt="Namma Bites" className="h-8 w-auto" />
-            <span className="text-xl font-bold">Admin Portal</span>
+            <span className="text-xl font-bold text-orange-600">Admin Portal</span>
           </Link>
 
           {/* Desktop Navigation */}
@@ -36,7 +36,7 @@ const AdminNavbar = () => {
               <Link
                 key={link.name}
                 to={link.path}
-                className="flex items-center space-x-2 text-gray-300 hover:text-white transition-colors duration-200"
+                className="flex items-center space-x-2 text-gray-700 hover:text-orange-600 transition-colors duration-200"
               >
                 {link.icon}
                 <span>{link.name}</span>
@@ -48,7 +48,7 @@ const AdminNavbar = () => {
           <div className="hidden md:block relative">
             <button
               onClick={() => setIsProfileOpen(!isProfileOpen)}
-              className="flex items-center space-x-2 text-gray-300 hover:text-white transition-colors duration-200"
+              className="flex items-center space-x-2 text-gray-700 hover:text-orange-600 transition-colors duration-200"
             >
               <FaUserCircle className="w-5 h-5" />
               <span>Profile</span>
@@ -56,22 +56,22 @@ const AdminNavbar = () => {
 
             {/* Profile Dropdown */}
             {isProfileOpen && (
-              <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-xl py-2 z-50">
+              <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-xl py-2 z-50 border border-orange-100">
                 <Link
                   to="/admin/profile"
-                  className="block px-4 py-2 text-gray-800 hover:bg-gray-100"
+                  className="block px-4 py-2 text-gray-800 hover:bg-orange-50"
                 >
                   View Profile
                 </Link>
                 <Link
                   to="/admin/settings"
-                  className="block px-4 py-2 text-gray-800 hover:bg-gray-100"
+                  className="block px-4 py-2 text-gray-800 hover:bg-orange-50"
                 >
                   Settings
                 </Link>
                 <button
                   onClick={handleLogout}
-                  className="w-full text-left px-4 py-2 text-red-600 hover:bg-gray-100 flex items-center space-x-2"
+                  className="w-full text-left px-4 py-2 text-red-600 hover:bg-orange-50 flex items-center space-x-2"
                 >
                   <FaSignOutAlt />
                   <span>Logout</span>
@@ -83,7 +83,7 @@ const AdminNavbar = () => {
           {/* Mobile Menu Button */}
           <button
             onClick={() => setIsMenuOpen(!isMenuOpen)}
-            className="md:hidden text-gray-300 hover:text-white"
+            className="md:hidden text-gray-700 hover:text-orange-600"
           >
             {isMenuOpen ? <FaTimes className="w-6 h-6" /> : <FaBars className="w-6 h-6" />}
           </button>
@@ -91,22 +91,22 @@ const AdminNavbar = () => {
 
         {/* Mobile Menu */}
         {isMenuOpen && (
-          <div className="md:hidden py-4 space-y-4">
+          <div className="md:hidden py-4 space-y-4 bg-white border-t border-orange-100">
             {navLinks.map((link) => (
               <Link
                 key={link.name}
                 to={link.path}
-                className="flex items-center space-x-2 text-gray-300 hover:text-white transition-colors duration-200 px-4 py-2 text-base"
+                className="flex items-center space-x-2 text-gray-700 hover:text-orange-600 transition-colors duration-200 px-4 py-2 text-base"
                 onClick={() => setIsMenuOpen(false)}
               >
                 {link.icon}
                 <span>{link.name}</span>
               </Link>
             ))}
-            <div className="border-t border-gray-700 pt-4 mt-4">
+            <div className="border-t border-orange-100 pt-4 mt-4">
               <Link
                 to="/admin/profile"
-                className="flex items-center space-x-2 text-gray-300 hover:text-white transition-colors duration-200 px-4 py-2 text-base"
+                className="flex items-center space-x-2 text-gray-700 hover:text-orange-600 transition-colors duration-200 px-4 py-2 text-base"
                 onClick={() => setIsMenuOpen(false)}
               >
                 <FaUserCircle className="w-5 h-5" />

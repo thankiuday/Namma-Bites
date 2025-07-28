@@ -504,3 +504,37 @@ export const getSubscriptionQrData = async (req, res) => {
     res.status(500).json({ success: false, message: 'Error generating QR code', error: error.message });
   }
 }; 
+
+// Pre-book or cancel a meal for a subscription
+export const prebookMeal = async (req, res) => {
+  try {
+    const userId = req.user._id;
+    const { subscriptionId } = req.params;
+    const { date, mealType, status } = req.body;
+    if (!date || !mealType || !['breakfast','lunch','dinner','snacks'].includes(mealType)) {
+      return res.status(400).json({ success: false, message: 'Invalid date or meal type' });
+    }
+    const sub = await UserSubscription.findOne({ _id: subscriptionId, user: userId });
+    if (!sub) return res.status(404).json({ success: false, message: 'Subscription not found' });
+    if (sub.paymentStatus !== 'approved' || sub.validated !== true) {
+      return res.status(403).json({ success: false, message: 'Subscription not active' });
+    }
+    // Check if subscription is expired
+    const today = new Date();
+    const subEnd = new Date(sub.startDate);
+    subEnd.setDate(subEnd.getDate() + sub.duration);
+    if (today > subEnd) {
+      return res.status(403).json({ success: false, message: 'Subscription expired' });
+    }
+    // Remove any existing prebooking for this date/mealType
+    sub.prebookings = sub.prebookings.filter(pb => !(pb.date === date && pb.mealType === mealType));
+    // Add new prebooking if status is 'booked'
+    if (status === 'booked') {
+      sub.prebookings.push({ date, mealType, status });
+    }
+    await sub.save();
+    res.json({ success: true, data: sub.prebookings });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+}; 

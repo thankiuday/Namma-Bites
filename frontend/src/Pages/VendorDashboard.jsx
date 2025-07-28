@@ -6,6 +6,9 @@ import vendorApi, { getPendingUserSubscriptions, approveUserSubscription, getApp
 import api from '../api/config';
 import VendorNavbar from '../components/vendor/VendorNavbar';
 import { getGreeting } from '../utils/greetings';
+import axios from 'axios';
+import DatePicker from 'react-datepicker';
+import 'react-datepicker/dist/react-datepicker.css';
 
 const vendorLinks = [
   { name: 'Home', path: '/vendor/dashboard', icon: <FaHome className="w-5 h-5" /> },
@@ -14,6 +17,20 @@ const vendorLinks = [
   { name: 'Subscription', path: '/vendor/subscription', icon: <FaMoneyCheckAlt className="w-5 h-5" /> },
   { name: 'Profile', path: '/vendor/profile', icon: <FaUserCircle className="w-5 h-5" /> },
 ];
+
+const mealTypes = ['breakfast', 'lunch', 'dinner', 'snacks'];
+const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+
+// Helper to get YYYY-MM-DD for a given day in the current week
+function getDateForDay(day) {
+  const today = new Date();
+  const currentDay = today.getDay(); // 0 (Sun) - 6 (Sat)
+  const targetDay = days.indexOf(day) + 1; // 1 (Mon) - 7 (Sun)
+  const diff = targetDay - (currentDay === 0 ? 7 : currentDay);
+  const date = new Date(today);
+  date.setDate(today.getDate() + diff);
+  return date.toISOString().slice(0, 10);
+}
 
 const VendorDashboard = () => {
   const navigate = useNavigate();
@@ -32,6 +49,14 @@ const VendorDashboard = () => {
   const [approvedFilter, setApprovedFilter] = useState('none');
   const [rejectedFilter, setRejectedFilter] = useState('none');
   const [rejectedSubs, setRejectedSubs] = useState([]);
+  // Add state for pre-booking view
+  const [selectedDay, setSelectedDay] = useState(days[new Date().getDay() === 0 ? 6 : new Date().getDay() - 1]);
+  const [selectedMeal, setSelectedMeal] = useState(mealTypes[0]);
+  const [prebookedUsers, setPrebookedUsers] = useState([]);
+  const [prebookLoading, setPrebookLoading] = useState(false);
+  const [calendarDate, setCalendarDate] = useState(new Date());
+  const [mealPrebookSummary, setMealPrebookSummary] = useState({});
+  const [summaryLoading, setSummaryLoading] = useState(false);
 
   const fetchApprovedSubs = async () => {
     setApprovedLoading(true);
@@ -81,6 +106,45 @@ const VendorDashboard = () => {
   useEffect(() => {
     fetchRejectedSubs();
   }, []);
+
+  const fetchPrebookedUsers = async (day, meal) => {
+    setPrebookLoading(true);
+    try {
+      const date = getDateForDay(day);
+      const res = await axios.get(`/api/vendor/prebookings?date=${date}&mealType=${meal}`, { withCredentials: true });
+      setPrebookedUsers(res.data.data || []);
+    } catch (err) {
+      setPrebookedUsers([]);
+    } finally {
+      setPrebookLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchPrebookedUsers(selectedDay, selectedMeal);
+  }, [selectedDay, selectedMeal]);
+
+  // Fetch all meal pre-bookings for a date
+  const fetchMealPrebookSummary = async (dateObj) => {
+    setSummaryLoading(true);
+    const date = dateObj.toISOString().slice(0, 10);
+    const summary = {};
+    try {
+      for (const meal of mealTypes) {
+        const res = await axios.get(`/api/vendor/prebookings?date=${date}&mealType=${meal}`, { withCredentials: true });
+        summary[meal] = res.data.data || [];
+      }
+      setMealPrebookSummary(summary);
+    } catch (err) {
+      setMealPrebookSummary({});
+    } finally {
+      setSummaryLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchMealPrebookSummary(calendarDate);
+  }, [calendarDate]);
 
   const handleLogout = () => {
     logout();
@@ -447,6 +511,50 @@ const VendorDashboard = () => {
                     </div>
                   </div>
                 ))}
+              </div>
+            )}
+          </div>
+          {/* Pre-bookings Section */}
+          <div className="bg-white rounded-2xl shadow-xl p-8 border border-green-100 mb-8 mt-8">
+            <h2 className="text-xl font-bold text-green-700 mb-4 flex items-center gap-2">
+              Pre-Booked Meals
+            </h2>
+            <div className="flex flex-col items-center mb-6">
+              <DatePicker
+                selected={calendarDate}
+                onChange={date => setCalendarDate(date)}
+                inline
+                calendarClassName="w-full text-lg"
+              />
+            </div>
+            {summaryLoading ? (
+              <div className="text-green-600">Loading pre-booked users...</div>
+            ) : (
+              <div className="overflow-x-auto w-full">
+                <table className="min-w-full border border-green-200 rounded-lg">
+                  <thead>
+                    <tr>
+                      <th className="border-b border-green-200 px-4 py-2 bg-green-100">Meal</th>
+                      <th className="border-b border-green-200 px-4 py-2 bg-green-100">Count</th>
+                      <th className="border-b border-green-200 px-4 py-2 bg-green-100">User Names</th>
+                      <th className="border-b border-green-200 px-4 py-2 bg-green-100">Emails</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {mealTypes.map(meal => (
+                      <tr key={meal} className="hover:bg-green-50 transition-colors duration-200">
+                        <td className="border-b border-green-200 px-4 py-2 font-bold capitalize">{meal}</td>
+                        <td className="border-b border-green-200 px-4 py-2">{mealPrebookSummary[meal]?.length || 0}</td>
+                        <td className="border-b border-green-200 px-4 py-2">
+                          {(mealPrebookSummary[meal] || []).map(u => u.user?.name).filter(Boolean).join(', ') || <span className="text-gray-400">-</span>}
+                        </td>
+                        <td className="border-b border-green-200 px-4 py-2">
+                          {(mealPrebookSummary[meal] || []).map(u => u.user?.email).filter(Boolean).join(', ') || <span className="text-gray-400">-</span>}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
               </div>
             )}
           </div>

@@ -34,7 +34,8 @@ import {
   approveUserSubscription,
   getApprovedUserSubscriptions,
   getRejectedUserSubscriptions,
-  scanSubscriptionQr
+  scanSubscriptionQr,
+  getMealPrebookings
 } from '../controllers/vendor/vendorController.js';
 import { getVendorOrders, acceptOrder, rejectOrder, markOrderReady, completeOrder, scanOrderQr } from '../controllers/vendor/orderController.js';
 import { authenticateAdmin, authenticateVendor, authenticateUser } from '../middleware/user/authMiddleware.js';
@@ -204,6 +205,9 @@ router.post('/orders/:orderId/reject', authenticateVendor, rejectOrder);
 router.post('/orders/:orderId/ready', authenticateVendor, markOrderReady);
 router.post('/orders/:orderId/complete', authenticateVendor, completeOrder);
 router.post('/orders/scan-qr', authenticateVendor, scanOrderQr);
+
+// Pre-bookings route for vendors
+router.get('/prebookings', authenticateVendor, getMealPrebookings);
 
 // === ADMIN-ONLY ROUTES ===
 

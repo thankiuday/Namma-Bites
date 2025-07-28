@@ -67,7 +67,7 @@ const Checkout = () => {
       );
       // 3. Clear cart and redirect
       await clearCart();
-      navigate('/orders');
+      navigate(`/order-confirmation/${order._id}`);
     } catch (err) {
       setError(err.response?.data?.message || 'Failed to place order.');
     } finally {

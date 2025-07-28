@@ -4,6 +4,9 @@ import { FaUsers, FaStore, FaPlus, FaUserFriends, FaStoreAlt, FaCheckCircle, FaC
 import api from '../api/config';
 import AdminLayout from '../components/admin/AdminLayout';
 import { useAuth } from '../context/AuthContext';
+import AnimatedButton from '../components/AnimatedButton';
+import { useAdminAuth } from '../context/AdminAuthContext';
+import { getGreeting } from '../utils/greetings';
 
 const AdminDashboard = () => {
   const navigate = useNavigate();
@@ -15,6 +18,7 @@ const AdminDashboard = () => {
   });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const { admin } = useAdminAuth();
 
   useEffect(() => {
     fetchStats();
@@ -53,7 +57,13 @@ const AdminDashboard = () => {
   return (
     <AdminLayout>
       <div className="bg-white rounded-lg shadow-md p-6">
-      {/* Header */}
+        {/* Personalized Greeting */}
+        <div className="mb-6 animate-fade-in-down">
+          <h2 className="text-2xl font-bold text-orange-700 drop-shadow-sm">
+            {getGreeting(admin?.name || admin?.username || 'Admin')}
+          </h2>
+        </div>
+        {/* Header */}
         <div className="mb-8">
               <h1 className="text-2xl font-bold text-gray-800">Admin Dashboard</h1>
           <p className="text-gray-600 mt-2">Welcome to your admin dashboard. Manage your users and vendors here.</p>
@@ -68,29 +78,58 @@ const AdminDashboard = () => {
 
         {/* Loading State */}
         {loading ? (
-          <div className="flex justify-center items-center h-64">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-600"></div>
-        </div>
+          <>
+            {/* Quick Actions Skeleton */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+              {[...Array(3)].map((_, i) => (
+                <div key={i} className="animate-pulse flex items-center p-6 bg-orange-50 border-2 border-gray-100 rounded-lg">
+                  <div className="p-3 bg-orange-100 rounded-lg mr-4 w-12 h-12" />
+                  <div className="flex-1">
+                    <div className="h-5 w-32 bg-orange-200 rounded mb-2" />
+                    <div className="h-4 w-24 bg-orange-100 rounded" />
+                  </div>
+                </div>
+              ))}
+            </div>
+            {/* Stats Skeleton */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+              {[...Array(4)].map((_, i) => (
+                <div key={i} className="animate-pulse bg-orange-50 border-2 border-gray-100 rounded-lg p-6">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <div className="h-4 w-20 bg-orange-200 rounded mb-2" />
+                      <div className="h-6 w-16 bg-orange-100 rounded" />
+                    </div>
+                    <div className="p-3 bg-orange-100 rounded-lg w-12 h-12" />
+                  </div>
+                </div>
+              ))}
+            </div>
+          </>
         ) : (
           <>
             {/* Quick Actions */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-              <button
+              <AnimatedButton
                 onClick={() => navigate('/admin/users')}
                 className="flex items-center p-6 bg-white border-2 border-gray-200 rounded-lg hover:border-orange-600 hover:shadow-md transition-all duration-200"
-          >
+                variant="primary"
+                size="lg"
+              >
                 <div className="p-3 bg-orange-100 rounded-lg mr-4">
-                <FaUsers className="w-6 h-6 text-orange-600" />
-              </div>
+                  <FaUsers className="w-6 h-6 text-orange-600" />
+                </div>
                 <div className="text-left">
                   <h3 className="text-lg font-semibold text-gray-800">Manage Users</h3>
                   <p className="text-gray-600">View and manage user accounts</p>
                 </div>
-              </button>
+              </AnimatedButton>
 
-              <button
+              <AnimatedButton
                 onClick={() => navigate('/admin/vendor')}
                 className="flex items-center p-6 bg-white border-2 border-gray-200 rounded-lg hover:border-orange-600 hover:shadow-md transition-all duration-200"
+                variant="primary"
+                size="lg"
               >
                 <div className="p-3 bg-orange-100 rounded-lg mr-4">
                   <FaStore className="w-6 h-6 text-orange-600" />
@@ -99,11 +138,13 @@ const AdminDashboard = () => {
                   <h3 className="text-lg font-semibold text-gray-800">Manage Vendors</h3>
                   <p className="text-gray-600">View and manage vendor accounts</p>
                 </div>
-              </button>
+              </AnimatedButton>
 
-              <button
+              <AnimatedButton
                 onClick={() => navigate('/admin/create-vendor')}
                 className="flex items-center p-6 bg-white border-2 border-gray-200 rounded-lg hover:border-orange-600 hover:shadow-md transition-all duration-200"
+                variant="primary"
+                size="lg"
               >
                 <div className="p-3 bg-orange-100 rounded-lg mr-4">
                   <FaPlus className="w-6 h-6 text-orange-600" />
@@ -111,8 +152,8 @@ const AdminDashboard = () => {
                 <div className="text-left">
                   <h3 className="text-lg font-semibold text-gray-800">Create Vendor</h3>
                   <p className="text-gray-600">Add a new vendor to the platform</p>
-              </div>
-              </button>
+                </div>
+              </AnimatedButton>
             </div>
 
             {/* Stats */}

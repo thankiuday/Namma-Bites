@@ -302,14 +302,14 @@ const UserProfile = () => {
         ) : (
           <div className="space-y-4 overflow-y-auto max-h-[400px] md:max-h-[600px] pr-2">
             {subscriptions.map(sub => (
-              <div key={sub._id} className="border rounded-lg p-4 flex flex-col md:flex-row gap-4 items-start md:items-center bg-orange-50">
-                <div className="flex-1">
+              <div key={sub._id} className="border rounded-lg p-4 flex flex-col gap-4 items-center bg-orange-50 justify-center w-full">
+                <div className="flex flex-col items-center text-center gap-1 w-full">
                   <div className="font-semibold text-gray-800 mb-1">Plan: {sub.subscriptionPlan?.planType} ({sub.subscriptionPlan?.duration} days, ₹{sub.subscriptionPlan?.price})</div>
                   <div className="text-gray-700 mb-1">Vendor: {sub.vendor?.name}</div>
                   <div className="text-gray-700 mb-1">Start Date: {new Date(sub.startDate).toLocaleDateString()}</div>
                   <div className="text-gray-700 mb-1">Duration: {sub.duration} days</div>
                 </div>
-                <div className="flex flex-col items-center gap-2">
+                <div className="flex flex-col items-center justify-center gap-2 w-full text-center">
                   <span className={`px-3 py-1 rounded-full text-xs font-bold ${
                     sub.paymentStatus === 'approved' ? 'bg-green-100 text-green-800 border border-green-200' :
                     sub.paymentStatus === 'pending' ? 'bg-orange-100 text-orange-800 border border-orange-200' :
@@ -320,12 +320,12 @@ const UserProfile = () => {
                     {sub.paymentStatus.charAt(0).toUpperCase() + sub.paymentStatus.slice(1)}
                   </span>
                   {sub.paymentProof && (
-                    <a href={`http://localhost:5000${sub.paymentProof}`} target="_blank" rel="noopener noreferrer" className="text-xs text-orange-600 underline">View Payment Proof</a>
+                    <a href={`http://localhost:5000${sub.paymentProof}`} target="_blank" rel="noopener noreferrer" className="text-xs text-orange-600 underline inline-block w-full text-center">View Payment Proof</a>
                   )}
                   {/* Validated QR Button */}
                   {sub.paymentStatus !== 'expired' ? (
                     <button
-                      className="text-xs text-blue-600 underline mt-1"
+                      className="text-xs text-blue-600 underline mt-1 inline-block w-full text-center"
                       onClick={() => {
                         setQrSubId(sub._id);
                         setShowQrModal(true);
@@ -405,8 +405,8 @@ const UserProfile = () => {
       {/* Subscription Details Section */}
       <section className="bg-white rounded-xl shadow-lg p-6 mb-8">
         <h2 className="text-2xl font-bold text-gray-900 mb-6">Subscription Details</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div className="p-4 border border-gray-200 rounded-lg">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-center text-center sm:items-start sm:text-left">
+          <div className="p-4 border border-gray-200 rounded-lg flex flex-col items-center text-center sm:items-start sm:text-left">
             <h3 className="text-lg font-semibold text-gray-900 mb-2">Current Plan</h3>
             {(() => {
               const activeSubscription = subscriptions.find(sub => sub.paymentStatus === 'approved');
@@ -445,7 +445,7 @@ const UserProfile = () => {
               }
             })()}
           </div>
-          <div className="p-4 border border-gray-200 rounded-lg">
+          <div className="p-4 border border-gray-200 rounded-lg flex flex-col items-center text-center sm:items-start sm:text-left">
             <h3 className="text-lg font-semibold text-gray-900 mb-2">Assigned Vendor</h3>
             {(() => {
               const activeSubscription = subscriptions.find(sub => sub.paymentStatus === 'approved');
