@@ -3,9 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import { FaUsers, FaStore, FaPlus, FaUserFriends, FaStoreAlt, FaCheckCircle, FaClock } from 'react-icons/fa';
 import api from '../api/config';
 import AdminLayout from '../components/admin/AdminLayout';
-import { useAuth } from '../context/AuthContext';
-import AnimatedButton from '../components/AnimatedButton';
 import { useAdminAuth } from '../context/AdminAuthContext';
+import AnimatedButton from '../components/AnimatedButton';
 import { getGreeting } from '../utils/greetings';
 
 const AdminDashboard = () => {
@@ -59,15 +58,15 @@ const AdminDashboard = () => {
       <div className="bg-white rounded-lg shadow-md p-6">
         {/* Personalized Greeting */}
         <div className="mb-6 animate-fade-in-down">
-          <h2 className="text-2xl font-bold text-orange-700 drop-shadow-sm">
+          <h2 className="text-2xl font-bold text-orange-700 drop-shadow-sm text-center">
             {getGreeting(admin?.name || admin?.username || 'Admin')}
           </h2>
         </div>
         {/* Header */}
         <div className="mb-8">
-              <h1 className="text-2xl font-bold text-gray-800">Admin Dashboard</h1>
+          <h1 className="text-2xl font-bold text-gray-800">Admin Dashboard</h1>
           <p className="text-gray-600 mt-2">Welcome to your admin dashboard. Manage your users and vendors here.</p>
-            </div>
+        </div>
 
         {/* Error Message */}
         {error && (
@@ -172,7 +171,7 @@ const AdminDashboard = () => {
 
               <div className="bg-white border-2 border-gray-200 rounded-lg p-6">
                 <div className="flex items-center justify-between">
-              <div>
+                  <div>
                     <p className="text-sm font-medium text-gray-600">Total Vendors</p>
                     <p className="text-2xl font-bold text-gray-800 mt-1">{stats.totalVendors}</p>
                   </div>
@@ -190,13 +189,13 @@ const AdminDashboard = () => {
                   </div>
                   <div className="p-3 bg-orange-100 rounded-lg">
                     <FaCheckCircle className="w-6 h-6 text-orange-600" />
-              </div>
-            </div>
+                  </div>
+                </div>
               </div>
 
               <div className="bg-white border-2 border-gray-200 rounded-lg p-6">
                 <div className="flex items-center justify-between">
-              <div>
+                  <div>
                     <p className="text-sm font-medium text-gray-600">Pending Approvals</p>
                     <p className="text-2xl font-bold text-gray-800 mt-1">{stats.pendingApprovals}</p>
                   </div>
@@ -208,9 +207,9 @@ const AdminDashboard = () => {
             </div>
           </>
         )}
-        </div>
+      </div>
     </AdminLayout>
   );
 };
 
-export default AdminDashboard; 
+export default AdminDashboard;

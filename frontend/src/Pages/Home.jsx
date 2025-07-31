@@ -136,7 +136,7 @@ const Home = () => {
         setLoadingFoods(true);
         const res = await apiClient.get('/vendor/menu-items/all');
         if (res.data.success) setFoods(res.data.data);
-      } catch {}
+      } catch { }
       setLoadingFoods(false);
     };
     fetchFoods();
@@ -149,7 +149,7 @@ const Home = () => {
         setLoadingVendors(true);
         const res = await apiClient.get('/vendor/public');
         if (res.data.success) setVendors(res.data.data);
-      } catch {}
+      } catch { }
       setLoadingVendors(false);
     };
     fetchVendors();
@@ -205,21 +205,22 @@ const Home = () => {
       />
       <div className="flex flex-col items-center justify-center">
         <div className="w-full max-w-7xl px-4 mb-12 flex justify-center">
-          <img 
-            src={logo} 
-            alt="Namma Bites Logo" 
+          <img
+            src={logo}
+            alt="Namma Bites Logo"
             className="h-24 md:h-32 object-contain"
           />
         </div>
-        
+
         {/* Food Categories */}
         <div className="onboard-categories">
           <FoodCategories />
         </div>
-        
+
         {/* Search Section - Mobile First */}
         <div className="w-full max-w-7xl px-4 mb-8 md:hidden relative onboard-search">
-          <div className="flex gap-2 flex-nowrap">
+          {/* FIX: Added items-center to vertically align the children */}
+          <div className="flex gap-2 flex-nowrap items-center">
             <div className="relative flex-1 min-w-0">
               <input
                 type="text"
@@ -240,12 +241,12 @@ const Home = () => {
                 visible={showSuggestions && searchTerm.length > 0}
               />
             </div>
-            <button className="flex-shrink-0 px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-500 transition-colors duration-300 h-full">
+            {/* FIX: Removed h-full and changed py-2 to py-3 to match input height */}
+            <button className="flex-shrink-0 px-4 py-3 bg-orange-600 text-white rounded-lg hover:bg-orange-500 transition-colors duration-300">
               Search
             </button>
           </div>
         </div>
-
         {/* Search Section - Desktop */}
         <div className="hidden md:block w-full max-w-7xl px-4 mt-12 relative onboard-search">
           <div className="flex gap-4 max-w-3xl mx-auto relative">
@@ -275,8 +276,8 @@ const Home = () => {
           </div>
         </div>
 
-         {/* All Foods Section */}
-         <div className="onboard-menu">
+        {/* All Foods Section */}
+        <div className="onboard-menu w-full max-w-6xl px-1 sm:px-8 lg:px-8">
           <AllFoods searchTerm={searchTerm} />
         </div>
 

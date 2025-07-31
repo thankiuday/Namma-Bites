@@ -75,13 +75,13 @@ const Navbar = ({ links = defaultStudentLinks, isAdmin = false }) => {
               <Link
                 key={link.to}
                 to={link.to}
-                className="text-black hover:text-orange-600 px-2 lg:px-3 py-2 rounded-md text-sm font-medium flex items-center gap-1 lg:gap-2 relative"
+                className="text-black hover:text-orange-600 px-2 lg:px-2.5 py-2 rounded-md text-lg font-medium flex items-center gap-1 lg:gap-2 relative"
               >
                 {iconMap[link.icon]?.('text-base lg:text-lg h-5 w-5')}
                 <span className="hidden lg:inline">{link.label}</span>
                 {/* Cart counter */}
                 {link.to === '/cart' && cartItemCount > 0 && (
-                  <span className="absolute -top-2 -right-2 bg-orange-600 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center font-bold">
+                  <span className="absolute -top-2 -right-2 bg-orange-600 text-white text-sm rounded-full h-6 w-6 flex items-center justify-center font-bold">
                     {cartItemCount}
                   </span>
                 )}
@@ -90,7 +90,7 @@ const Navbar = ({ links = defaultStudentLinks, isAdmin = false }) => {
             {isAuthenticated && (
               <button
                 onClick={handleLogout}
-                className="text-black hover:text-orange-600 px-2 lg:px-3 py-2 rounded-md text-sm font-medium flex items-center gap-1 lg:gap-2"
+                className="text-black hover:text-orange-600 px-2 lg:px-2.5 py-2 rounded-md text-base font-medium flex items-center gap-1 lg:gap-2"
               >
                 <FaSignOutAlt className="text-base lg:text-lg" /> 
                 <span className="hidden lg:inline">Logout</span>
@@ -137,14 +137,14 @@ const Navbar = ({ links = defaultStudentLinks, isAdmin = false }) => {
             <Link
               key={link.to}
               to={link.to}
-              className="block px-3 py-3 rounded-md text-base font-medium text-black hover:text-orange-600 hover:bg-orange-50 flex items-center gap-3 relative transition-colors"
+              className="block px-3 py-3 rounded-md text-lg font-medium text-black hover:text-orange-600 hover:bg-orange-50 flex items-center gap-3 relative transition-colors"
               onClick={() => setIsMenuOpen(false)}
             >
               {iconMap[link.icon]?.('text-lg h-5 w-5')}
               {link.label}
               {/* Cart counter for mobile */}
               {link.to === '/cart' && cartItemCount > 0 && (
-                <span className="ml-auto bg-orange-600 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center font-bold">
+                <span className="ml-auto bg-orange-600 text-white text-sm rounded-full h-6 w-6 flex items-center justify-center font-bold">
                   {cartItemCount}
                 </span>
               )}
@@ -156,7 +156,7 @@ const Navbar = ({ links = defaultStudentLinks, isAdmin = false }) => {
                 handleLogout();
                 setIsMenuOpen(false);
               }}
-              className="w-full text-left block px-3 py-3 rounded-md text-base font-medium text-black hover:text-orange-600 hover:bg-orange-50 flex items-center gap-3 transition-colors"
+              className="w-full text-left block px-3 py-3 rounded-md text-lg font-medium text-black hover:text-orange-600 hover:bg-orange-50 flex items-center gap-3 transition-colors"
             >
               <FaSignOutAlt className="text-lg h-5 w-5" /> Logout
             </button>
@@ -167,4 +167,4 @@ const Navbar = ({ links = defaultStudentLinks, isAdmin = false }) => {
   );
 };
 
-export default Navbar; 
+export default Navbar;

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { FaUser, FaShoppingCart, FaClipboardList, FaWallet, FaKey, FaHeadset, FaDownload, FaEdit } from 'react-icons/fa';
+import { FaArrowLeft,FaUser, FaShoppingCart, FaClipboardList, FaWallet, FaKey, FaHeadset, FaDownload, FaEdit } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import userApi, { getUserSubscriptions, deleteUserSubscription } from '../api/userApi';
@@ -183,7 +183,15 @@ const UserProfile = () => {
 
   return (
     <div className="profile-page-root">
-      <Joyride
+      <button
+        onClick={() => navigate(-1)}
+        className="flex items-center gap-2 mb-4 px-4 py-2 bg-white text-orange-700 rounded-lg hover:bg-orange-50 transition-colors duration-200 shadow-sm border border-orange-200"
+      >
+        <FaArrowLeft className="w-4 h-4" />
+        Back
+      </button>
+    {/* ... Joyride and other code remains the same ... */}
+    <Joyride
         steps={tourSteps}
         run={runTour}
         continuous
@@ -191,106 +199,83 @@ const UserProfile = () => {
         showProgress
         styles={{ options: { zIndex: 10000, primaryColor: '#ea580c' } }}
         callback={handleTourCallback}
-      />
-      {/* Personalized Greeting */}
-      <div className="mb-6 animate-fade-in-down">
-        <h2 className="text-2xl font-bold text-orange-700 drop-shadow-sm">
-          {getGreeting(user?.username || user?.name || 'User')}
+    />
+
+    {/* Personalized Greeting */}
+    <div className="mb-6 animate-fade-in-down">
+        <h2 className="text-2xl font-bold text-orange-700 text-center drop-shadow-sm">
+            {getGreeting(user?.username || user?.name || 'User')}
         </h2>
-      </div>
-      {/* Profile Hub Section */}
-      <section className="bg-white rounded-xl shadow-lg p-4 sm:p-6 mb-6 sm:mb-8">
+    </div>
+
+    {/* Profile Hub Section */}
+    <section className="bg-white rounded-xl shadow-lg p-4 sm:p-6 mb-6 sm:mb-8">
         <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 sm:gap-0 mb-6">
-          <h2 className="text-xl sm:text-2xl font-bold text-gray-900 flex items-center gap-2">
-            <FaUser className="text-orange-600 w-5 h-5 sm:w-6 sm:h-6" /> Profile Hub
-          </h2>
-          {!isEditing ? (
-            <button
-              onClick={handleEdit}
-              className="flex items-center justify-center gap-2 px-3 sm:px-4 py-2 bg-orange-600 text-white rounded-md hover:bg-orange-700 transition-colors text-sm sm:text-base"
-            >
-              <FaEdit className="w-4 h-4" /> Edit Profile
-            </button>
-          ) : (
-            <button
-              onClick={handleSave}
-              disabled={loading}
-              className={`px-3 sm:px-4 py-2 text-sm sm:text-base ${loading ? 'bg-gray-400' : 'bg-green-600 hover:bg-green-700'} text-white rounded-md transition-colors`}
-            >
-              {loading ? 'Saving...' : 'Save Changes'}
-            </button>
-          )}
+            <h2 className="text-xl sm:text-2xl font-bold text-gray-900 flex items-center gap-2">
+                <FaUser className="text-orange-600 w-5 h-5 sm:w-6 sm:h-6" /> Profile Hub
+            </h2>
+
+            {/* --- DESKTOP BUTTON --- */}
+            {/* This button is now hidden on mobile (`hidden`) and shown on screens small and larger (`sm:flex`). */}
+            <div className="hidden sm:flex items-center">
+                {!isEditing ? (
+                    <button
+                        onClick={handleEdit}
+                        className="flex items-center justify-center gap-2 px-3 sm:px-4 py-2 bg-orange-600 text-white rounded-md hover:bg-orange-700 transition-colors text-sm sm:text-base"
+                    >
+                        <FaEdit className="w-4 h-4" /> Edit Profile
+                    </button>
+                ) : (
+                    <button
+                        onClick={handleSave}
+                        disabled={loading}
+                        className={`px-3 sm:px-4 py-2 text-sm sm:text-base ${loading ? 'bg-gray-400' : 'bg-green-600 hover:bg-green-700'} text-white rounded-md transition-colors`}
+                    >
+                        {loading ? 'Saving...' : 'Save Changes'}
+                    </button>
+                )}
+            </div>
         </div>
+
         {error && (
-          <div className="mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded">
-            {error}
-          </div>
+            <div className="mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded">
+                {error}
+            </div>
         )}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
-          <div>
-            <label className="block text-sm font-medium text-gray-700">Username</label>
-            {isEditing ? (
-              <input
-                type="text"
-                name="username"
-                value={editedUser?.username || ''}
-                onChange={handleInputChange}
-                placeholder="Enter your username"
-                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-orange-500 focus:border-orange-500 text-gray-900"
-              />
-            ) : (
-              <p className="mt-1 text-gray-900">{user.username}</p>
-            )}
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700">Email</label>
-            {isEditing ? (
-              <input
-                type="email"
-                name="email"
-                value={editedUser?.email || ''}
-                onChange={handleInputChange}
-                placeholder="Enter your email address"
-                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-orange-500 focus:border-orange-500 text-gray-900"
-              />
-            ) : (
-              <p className="mt-1 text-gray-900">{user.email}</p>
-            )}
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700">Full Name</label>
-            {isEditing ? (
-              <input
-                type="text"
-                name="name"
-                value={editedUser?.name || ''}
-                onChange={handleInputChange}
-                placeholder="Enter your full name"
-                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-orange-500 focus:border-orange-500 text-gray-900"
-              />
-            ) : (
-              <p className="mt-1 text-gray-900">{user.name}</p>
-            )}
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700">Mobile Number</label>
-            {isEditing ? (
-              <input
-                type="tel"
-                name="mobileNumber"
-                value={editedUser?.mobileNumber || ''}
-                onChange={handleInputChange}
-                placeholder="Enter your mobile number"
-                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-orange-500 focus:border-orange-500 text-gray-900"
-              />
-            ) : (
-              <p className="mt-1 text-gray-900">{user.mobileNumber}</p>
-            )}
-          </div>
+            {/* ... Your original form fields for username, email, name, and mobile number ... */}
+            <div> <label className="block text-sm font-medium text-gray-700">Username</label> {isEditing ? ( <input type="text" name="username" value={editedUser?.username || ''} onChange={handleInputChange} className="mt-1 block w-full px-3 py-2 border border-gray-300 text-black rounded-md"/> ) : ( <p className="mt-1 text-gray-900">{user.username}</p> )} </div>
+            <div> <label className="block text-sm font-medium text-gray-700">Email</label> {isEditing ? ( <input type="email" name="email" value={editedUser?.email || ''} onChange={handleInputChange} className="mt-1 block w-full px-3 py-2 border border-gray-300  text-black  rounded-md"/> ) : ( <p className="mt-1 text-gray-900">{user.email}</p> )} </div>
+            <div> <label className="block text-sm font-medium text-gray-700">Full Name</label> {isEditing ? ( <input type="text" name="name" value={editedUser?.name || ''} onChange={handleInputChange} className="mt-1 block w-full px-3 py-2 border border-gray-300  text-black  rounded-md"/> ) : ( <p className="mt-1 text-gray-900">{user.name}</p> )} </div>
+            <div> <label className="block text-sm font-medium text-gray-700">Mobile Number</label> {isEditing ? ( <input type="tel" name="mobileNumber" value={editedUser?.mobileNumber || ''} onChange={handleInputChange} className="mt-1 block w-full px-3 py-2 border border-gray-300  text-black  rounded-md"/> ) : ( <p className="mt-1 text-gray-900">{user.mobileNumber}</p> )} </div>
         </div>
-      </section>
-
-      {/* User Subscriptions Section */}
+        
+        {/* --- MOBILE BUTTON --- */}
+        {/* This is a copy of the button that is ONLY visible on mobile screens (`sm:hidden`). */}
+        <div className="mt-6 sm:hidden">
+            {!isEditing ? (
+                <button
+                    onClick={handleEdit}
+                    className="w-full flex items-center justify-center gap-2 py-2.5 bg-orange-600 text-white rounded-md hover:bg-orange-700 transition-colors text-base font-semibold"
+                >
+                    <FaEdit /> Edit Profile
+                </button>
+            ) : (
+                 <div className="flex items-center gap-2">
+                    {/* A Cancel button is added here for better mobile UX */}
+                    <button onClick={() => setIsEditing(false)} className="w-full flex items-center justify-center py-2.5 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300 text-base font-semibold">Cancel</button>
+                    <button
+                        onClick={handleSave}
+                        disabled={loading}
+                        className={`w-full py-2.5 ${loading ? 'bg-gray-400' : 'bg-green-600 hover:bg-green-700'} text-white rounded-md transition-colors text-base font-semibold`}
+                    >
+                        {loading ? 'Saving...' : 'Save Changes'}
+                    </button>
+                </div>
+            )}
+        </div>
+    </section>
+     {/* User Subscriptions Section */}
       <section className="bg-white rounded-xl shadow-lg p-4 sm:p-6 mb-6 sm:mb-8">
         <h2 className="text-xl sm:text-2xl font-bold text-gray-900 mb-4 sm:mb-6">My Subscriptions</h2>
         {subsLoading ? (

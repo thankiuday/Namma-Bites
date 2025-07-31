@@ -54,7 +54,8 @@ const BrowseVendors = () => {
                 className="w-full h-full object-cover transform transition-transform duration-300 group-hover:scale-110"
               />
             </div>
-            <h3 className="mt-2 md:mt-4 text-base md:text-lg font-medium text-gray-800 group-hover:text-orange-600 transition-colors duration-300">
+            {/* FIX: Added 'text-center' to ensure the text itself is centered */}
+            <h3 className="mt-2 md:mt-4 text-base md:text-lg font-medium text-gray-800 group-hover:text-orange-600 transition-colors duration-300 text-center">
               {vendor.name}
             </h3>
           </div>
@@ -64,4 +65,4 @@ const BrowseVendors = () => {
   );
 };
 
-export default BrowseVendors; 
+export default BrowseVendors;

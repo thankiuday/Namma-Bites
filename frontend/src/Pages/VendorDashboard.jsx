@@ -288,7 +288,7 @@ const VendorDashboard = () => {
       <VendorNavbar />
       {/* Personalized Greeting */}
       <div className="container mx-auto px-2 sm:px-6 mt-6 animate-fade-in-down">
-        <h2 className="text-2xl font-bold text-green-700 drop-shadow-sm">
+        <h2 className="text-2xl font-bold text-green-700 drop-shadow-sm text-center">
           {getGreeting(vendor?.name || vendor?.username || 'Vendor')}
         </h2>
       </div>

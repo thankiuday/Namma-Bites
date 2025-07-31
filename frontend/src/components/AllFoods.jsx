@@ -50,12 +50,13 @@ const AllFoods = ({ searchTerm = '' }) => {
   });
 
   return (
-    <div className="w-full max-w-6xl px-4 sm:px-6 lg:px-8 mt-8 sm:mt-16">
+    <div className="w-full mt-8 sm:mt-16">
       <h2 className="text-xl sm:text-2xl font-semibold text-gray-800 mb-6 sm:mb-8 text-center">Our Menu</h2>
       {loading ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
           {[...Array(6)].map((_, i) => (
-            <div key={i} className="animate-pulse bg-orange-50 rounded-xl shadow p-4 flex flex-col items-center">
+            // FIX: Increased padding from p-4 to p-5 to make the skeleton taller.
+            <div key={i} className="animate-pulse bg-orange-50 rounded-xl shadow p-6 flex flex-col items-center">
               <div className="w-32 h-32 bg-orange-100 rounded-lg mb-4" />
               <div className="h-4 w-3/4 bg-orange-200 rounded mb-2" />
               <div className="h-3 w-1/2 bg-orange-100 rounded mb-2" />
@@ -82,4 +83,4 @@ const AllFoods = ({ searchTerm = '' }) => {
   );
 };
 
-export default AllFoods; 
+export default AllFoods;

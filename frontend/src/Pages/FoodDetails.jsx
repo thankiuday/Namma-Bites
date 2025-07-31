@@ -1,11 +1,46 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { FaLeaf, FaDrumstickBite, FaMinus, FaPlus, FaShoppingCart, FaStar, FaClock, FaFire, FaCheckCircle, FaTimesCircle, FaArrowLeft } from 'react-icons/fa';
+import {
+  FaLeaf, FaDrumstickBite, FaMinus, FaPlus, FaShoppingCart, FaStar, FaClock, FaFire,
+  FaCheckCircle, FaTimesCircle, FaArrowLeft, FaBookOpen, FaPepperHot, FaUtensils
+} from 'react-icons/fa';
 import apiClient from '../api/apiClient';
 import { useAuth } from '../context/AuthContext';
 import { useCart } from '../context/CartContext';
-import AnimatedButton from '../components/AnimatedButton';
+import { motion, AnimatePresence } from 'framer-motion';
 
+// --- A local Accordion component to keep the main code clean ---
+const AccordionItem = ({ title, icon, children, isOpen, onToggle }) => (
+  <div className="border-b border-gray-200">
+    <button
+      onClick={onToggle}
+      className="flex w-full items-center justify-between py-4 text-left font-semibold text-gray-800 focus:outline-none"
+    >
+      <div className="flex items-center gap-3">
+        {icon}
+        <span>{title}</span>
+      </div>
+      <motion.div animate={{ rotate: isOpen ? 180 : 0 }} transition={{ duration: 0.3 }}>
+        <FaPlus size={12} className="transform transition-transform" />
+      </motion.div>
+    </button>
+    <AnimatePresence>
+      {isOpen && (
+        <motion.div
+          initial={{ height: 0, opacity: 0 }}
+          animate={{ height: 'auto', opacity: 1 }}
+          exit={{ height: 0, opacity: 0 }}
+          transition={{ duration: 0.3 }}
+          className="overflow-hidden"
+        >
+          <div className="pb-4 text-gray-600">{children}</div>
+        </motion.div>
+      )}
+    </AnimatePresence>
+  </div>
+);
+
+// --- Main FoodDetails Component ---
 const FoodDetails = () => {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -15,282 +50,123 @@ const FoodDetails = () => {
   const [error, setError] = useState('');
   const [userRating, setUserRating] = useState(0);
   const [submittingRating, setSubmittingRating] = useState(false);
-  const [ratingError, setRatingError] = useState('');
   const { user } = useAuth();
   const { addToCart } = useCart();
   const [cartMsg, setCartMsg] = useState('');
+  const [openSection, setOpenSection] = useState('description');
 
   useEffect(() => {
+    // Original data fetching logic remains the same
     const fetchFood = async () => {
-      try {
-        setLoading(true);
-        setError('');
-        const res = await apiClient.get(`/vendor/menu-items/${id}`);
-        if (res.data.success) {
-          setFood(res.data.data);
-          // Pre-fill user rating if exists
-          if (user && res.data.data.ratings) {
-            const found = res.data.data.ratings.find(r => r.user === user._id);
-            setUserRating(found ? found.value : 0);
-          }
-        } else {
-          setError(res.data.message || 'Failed to fetch food details');
-        }
-      } catch (err) {
-        setError('Failed to fetch food details');
-      } finally {
-        setLoading(false);
-      }
+      try { setLoading(true); setError(''); const res = await apiClient.get(`/vendor/menu-items/${id}`); if (res.data.success) { setFood(res.data.data); if (user && res.data.data.ratings) { const found = res.data.data.ratings.find(r => r.user === user._id); setUserRating(found ? found.value : 0); } } else { setError(res.data.message || 'Failed to fetch food details'); } } catch (err) { setError('Failed to fetch food details'); } finally { setLoading(false); }
     };
     fetchFood();
-    // eslint-disable-next-line
   }, [id, user]);
 
-  const handleQuantityChange = (action) => {
-    if (action === 'increase') {
-      setQuantity(prev => prev + 1);
-    } else if (action === 'decrease' && quantity > 1) {
-      setQuantity(prev => prev - 1);
-    }
+  // --- Handlers ---
+  const handleQuantityChange = (val) => {
+    const newQuantity = quantity + val;
+    if (newQuantity >= 1) setQuantity(newQuantity);
   };
-
+  
   const handleAddToCart = () => {
-    if (!food) return;
-    if (!user) {
-      navigate('/login');
-      return;
-    }
+    if (!user) { navigate('/login'); return; }
     addToCart(food, quantity);
     setCartMsg('Added to cart!');
-    setTimeout(() => setCartMsg(''), 1500);
+    setTimeout(() => setCartMsg(''), 2000);
   };
-
+  
   const handleRate = async (value) => {
-    setSubmittingRating(true);
-    setRatingError('');
-    try {
-      await apiClient.post(`/vendor/menu-items/${id}/rate`, { value });
-      setUserRating(value);
-      // Refetch food details to update average
-      const res = await apiClient.get(`/vendor/menu-items/${id}`);
-      if (res.data.success) setFood(res.data.data);
-    } catch (err) {
-      setRatingError('Failed to submit rating.');
-    } finally {
-      setSubmittingRating(false);
-    }
+    // Original rating logic remains the same
+    setSubmittingRating(true); try { await apiClient.post(`/vendor/menu-items/${id}/rate`, { value }); setUserRating(value); const res = await apiClient.get(`/vendor/menu-items/${id}`); if (res.data.success) setFood(res.data.data); } catch (err) { console.error(err) } finally { setSubmittingRating(false); }
   };
+  
+  const handleToggleAccordion = (section) => {
+    setOpenSection(openSection === section ? null : section);
+  };
+  
+  // --- Loading/Error States ---
+  if (loading || error || !food) {
+    let message = 'Loading food details...';
+    if (error) message = error;
+    if (!food && !loading) message = 'Food not found.';
+    return (
+      <div className="flex h-[60vh] items-center justify-center p-4">
+        <p className={`text-lg ${error ? 'text-red-500' : 'text-gray-600'}`}>{message}</p>
+      </div>
+    );
+  }
 
-  if (loading) {
-    return (
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8 text-center">
-        <div className="bg-white rounded-xl shadow-lg p-8">
-          <p className="text-gray-600 text-base sm:text-lg">Loading food details...</p>
-        </div>
-      </div>
-    );
-  }
-  if (error) {
-    return (
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8 text-center">
-        <div className="bg-white rounded-xl shadow-lg p-8">
-          <p className="text-red-500 text-base sm:text-lg">{error}</p>
-        </div>
-      </div>
-    );
-  }
-  if (!food) {
-    return (
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8 text-center">
-        <div className="bg-white rounded-xl shadow-lg p-8">
-          <p className="text-gray-500 text-base sm:text-lg">Food not found.</p>
-        </div>
-      </div>
-    );
-  }
+  // --- Badge Logic ---
+  const isVeg = food.category?.toLowerCase() === 'veg';
+  const categoryBadge = { icon: isVeg ? FaLeaf : FaDrumstickBite, label: isVeg ? 'Veg' : 'Non-Veg', style: isVeg ? 'bg-green-100 text-green-800 border-green-200' : 'bg-red-100 text-red-800 border-red-200' };
+  const availabilityBadge = { icon: food.isAvailable ? FaCheckCircle : FaTimesCircle, label: food.isAvailable ? 'Available' : 'Unavailable', style: food.isAvailable ? 'bg-green-100 text-green-800 border-green-200' : 'bg-gray-100 text-gray-600 border-gray-200' };
 
   return (
-    <div className="w-full max-w-2xl sm:max-w-3xl md:max-w-4xl mx-auto px-2 sm:px-4 py-4 sm:py-8">
-      <button
-        onClick={() => navigate(-1)}
-        className="flex items-center gap-2 mb-4 px-4 py-2 bg-white text-orange-700 rounded-lg hover:bg-orange-50 transition-colors duration-200 shadow-sm border border-orange-200"
-      >
-        <FaArrowLeft className="w-4 h-4" />
-        Back
+    <div className="mx-auto max-w-6xl p-4 font-sans">
+      <button onClick={() => navigate(-1)} className="mb-4 flex items-center gap-2 text-sm font-semibold text-gray-600 hover:text-orange-600">
+        <FaArrowLeft />
+        Back to Menu
       </button>
-      <div className="bg-white rounded-xl shadow-lg overflow-hidden">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 p-2 sm:p-6">
-          {/* Food Image */}
-          <div className="relative">
-            <img
-              src={food.image ? (food.image.startsWith('http') ? food.image : `http://localhost:5000${food.image}`) : '/default-food.png'}
-              alt={food.name}
-              className="w-full h-64 sm:h-80 lg:h-[400px] object-cover rounded-lg"
-            />
-            <div className="absolute top-2 sm:top-4 right-2 sm:right-4 flex flex-col gap-1 sm:gap-2">
-              {/* Availability Badge */}
-              <div className={`px-2 sm:px-3 py-1 rounded-full text-xs sm:text-sm font-medium flex items-center gap-1 ${
-                food.isAvailable 
-                  ? 'bg-green-300 text-black font-bold' 
-                  : 'bg-red-300 text-black font-bold'
-              }`}>
-                {food.isAvailable ? (
-                  <>
-                    <FaCheckCircle className="text-green-600 w-3 h-3 sm:w-4 sm:h-4" /> 
-                    <span className="hidden sm:inline">Available</span>
-                    <span className="sm:hidden">✓</span>
-                  </>
-                ) : (
-                  <>
-                    <FaTimesCircle className="text-red-600 w-3 h-3 sm:w-4 sm:h-4" /> 
-                    <span className="hidden sm:inline">Not Available</span>
-                    <span className="sm:hidden">✗</span>
-                  </>
-                )}
-              </div>
-              {/* Veg/Non-Veg Badge */}
-              {food.category === 'veg' ? (
-                <div className="bg-green-500 text-white px-2 sm:px-3 py-1 rounded-full flex items-center gap-1">
-                  <FaLeaf className="w-3 h-3 sm:w-4 sm:h-4" /> 
-                  <span className="text-xs sm:text-sm">Veg</span>
-                </div>
-              ) : (
-                <div className="bg-red-500 text-white px-2 sm:px-3 py-1 rounded-full flex items-center gap-1">
-                  <FaDrumstickBite className="w-3 h-3 sm:w-4 sm:h-4" /> 
-                  <span className="text-xs sm:text-sm">Non-Veg</span>
-                </div>
-              )}
-            </div>
+      <div className="grid grid-cols-1 gap-8 lg:grid-cols-2 lg:gap-12">
+        {/* --- Image Column --- */}
+        <div className="relative h-80 overflow-hidden rounded-xl md:h-[450px]">
+          <img src={food.image ? `http://localhost:5000${food.image}` : '/default-food.png'} alt={food.name} className="h-full w-full object-cover"/>
+          <div className={`absolute top-3 left-3 flex items-center gap-1.5 rounded-full border px-2 py-1 text-xs font-semibold ${categoryBadge.style}`}>
+            {React.createElement(categoryBadge.icon)}<span>{categoryBadge.label}</span>
+          </div>
+          <div className={`absolute top-3 right-3 flex items-center gap-1.5 rounded-full border px-2 py-1 text-xs font-semibold ${availabilityBadge.style}`}>
+            {React.createElement(availabilityBadge.icon)}<span>{availabilityBadge.label}</span>
+          </div>
+        </div>
+
+        {/* --- Details Column --- */}
+        <div className="flex flex-col">
+          <h1 className="text-3xl font-extrabold text-gray-900 md:text-4xl">{food.name}</h1>
+          
+          {/* Info Chips */}
+          <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-2">
+            <div className="flex items-center gap-1.5 text-sm text-gray-700"><FaStar className="text-yellow-400" /><b>{food.rating?.toFixed(1) || 'N/A'}</b> ({food.ratings?.length || 0} reviews)</div>
+            {food.preparationTime && <div className="flex items-center gap-1.5 text-sm text-gray-700"><FaClock className="text-orange-500" /><span>{food.preparationTime}</span></div>}
+            {food.calories && <div className="flex items-center gap-1.5 text-sm text-gray-700"><FaFire className="text-red-500" /><span>{food.calories}</span></div>}
           </div>
 
-          {/* Food Details */}
-          <div className="space-y-4 sm:space-y-6">
-            <div>
-              <h1 className="text-2xl sm:text-3xl font-bold text-gray-800 mb-2">{food.name}</h1>
-              <div className="flex flex-wrap items-center gap-2 sm:gap-4 text-gray-600 text-sm sm:text-base">
-                {food.rating !== undefined && food.rating !== null && (
-                  <div className="flex items-center gap-1">
-                    <FaStar className="text-yellow-400 w-4 h-4 sm:w-5 sm:h-5" />
-                    <span>{food.rating.toFixed(1)}</span>
-                  </div>
-                )}
-                {food.preparationTime && (
-                  <div className="flex items-center gap-1">
-                    <FaClock className="text-orange-500 w-4 h-4 sm:w-5 sm:h-5" />
-                    <span>{food.preparationTime}</span>
-                  </div>
-                )}
-                {food.calories && (
-                  <div className="flex items-center gap-1">
-                    <FaFire className="text-red-500 w-4 h-4 sm:w-5 sm:h-5" />
-                    <span>{food.calories}</span>
-                  </div>
-                )}
-              </div>
-              {/* Star Rating Input (only for logged-in users) */}
-              {user ? (
-                <div className="mt-2 flex items-center gap-1">
-                  {[1,2,3,4,5].map((star) => (
-                    <button
-                      key={star}
-                      type="button"
-                      className="focus:outline-none"
-                      disabled={submittingRating}
-                      onClick={() => handleRate(star)}
-                    >
-                      <FaStar
-                        className={
-                          (userRating || 0) >= star
-                            ? 'text-yellow-400 text-2xl'
-                            : 'text-gray-300 text-2xl'
-                        }
-                      />
-                    </button>
-                  ))}
-                  {submittingRating && <span className="ml-2 text-sm text-gray-500">Submitting...</span>}
-                  {ratingError && <span className="ml-2 text-sm text-red-500">{ratingError}</span>}
-                  {userRating > 0 && !submittingRating && <span className="ml-2 text-sm text-green-600">Thanks for rating!</span>}
-                </div>
-              ) : (
-                <div className="mt-2 text-sm text-gray-500">Login to rate this food.</div>
-              )}
+          {/* User Rating */}
+          {user && (
+            <div className="mt-4 flex items-center gap-1">
+              {[1, 2, 3, 4, 5].map((star) => <button key={star} type="button" disabled={submittingRating} onClick={() => handleRate(star)}><FaStar className={`transition-colors ${(userRating || 0) >= star ? 'text-yellow-400' : 'text-gray-300 hover:text-yellow-300'} text-2xl`}/></button>)}
             </div>
+          )}
+          
+          <div className="my-6 border-t border-gray-200" />
 
-            {/* Description */}
-            {food.description && <p className="text-gray-600">{food.description}</p>}
-
-            {/* Ingredients */}
-            {food.ingredients && food.ingredients.length > 0 && (
-              <div>
-                <h3 className="text-lg font-semibold text-gray-800 mb-2">Ingredients</h3>
-                <div className="flex flex-wrap gap-2">
-                  {food.ingredients.map((ingredient, index) => (
-                    <span
-                      key={index}
-                      className="bg-orange-100 text-orange-800 px-3 py-1 rounded-full text-sm"
-                    >
-                      {ingredient}
-                    </span>
-                  ))}
-                </div>
+          {/* --- The "Buy Box" --- */}
+          <div>
+            <div className="mb-4 flex items-center justify-between">
+              <p className="text-3xl font-bold text-orange-600">₹{food.price}</p>
+              <div className="flex items-center gap-3 rounded-full bg-orange-50 p-1">
+                <button onClick={() => handleQuantityChange(-1)} className="flex h-8 w-8 items-center justify-center rounded-full bg-white text-orange-600 shadow transition hover:bg-orange-100"><FaMinus /></button>
+                <span className="w-8 text-center text-lg font-bold text-gray-900">{quantity}</span>
+                <button onClick={() => handleQuantityChange(1)} className="flex h-8 w-8 items-center justify-center rounded-full bg-white text-orange-600 shadow transition hover:bg-orange-100"><FaPlus /></button>
               </div>
-            )}
-
-            {/* Allergens */}
-            {food.allergens && food.allergens.length > 0 && (
-              <div>
-                <h3 className="text-lg font-semibold text-gray-800 mb-2">Allergens</h3>
-                <div className="flex flex-wrap gap-2">
-                  {food.allergens.map((allergen, index) => (
-                    <span
-                      key={index}
-                      className="bg-red-100 text-red-800 px-3 py-1 rounded-full text-sm"
-                    >
-                      {allergen}
-                    </span>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            <div className="border-t pt-6">
-              <div className="flex justify-between items-center mb-6">
-                <div className="text-2xl font-bold text-orange-600">₹{food.price}</div>
-                <div className="flex items-center gap-4">
-                  <div className="flex items-center gap-2">
-                    <button
-                      onClick={() => handleQuantityChange('decrease')}
-                      className="p-2 rounded-full bg-orange-100 text-orange-600 hover:bg-orange-200"
-                      disabled={!food.isAvailable}
-                    >
-                      <FaMinus />
-                    </button>
-                    <span className="w-8 text-center font-semibold text-black">{quantity}</span>
-                    <button
-                      onClick={() => handleQuantityChange('increase')}
-                      className="p-2 rounded-full bg-orange-100 text-orange-600 hover:bg-orange-200"
-                      disabled={!food.isAvailable}
-                    >
-                      <FaPlus />
-                    </button>
-                  </div>
-                </div>
-              </div>
-              <AnimatedButton
-                onClick={handleAddToCart}
-                className="w-full py-3 px-6 flex items-center justify-center gap-2"
-                disabled={!food.isAvailable}
-                variant={food.isAvailable ? 'primary' : 'secondary'}
-                size="md"
-              >
-                <FaShoppingCart />
-                {food.isAvailable 
-                  ? `Add to Cart - ₹${food.price * quantity}`
-                  : 'Currently Unavailable'
-                }
-              </AnimatedButton>
-              {cartMsg && <div className="mt-2 text-green-600 text-center">{cartMsg}</div>}
             </div>
+            <motion.button onClick={handleAddToCart} disabled={!food.isAvailable || !!cartMsg} whileTap={{ scale: 0.95 }}
+              className={`w-full rounded-lg py-3 text-base font-bold text-white shadow-lg transition-colors ${!food.isAvailable ? 'bg-gray-400 cursor-not-allowed' : 'bg-orange-600 hover:bg-orange-700'}`}>
+              {cartMsg || (food.isAvailable ? `Add to Cart - ₹${(food.price * quantity).toFixed(2)}` : 'Unavailable')}
+            </motion.button>
+          </div>
+          
+          <div className="my-6 border-t border-gray-200" />
+          
+          {/* --- Accordion for extra details --- */}
+          <div className="space-y-2">
+            {food.description && <AccordionItem title="Description" icon={<FaBookOpen className="text-orange-500"/>} isOpen={openSection === 'description'} onToggle={() => handleToggleAccordion('description')}><p>{food.description}</p></AccordionItem>}
+            {food.ingredients?.length > 0 && <AccordionItem title="Ingredients" icon={<FaUtensils className="text-green-500"/>} isOpen={openSection === 'ingredients'} onToggle={() => handleToggleAccordion('ingredients')}>
+              <div className="flex flex-wrap gap-2">{food.ingredients.map((item, i) => <span key={i} className="rounded-md bg-gray-100 px-2 py-1 text-sm">{item}</span>)}</div>
+            </AccordionItem>}
+            {food.allergens?.length > 0 && <AccordionItem title="Allergens" icon={<FaPepperHot className="text-red-500"/>} isOpen={openSection === 'allergens'} onToggle={() => handleToggleAccordion('allergens')}>
+              <div className="flex flex-wrap gap-2">{food.allergens.map((item, i) => <span key={i} className="rounded-md bg-gray-100 px-2 py-1 text-sm">{item}</span>)}</div>
+            </AccordionItem>}
           </div>
         </div>
       </div>
@@ -298,4 +174,4 @@ const FoodDetails = () => {
   );
 };
 
-export default FoodDetails; 
+export default FoodDetails;

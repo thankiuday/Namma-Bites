@@ -140,46 +140,54 @@ const Orders = () => {
         Back
       </button>
       <h1 className="text-2xl sm:text-3xl font-bold text-gray-800 mb-6 sm:mb-8">Your Orders</h1>
-      {/* Filter UI */}
-      <div className="flex flex-col sm:flex-row sm:justify-end gap-3 sm:gap-6 mb-6 bg-orange-100 p-4 rounded-lg shadow flex-row-reverse sm:flex-row">
-        <div>
-          <label className="block text-xs font-semibold text-orange-900 mb-1">Sort By</label>
-          <select
-            className="border border-orange-300 rounded px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400 text-orange-900 bg-white"
-            value={sortBy}
-            onChange={e => setSortBy(e.target.value)}
-          >
-            <option value="newest">Newest</option>
-            <option value="oldest">Oldest</option>
-            <option value="priceHigh">Price: High to Low</option>
-            <option value="priceLow">Price: Low to High</option>
-          </select>
-        </div>
-        <div>
-          <label className="block text-xs font-semibold text-orange-900 mb-1">Order State</label>
-          <select
-            className="border border-orange-300 rounded px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400 text-orange-900 bg-white"
-            value={stateFilter}
-            onChange={e => setStateFilter(e.target.value)}
-          >
-            <option value="">All</option>
-            {uniqueStates.map(state => (
-              <option key={state} value={state}>
-                {getStatusText(state) === 'Ready for Pickup' ? 'Ready for Pickup' : getStatusText(state)}
-              </option>
-            ))}
-          </select>
-        </div>
-        {(sortBy !== 'newest' || stateFilter) && (
-          <button
-            className="self-end sm:self-center mt-2 sm:mt-0 bg-orange-500 hover:bg-orange-600 text-white text-xs font-semibold px-3 py-1 rounded shadow"
-            onClick={() => { setSortBy('newest'); setStateFilter(''); }}
-          >
-            Clear Filters
-          </button>
-        )}
-      </div>
-      {/* End Filter UI */}
+     {/* Filter UI */}
+<div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 mb-6 bg-white p-4 rounded-lg shadow-sm border">
+  {/* Sort By */}
+  <div className="flex-1">
+    <label className="block text-xs font-semibold text-orange-900 mb-1">Sort By</label>
+    <select
+      className="w-full border border-orange-300 rounded px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400 text-orange-900 bg-white"
+      value={sortBy}
+      onChange={e => setSortBy(e.target.value)}
+    >
+      <option value="newest">Newest</option>
+      <option value="oldest">Oldest</option>
+      <option value="priceHigh">Price: High to Low</option>
+      <option value="priceLow">Price: Low to High</option>
+    </select>
+  </div>
+
+  {/* Order State */}
+  <div className="flex-1">
+    <label className="block text-xs font-semibold text-orange-900 mb-1">Order State</label>
+    <select
+      className="w-full border border-orange-300 rounded px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400 text-orange-900 bg-white"
+      value={stateFilter}
+      onChange={e => setStateFilter(e.target.value)}
+    >
+      <option value="">All</option>
+      {uniqueStates.map(state => (
+        <option key={state} value={state}>
+          {getStatusText(state) === 'Ready for Pickup' ? 'Ready for Pickup' : getStatusText(state)}
+        </option>
+      ))}
+    </select>
+  </div>
+
+  {/* Clear Filters Button */}
+  {(sortBy !== 'newest' || stateFilter) && (
+    <div className="sm:ml-4">
+      <button
+        className="w-full sm:w-auto bg-orange-500 hover:bg-orange-600 text-white text-xs font-semibold px-4 py-2 rounded shadow"
+        onClick={() => { setSortBy('newest'); setStateFilter(''); }}
+      >
+        Clear Filters
+      </button>
+    </div>
+  )}
+</div>
+{/* End Filter UI */}
+
       {loading ? (
         <div className="space-y-4 sm:space-y-6">
           {[...Array(3)].map((_, i) => (

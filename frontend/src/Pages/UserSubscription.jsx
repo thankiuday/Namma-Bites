@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { getAllSubscriptionPlans, getSubscriptionPlanById, getUserSubscriptions, getUserSubscriptionQr } from '../api/userApi';
 import { 
+  FaArrowLeft ,
   FaStar, 
   FaMapMarkerAlt, 
   FaPhone, 
@@ -206,6 +207,13 @@ const UserSubscription = () => {
 
   return (
     <div className="max-w-6xl mx-auto p-6 bg-gradient-to-br from-orange-50 to-white min-h-screen">
+      <button
+        onClick={() => navigate(-1)}
+        className="flex items-center gap-2 mb-4 px-4 py-2 bg-white text-orange-700 rounded-lg hover:bg-orange-50 transition-colors duration-200 shadow-sm border border-orange-200"
+      >
+        <FaArrowLeft className="w-4 h-4" />
+        Back
+      </button>
       <div className="text-center mb-8">
         <div className="flex justify-center mb-4">
           <FaUtensils className="text-5xl text-orange-600" />

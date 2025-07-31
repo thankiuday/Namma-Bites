@@ -170,44 +170,44 @@ const VendorOrders = () => {
           <FaArrowLeft /> Back
         </button>
         <h1 className="text-2xl sm:text-3xl font-bold text-orange-700 mb-6 sm:mb-8">Vendor Orders</h1>
-        {/* Filter & Sort UI */}
-        <div className="flex flex-col sm:flex-row gap-3 sm:gap-6 mb-6 bg-orange-100 p-4 rounded-lg shadow">
-          <div>
-            <label className="block text-xs font-semibold text-orange-900 mb-1">Sort By</label>
-            <select
-              className="border border-orange-300 rounded px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400 text-orange-900 bg-white"
-              value={sortBy}
-              onChange={e => setSortBy(e.target.value)}
-            >
-              <option value="newest">Newest</option>
-              <option value="oldest">Oldest</option>
-              <option value="priceHigh">Price: High to Low</option>
-              <option value="priceLow">Price: Low to High</option>
-            </select>
-          </div>
-          <div>
-            <label className="block text-xs font-semibold text-orange-900 mb-1">Order State</label>
-            <select
-              className="border border-orange-300 rounded px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400 text-orange-900 bg-white"
-              value={stateFilter}
-              onChange={e => setStateFilter(e.target.value)}
-            >
-              <option value="">All</option>
-              {uniqueStates.map(state => (
-                <option key={state} value={state}>{getStatusText(state)}</option>
-              ))}
-            </select>
-          </div>
-          {(sortBy !== 'newest' || stateFilter) && (
-            <button
-              className="self-end sm:self-center mt-2 sm:mt-0 bg-orange-500 hover:bg-orange-600 text-white text-xs font-semibold px-3 py-1 rounded shadow"
-              onClick={() => { setSortBy('newest'); setStateFilter(''); }}
-            >
-              Clear Filters
-            </button>
-          )}
-        </div>
-        {/* End Filter & Sort UI */}
+       {/* Filter & Sort UI */}
+<div className="flex flex-col sm:flex-row gap-2 sm:gap-4 mb-4 sm:mb-6 bg-orange-100 p-3 sm:p-4 rounded-lg shadow">
+  <div className="w-full sm:w-auto">
+    <label className="block text-xs sm:text-sm font-semibold text-orange-900 mb-1">Sort By</label>
+    <select
+      className="w-full border border-orange-300 rounded px-2 py-1.5 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-orange-400 text-orange-900 bg-white"
+      value={sortBy}
+      onChange={e => setSortBy(e.target.value)}
+    >
+      <option value="newest">Newest</option>
+      <option value="oldest">Oldest</option>
+      <option value="priceHigh">Price: High to Low</option>
+      <option value="priceLow">Price: Low to High</option>
+    </select>
+  </div>
+  <div className="w-full sm:w-auto">
+    <label className="block text-xs sm:text-sm font-semibold text-orange-900 mb-1">Order State</label>
+    <select
+      className="w-full border border-orange-300 rounded px-2 py-1.5 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-orange-400 text-orange-900 bg-white"
+      value={stateFilter}
+      onChange={e => setStateFilter(e.target.value)}
+    >
+      <option value="">All</option>
+      {uniqueStates.map(state => (
+        <option key={state} value={state}>{getStatusText(state)}</option>
+      ))}
+    </select>
+  </div>
+  {(sortBy !== 'newest' || stateFilter) && (
+    <button
+      className="w-full sm:w-auto self-end sm:self-center mt-2 sm:mt-0 bg-orange-500 hover:bg-orange-600 text-white text-xs sm:text-sm font-semibold px-3 py-1.5 rounded shadow"
+      onClick={() => { setSortBy('newest'); setStateFilter(''); }}
+    >
+      Clear Filters
+    </button>
+  )}
+</div>
+{/* End Filter & Sort UI */}
         {loading ? (
           <div className="text-center py-8 sm:py-12">
             <p className="text-orange-600 text-base sm:text-lg">Loading orders...</p>

@@ -119,10 +119,11 @@ const VendorProfile = () => {
               Vendor Profile
             </h1>
           </div>
+          {/* Edit Profile Button for sm and above */}
           {!editMode && (
             <button 
               onClick={() => setEditMode(true)} 
-              className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-lg hover:from-orange-600 hover:to-orange-700 transition-all duration-200 font-semibold shadow-lg"
+              className="hidden sm:flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-lg hover:from-orange-600 hover:to-orange-700 transition-all duration-200 font-semibold shadow-lg"
             >
               <FaEdit className="w-4 h-4" />
               Edit Profile
@@ -213,6 +214,18 @@ const VendorProfile = () => {
                     alt="Payment Scanner" 
                     className="w-40 h-40 object-cover rounded-lg border-2 border-orange-200 shadow-sm"
                   />
+                </div>
+              )}
+              {/* Edit Profile Button for mobile */}
+              {!editMode && (
+                <div className="sm:hidden md:col-span-2 mt-4">
+                  <button 
+                    onClick={() => setEditMode(true)} 
+                    className="w-full flex items-center justify-center gap-2 px-6 py-3 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-lg hover:from-orange-600 hover:to-orange-700 transition-all duration-200 font-semibold shadow-lg"
+                  >
+                    <FaEdit className="w-4 h-4" />
+                    Edit Profile
+                  </button>
                 </div>
               )}
             </div>
@@ -424,7 +437,7 @@ const VendorProfile = () => {
             <div className="flex justify-end pt-4 border-t border-gray-200">
               <button 
                 type="submit" 
-                className="px-6 py-3 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-lg hover:from-orange-600 hover:to-orange-700 transition-all duration-200 font-semibold shadow-lg flex items-center gap-2"
+                className="w-full sm:w-auto px-6 py-3 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-lg hover:from-orange-600 hover:to-orange-700 transition-all duration-200 font-semibold shadow-lg flex items-center gap-2"
               >
                 <FaLock className="w-4 h-4" />
                 Change Password
@@ -446,4 +459,4 @@ const VendorProfile = () => {
   );
 };
 
-export default VendorProfile; 
+export default VendorProfile;
