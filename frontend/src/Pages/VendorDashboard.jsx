@@ -321,7 +321,7 @@ const VendorDashboard = () => {
                 <button
                   onClick={handleStatusButtonClick}
                   disabled={statusLoading}
-                  className={`px-6 py-2 rounded-full font-bold text-white transition-colors duration-200 shadow ${vendor.status === 'Open' ? 'bg-green-500 hover:bg-green-600' : 'bg-gray-500 hover:bg-gray-600'}`}
+                  className={`px-6 py-2 rounded-full font-bold text-black transition-colors duration-200 shadow ${vendor.status === 'Open' ? 'bg-green-500 hover:bg-green-600' : 'bg-gray-500 hover:bg-gray-600'}`}
                 >
                   {statusLoading ? 'Updating...' : vendor.status === 'Open' ? 'Open' : 'Closed'}
                 </button>
@@ -331,7 +331,7 @@ const VendorDashboard = () => {
             )}
             {showConfirm && (
               <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-40 z-50">
-                <div className="bg-white p-6 rounded-lg shadow-lg max-w-sm w-full">
+                <div className="bg-white p-6 rounded-lg shadow-lg max-w-sm w-full text-black font-semibold">
                   <h2 className="text-lg font-semibold mb-4">Confirm Action</h2>
                   <p className="mb-6">
                     {pendingStatus === 'Closed'

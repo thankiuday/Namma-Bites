@@ -30,6 +30,7 @@ app.use(cors({
   secure: false // for localhost development
 }));
 app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 
 // Set CORP header for uploads

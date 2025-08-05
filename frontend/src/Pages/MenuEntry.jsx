@@ -328,7 +328,8 @@ const MenuEntry = () => {
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
                   className="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 text-sm text-black"
-                  placeholder="Short description of the dish (optional)"
+                  placeholder="Short description of the dish"
+                  required
                   rows="4"
                 />
               </div>
@@ -341,6 +342,7 @@ const MenuEntry = () => {
                   onChange={(e) => setIngredients(e.target.value)}
                   className="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 text-sm text-black"
                   placeholder="e.g. Paneer, Tomato, Butter, Spices"
+                  required
                 />
               </div>
               <div>
@@ -363,6 +365,7 @@ const MenuEntry = () => {
                   onChange={(e) => setPreparationTime(e.target.value)}
                   className="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 text-sm text-black"
                   placeholder="e.g. 20 mins"
+                  required
                 />
               </div>
               <div>

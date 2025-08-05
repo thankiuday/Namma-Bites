@@ -205,16 +205,16 @@ const VendorProfile = () => {
               </div>
               {vendor.scanner && (
                 <div className="md:col-span-2 bg-orange-50 rounded-xl p-4 border border-orange-200">
-                  <div className="flex items-center gap-3 mb-3">
-                    <FaQrcode className="w-5 h-5 text-orange-600" />
-                    <label className="text-sm font-semibold text-gray-700">Payment Scanner QR Code</label>
-                  </div>
-                  <img 
-                    src={`http://localhost:5000${vendor.scanner}`} 
-                    alt="Payment Scanner" 
-                    className="w-40 h-40 object-cover rounded-lg border-2 border-orange-200 shadow-sm"
-                  />
+                <div className="flex items-center gap-3 mb-3">
+                  <FaQrcode className="w-5 h-5 text-orange-600" />
+                  <label className="text-sm font-semibold text-gray-700">Payment Scanner QR Code</label>
                 </div>
+                <img 
+                  src={`http://localhost:5000${vendor.scanner}`} 
+                  alt="Payment Scanner" 
+                  className="block mx-auto md:mx-0 w-40 h-40 object-cover rounded-lg border-2 border-orange-200 shadow-sm"
+                />
+              </div>
               )}
               {/* Edit Profile Button for mobile */}
               {!editMode && (

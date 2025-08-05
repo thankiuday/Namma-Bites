@@ -223,7 +223,7 @@ const Subscription = () => {
             </div>
             <div className="flex-1">
               <label className="block font-semibold mb-2 text-gray-700">Price (₹)</label>
-              <input type="number" name="price" value={form.price} onChange={handleChange} className="border border-orange-300 rounded-lg px-3 py-2 text-gray-900 bg-white focus:border-orange-500 focus:ring-2 focus:ring-orange-200 w-full" required min="1" />
+              <input type="number" name="price" placeholder="Enter price" value={form.price} onChange={handleChange} className="border border-orange-300 rounded-lg px-3 py-2 text-gray-900 bg-white focus:border-orange-500 focus:ring-2 focus:ring-orange-200 w-full" required min="1" />
             </div>
             <div className="flex-1">
               <label className="block font-semibold mb-2 text-gray-700">Plan Type</label>

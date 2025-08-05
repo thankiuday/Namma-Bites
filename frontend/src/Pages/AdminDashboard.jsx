@@ -189,7 +189,7 @@ const AdminDashboard = () => {
                   </div>
                   <div className="p-3 bg-orange-100 rounded-lg">
                     <FaCheckCircle className="w-6 h-6 text-orange-600" />
-                  </div>
+                  </div>  
                 </div>
               </div>
 
