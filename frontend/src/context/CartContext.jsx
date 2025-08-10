@@ -17,7 +17,8 @@ export const CartProvider = ({ children }) => {
     try {
       setLoading(true);
       const res = await apiGetCart();
-      setCart(flattenCart(res.data.cart));
+      const flattenedCart = flattenCart(res.data.cart);
+      setCart(flattenedCart);
     } catch (err) {
       console.error('Error fetching cart:', err);
       setCart([]);

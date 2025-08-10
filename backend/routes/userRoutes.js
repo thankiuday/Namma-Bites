@@ -19,35 +19,12 @@ import {
   getUserSubscriptions,
   deleteUserSubscription,
   getSubscriptionQrData,
-  prebookMeal
+  prebookMeal,
+  cancelUserSubscription
 } from '../controllers/user/userController.js';
 import { createOrder, uploadOrderPaymentProof, getUserOrders, getOrderQr, getUserOrderById } from '../controllers/user/orderController.js';
 import { authenticateAdmin, authenticateUser } from '../middleware/user/authMiddleware.js';
-import multer from 'multer';
-import fs from 'fs';
-import { fileURLToPath } from 'url';
-import path from 'path';
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-
-// Ensure uploads/payment-proofs directory exists at project root
-const paymentProofDir = path.join(__dirname, '../../uploads/payment-proofs');
-if (!fs.existsSync(paymentProofDir)) {
-  fs.mkdirSync(paymentProofDir, { recursive: true });
-}
-
-const paymentProofStorage = multer.diskStorage({
-  destination: function (req, file, cb) {
-    const dest = paymentProofDir;
-    cb(null, dest);
-  },
-  filename: function (req, file, cb) {
-    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-    cb(null, uniqueSuffix + path.extname(file.originalname));
-  }
-});
-const upload = multer({ storage: paymentProofStorage });
+import { uploadPaymentProof as uploadPaymentProofMulter } from '../config/cloudinary.js';
 
 const router = express.Router();
 
@@ -64,6 +41,7 @@ router.get('/me', authenticateUser, getMe);
 router.put('/profile', authenticateUser, updateProfile);
 router.get('/subscriptions', authenticateUser, getUserSubscriptions);
 router.delete('/subscriptions/:subscriptionId', authenticateUser, deleteUserSubscription);
+router.post('/subscriptions/:subscriptionId/cancel', authenticateUser, cancelUserSubscription);
 router.post('/subscriptions/:subscriptionId/prebook', authenticateUser, prebookMeal);
 
 // --- Subscription plan routes (for users to browse) ---
@@ -73,12 +51,12 @@ router.get('/subscription-plans/:id', getSubscriptionPlanById);
 
 // --- Subscription routes ---
 router.post('/subscriptions', authenticateUser, createUserSubscription);
-router.post('/subscriptions/:subscriptionId/payment-proof', authenticateUser, upload.single('paymentProof'), uploadPaymentProof);
+router.post('/subscriptions/:subscriptionId/payment-proof', authenticateUser, uploadPaymentProofMulter.single('paymentProof'), uploadPaymentProof);
 router.get('/subscriptions/:subscriptionId/qr', authenticateUser, getSubscriptionQrData);
 
 // --- Order routes ---
 router.post('/orders', authenticateUser, createOrder);
-router.post('/orders/:orderId/payment-proof', authenticateUser, upload.single('paymentProof'), uploadOrderPaymentProof);
+router.post('/orders/:orderId/payment-proof', authenticateUser, uploadPaymentProofMulter.single('paymentProof'), uploadOrderPaymentProof);
 router.get('/orders', authenticateUser, getUserOrders);
 router.get('/orders/:orderId', authenticateUser, getUserOrderById);
 router.get('/orders/:orderId/qr', authenticateUser, getOrderQr);

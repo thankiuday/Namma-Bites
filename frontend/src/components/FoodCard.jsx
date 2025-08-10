@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { FaCheckCircle, FaTimesCircle, FaStore, FaLeaf, FaDrumstickBite } from 'react-icons/fa';
 import AnimatedCard from './AnimatedCard';
 import { motion } from 'framer-motion';
+import { getMenuItemImageUrl } from '../utils/imageUtils';
 
 const FoodCard = ({ food }) => {
   const navigate = useNavigate();
@@ -41,7 +42,7 @@ const FoodCard = ({ food }) => {
       {/* Food Image */}
       <div className="relative h-44 w-full overflow-hidden">
         <motion.img
-          src={food.image ? `http://localhost:5000${food.image}` : '/default-food.png'}
+          src={getMenuItemImageUrl(food.image)}
           alt={food.name}
           className="h-full w-full object-cover duration-500 ease-in-out group-hover:scale-110"
           transition={{ type: 'spring', stiffness: 200, damping: 18 }}

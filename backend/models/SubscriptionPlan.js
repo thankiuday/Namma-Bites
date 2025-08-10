@@ -21,6 +21,12 @@ const subscriptionPlanSchema = new mongoose.Schema({
     Sunday: { type: mealSchema, required: true },
   },
   planType: { type: String, enum: ['veg', 'non-veg'], required: true },
+  mealTimings: {
+    breakfast: { type: String, default: '8:00–10:00 AM' },
+    lunch: { type: String, default: '11:00 AM–3:00 PM' },
+    snacks: { type: String, default: '4:00–6:00 PM' },
+    dinner: { type: String, default: '7:00–10:00 PM' },
+  },
 }, { timestamps: true });
 
 const SubscriptionPlan = mongoose.model('SubscriptionPlan', subscriptionPlanSchema);

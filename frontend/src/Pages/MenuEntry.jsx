@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import vendorApi from '../api/vendorApi';
 import VendorNavbar from '../components/vendor/VendorNavbar';
 import { useVendorAuth } from '../context/VendorAuthContext';
+import { getMenuItemImageUrl } from '../utils/imageUtils';
 import apiClient from '../api/apiClient';
 
 const MenuEntry = () => {
@@ -93,11 +94,16 @@ const MenuEntry = () => {
     setSuccess('');
   };
 
+  const [uploadProgress, setUploadProgress] = useState(0);
+  const [uploadStatus, setUploadStatus] = useState('');
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
     setError('');
     setSuccess('');
+    setUploadProgress(0);
+    setUploadStatus('Preparing upload...');
 
     if (!itemName || !itemPrice || !itemImage) {
       setError('Please fill out all fields and select an image.');
@@ -118,11 +124,25 @@ const MenuEntry = () => {
     formData.append('image', itemImage);
 
     try {
+      setUploadStatus('Uploading image to cloud storage...');
+      setUploadProgress(25);
+
       const res = await vendorApi.post('/menu-items', formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
         },
+        onUploadProgress: (progressEvent) => {
+          const progress = Math.round((progressEvent.loaded * 100) / progressEvent.total);
+          setUploadProgress(Math.min(progress, 90)); // Cap at 90% until complete
+          if (progress > 50) {
+            setUploadStatus('Processing image...');
+          }
+        },
+        timeout: 120000, // 2 minute timeout
       });
+
+      setUploadProgress(100);
+      setUploadStatus('Complete!');
 
       if (res.data.success) {
         setSuccess('Menu item added successfully!');
@@ -132,9 +152,19 @@ const MenuEntry = () => {
         setError(res.data.message || 'Failed to add menu item.');
       }
     } catch (err) {
-      setError(err.response?.data?.message || 'An error occurred. Please try again.');
+      setUploadProgress(0);
+      setUploadStatus('');
+      if (err.code === 'ECONNABORTED') {
+        setError('Upload timeout. Please try with a smaller image or check your internet connection.');
+      } else {
+        setError(err.response?.data?.message || 'An error occurred. Please try again.');
+      }
     } finally {
       setLoading(false);
+      setTimeout(() => {
+        setUploadProgress(0);
+        setUploadStatus('');
+      }, 3000);
     }
   };
 
@@ -282,6 +312,28 @@ const MenuEntry = () => {
           {/* Form Section */}
           <div className="bg-white p-4 sm:p-6 md:p-8 rounded-lg shadow-md mb-8 sm:mb-12">
             <h1 className="text-2xl sm:text-3xl font-bold text-gray-800 mb-4 sm:mb-6">Add New Menu Item</h1>
+            
+            {/* Upload Tips */}
+            <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-lg p-4 mb-6">
+              <div className="flex items-start">
+                <div className="flex-shrink-0">
+                  <svg className="h-5 w-5 text-blue-400 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+                  </svg>
+                </div>
+                <div className="ml-3">
+                  <h3 className="text-sm font-medium text-blue-900">Quick Upload Tips</h3>
+                  <div className="mt-2 text-sm text-blue-700">
+                    <ul className="list-disc list-inside space-y-1">
+                      <li>Use images under 2MB for faster uploads</li>
+                      <li>JPG format uploads faster than PNG</li>
+                      <li>Square or landscape images work best (600x450px ideal)</li>
+                      <li>Good lighting and clear focus improve customer appeal</li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+            </div>
 
             {error && (
               <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4" role="alert">
@@ -433,20 +485,50 @@ const MenuEntry = () => {
                 />
               </div>
 
+              {/* Upload Progress Indicator */}
+              {loading && (
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-sm font-medium text-blue-900">{uploadStatus}</span>
+                    <span className="text-sm text-blue-700">{uploadProgress}%</span>
+                  </div>
+                  <div className="w-full bg-blue-200 rounded-full h-2">
+                    <div 
+                      className="bg-blue-600 h-2 rounded-full transition-all duration-300 ease-out"
+                      style={{ width: `${uploadProgress}%` }}
+                    ></div>
+                  </div>
+                  <p className="text-xs text-blue-600 mt-2">
+                    {uploadProgress < 50 ? 'Uploading image to cloud storage...' : 
+                     uploadProgress < 90 ? 'Processing and optimizing image...' : 
+                     'Finalizing...'}
+                  </p>
+                </div>
+              )}
+
               <div className="flex flex-col sm:flex-row sm:justify-end space-y-3 sm:space-y-0 sm:space-x-4">
                 <button
                   type="button"
                   onClick={handleCancel}
-                  className="w-full sm:w-auto px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                  disabled={loading}
+                  className="w-full sm:w-auto px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={loading}
-                  className="w-full sm:w-auto px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:bg-indigo-400"
+                  className="w-full sm:w-auto px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:bg-indigo-400 disabled:cursor-not-allowed"
                 >
-                  {loading ? 'Adding...' : 'Add Item'}
+                  {loading ? (
+                    <span className="flex items-center justify-center">
+                      <svg className="animate-spin -ml-1 mr-3 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                      </svg>
+                      Adding Item...
+                    </span>
+                  ) : 'Add Item'}
                 </button>
               </div>
             </form>
@@ -514,7 +596,7 @@ const MenuEntry = () => {
                   >
                     <div className="relative">
                       <img
-                        src={`http://localhost:5000${item.image}`}
+                        src={getMenuItemImageUrl(item.image)}
                         alt={item.name}
                         className="w-full h-36 sm:h-44 object-cover object-center border-b-2 border-indigo-200"
                       />

@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import apiClient from '../api/apiClient';
 import FoodCard from '../components/FoodCard';
+import { getVendorImageUrl } from '../utils/imageUtils';
 
 const VendorDetails = () => {
   const { id } = useParams();
@@ -50,7 +51,7 @@ const VendorDetails = () => {
       </div>
       <div className="bg-white rounded-lg shadow-md p-6 mb-8 flex flex-col items-center">
         <img
-          src={`http://localhost:5000${vendor.image}`}
+          src={getVendorImageUrl(vendor.image)}
           alt={vendor.name}
           className="w-32 h-32 rounded-full object-cover border-4 border-orange-600 mb-4"
         />

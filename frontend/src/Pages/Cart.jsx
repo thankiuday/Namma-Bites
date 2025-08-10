@@ -3,6 +3,8 @@ import { FaTrash, FaMinus, FaPlus, FaArrowLeft } from 'react-icons/fa';
 import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
+import { getMenuItemImageUrl } from '../utils/imageUtils';
+import LazyImage from '../components/LazyImage';
 import Joyride from 'react-joyride';
 import { motion } from 'framer-motion';
 
@@ -175,10 +177,11 @@ const Cart = () => {
           <div className="lg:col-span-2 bg-white rounded-lg shadow-lg p-4 sm:p-6">
             {cart.map((item) => (
               <div key={item._id} className="flex flex-row items-center gap-3 sm:gap-4 py-4 border-b last:border-b-0 flex-wrap">
-                <img
-                  src={item.image ? (item.image.startsWith('http') ? item.image : `http://localhost:5000${item.image}`) : '/default-food.png'}
+                <LazyImage
+                  src={getMenuItemImageUrl(item.image)}
                   alt={item.name}
-                  className="w-16 h-16 sm:w-20 sm:h-20 object-cover rounded-md"
+                  className="w-16 h-16 sm:w-20 sm:h-20"
+                  imgClassName="w-16 h-16 sm:w-20 sm:h-20 object-cover rounded-md"
                 />
                 <div className="flex-grow min-w-0">
                   <h3 className="text-base sm:text-lg font-semibold text-gray-800 truncate">{item.name}</h3>

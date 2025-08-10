@@ -2,6 +2,7 @@ import User from '../../models/User.js';
 import SubscriptionPlan from '../../models/SubscriptionPlan.js';
 import UserSubscription from '../../models/UserSubscription.js';
 import jwt from 'jsonwebtoken';
+import { uploadPaymentProofToCloudinary } from '../../config/cloudinary.js';
 
 // Get all users
 export const getAllUsers = async (req, res) => {
@@ -252,8 +253,15 @@ export const addOrUpdateCartItem = async (req, res) => {
     }
     await user.save();
     
-    // Populate cart items before sending response
-    const populatedUser = await User.findById(req.user._id).populate('cart.item');
+    // Populate cart items with vendor data before sending response
+    const populatedUser = await User.findById(req.user._id)
+      .populate({
+        path: 'cart.item',
+        populate: {
+          path: 'vendor',
+          select: 'name scanner image email',
+        }
+      });
     res.json({ success: true, cart: populatedUser.cart });
   } catch (error) {
     res.status(500).json({ success: false, message: 'Error updating cart', error: error.message });
@@ -275,8 +283,15 @@ export const updateCartItemQuantity = async (req, res) => {
     item.quantity = quantity;
     await user.save();
     
-    // Populate cart items before sending response
-    const populatedUser = await User.findById(req.user._id).populate('cart.item');
+    // Populate cart items with vendor data before sending response
+    const populatedUser = await User.findById(req.user._id)
+      .populate({
+        path: 'cart.item',
+        populate: {
+          path: 'vendor',
+          select: 'name scanner image email',
+        }
+      });
     res.json({ success: true, cart: populatedUser.cart });
   } catch (error) {
     res.status(500).json({ success: false, message: 'Error updating cart item', error: error.message });
@@ -292,8 +307,15 @@ export const removeCartItem = async (req, res) => {
     user.cart = user.cart.filter(i => i.item.toString() !== itemId);
     await user.save();
     
-    // Populate cart items before sending response
-    const populatedUser = await User.findById(req.user._id).populate('cart.item');
+    // Populate cart items with vendor data before sending response
+    const populatedUser = await User.findById(req.user._id)
+      .populate({
+        path: 'cart.item',
+        populate: {
+          path: 'vendor',
+          select: 'name scanner image email',
+        }
+      });
     res.json({ success: true, cart: populatedUser.cart });
   } catch (error) {
     res.status(500).json({ success: false, message: 'Error removing cart item', error: error.message });
@@ -310,8 +332,15 @@ export const clearCart = async (req, res) => {
     user.cart = [];
     await user.save();
     
-    // Populate cart items before sending response
-    const populatedUser = await User.findById(req.user._id).populate('cart.item');
+    // Populate cart items with vendor data before sending response
+    const populatedUser = await User.findById(req.user._id)
+      .populate({
+        path: 'cart.item',
+        populate: {
+          path: 'vendor',
+          select: 'name scanner image email',
+        }
+      });
     res.json({ success: true, cart: populatedUser.cart });
   } catch (error) {
     console.error('Error clearing cart:', error);
@@ -355,7 +384,15 @@ export const uploadPaymentProof = async (req, res) => {
     if (!req.file) {
       return res.status(400).json({ success: false, message: 'No file uploaded' });
     }
-    subscription.paymentProof = `/uploads/payment-proofs/${req.file.filename}`;
+
+    // Upload payment proof to Cloudinary
+    const paymentProofUploadResult = await uploadPaymentProofToCloudinary(
+      req.file.buffer,
+      req.user._id,
+      subscriptionId
+    );
+
+    subscription.paymentProof = paymentProofUploadResult.secure_url;
     subscription.paymentStatus = 'pending';
     await subscription.save();
     res.json({ success: true, data: subscription });
@@ -516,7 +553,7 @@ export const prebookMeal = async (req, res) => {
     }
     const sub = await UserSubscription.findOne({ _id: subscriptionId, user: userId });
     if (!sub) return res.status(404).json({ success: false, message: 'Subscription not found' });
-    if (sub.paymentStatus !== 'approved' || sub.validated !== true) {
+    if (sub.paymentStatus !== 'approved') {
       return res.status(403).json({ success: false, message: 'Subscription not active' });
     }
     // Check if subscription is expired
@@ -534,6 +571,63 @@ export const prebookMeal = async (req, res) => {
     }
     await sub.save();
     res.json({ success: true, data: sub.prebookings });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// Cancel/unsubscribe from an active subscription
+export const cancelUserSubscription = async (req, res) => {
+  try {
+    const userId = req.user._id;
+    const { subscriptionId } = req.params;
+    const { cancellationReason } = req.body;
+
+    const sub = await UserSubscription.findOne({ _id: subscriptionId, user: userId });
+    if (!sub) {
+      return res.status(404).json({ success: false, message: 'Subscription not found' });
+    }
+
+    // Check if subscription can be cancelled
+    if (sub.paymentStatus !== 'approved') {
+      return res.status(400).json({ 
+        success: false, 
+        message: 'Only active approved subscriptions can be cancelled' 
+      });
+    }
+
+    if (sub.paymentStatus === 'cancelled') {
+      return res.status(400).json({ 
+        success: false, 
+        message: 'Subscription is already cancelled' 
+      });
+    }
+
+    // Check if subscription is already expired
+    const today = new Date();
+    const subEnd = new Date(sub.startDate);
+    subEnd.setDate(subEnd.getDate() + sub.duration);
+    if (today > subEnd) {
+      return res.status(400).json({ 
+        success: false, 
+        message: 'Cannot cancel an expired subscription' 
+      });
+    }
+
+    // Update subscription status to cancelled
+    sub.paymentStatus = 'cancelled';
+    sub.cancelledAt = new Date();
+    if (cancellationReason) {
+      sub.cancellationReason = cancellationReason;
+    }
+
+    await sub.save();
+
+    res.json({ 
+      success: true, 
+      message: 'Subscription cancelled successfully',
+      data: sub
+    });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }

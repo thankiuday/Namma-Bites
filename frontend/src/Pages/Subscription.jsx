@@ -23,7 +23,13 @@ const Subscription = () => {
     weekMeals: days.reduce((acc, day) => {
       acc[day] = { breakfast: '', lunch: '', dinner: '', snacks: '' };
       return acc;
-    }, {})
+    }, {}),
+    mealTimings: {
+      breakfast: '8:00–10:00 AM',
+      lunch: '11:00 AM–3:00 PM',
+      snacks: '4:00–6:00 PM',
+      dinner: '7:00–10:00 PM',
+    }
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -49,6 +55,10 @@ const Subscription = () => {
 
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
+  };
+  const handleTimingChange = (e) => {
+    const { name, value } = e.target;
+    setForm(f => ({ ...f, mealTimings: { ...f.mealTimings, [name]: value } }));
   };
 
   const handleMealChange = (day, meal, value) => {
@@ -84,7 +94,8 @@ const Subscription = () => {
         duration: Number(form.duration),
         price: Number(form.price),
         planType: form.planType,
-        weekMeals: form.weekMeals
+        weekMeals: form.weekMeals,
+        mealTimings: form.mealTimings
       };
       await createSubscriptionPlan(payload);
       setSuccess('Subscription plan created!');
@@ -95,7 +106,13 @@ const Subscription = () => {
         weekMeals: days.reduce((acc, day) => {
           acc[day] = { breakfast: '', lunch: '', dinner: '', snacks: '' };
           return acc;
-        }, {})
+        }, {}),
+        mealTimings: {
+          breakfast: '8:00–10:00 AM',
+          lunch: '11:00 AM–3:00 PM',
+          snacks: '4:00–6:00 PM',
+          dinner: '7:00–10:00 PM',
+        }
       });
       // Refresh plans
       getSubscriptionPlans().then(res => setPlans(res.data.data || []));
@@ -119,7 +136,13 @@ const Subscription = () => {
           acc[day][meal] = mealValue && mealValue._id ? mealValue._id : mealValue || '';
         });
         return acc;
-      }, {})
+      }, {}),
+      mealTimings: {
+        breakfast: plan.mealTimings?.breakfast || '8:00–10:00 AM',
+        lunch: plan.mealTimings?.lunch || '11:00 AM–3:00 PM',
+        snacks: plan.mealTimings?.snacks || '4:00–6:00 PM',
+        dinner: plan.mealTimings?.dinner || '7:00–10:00 PM',
+      }
     });
     setEditError('');
     setEditSuccess('');
@@ -127,6 +150,10 @@ const Subscription = () => {
 
   const handleEditChange = (e) => {
     setEditForm({ ...editForm, [e.target.name]: e.target.value });
+  };
+  const handleEditTimingChange = (e) => {
+    const { name, value } = e.target;
+    setEditForm(f => ({ ...f, mealTimings: { ...f.mealTimings, [name]: value } }));
   };
 
   const handleEditMealChange = (day, meal, value) => {
@@ -162,7 +189,8 @@ const Subscription = () => {
         duration: Number(editForm.duration),
         price: Number(editForm.price),
         planType: editForm.planType,
-        weekMeals: editForm.weekMeals
+        weekMeals: editForm.weekMeals,
+        mealTimings: editForm.mealTimings
       };
       await updateSubscriptionPlan(editingPlan, payload);
       setEditSuccess('Plan updated!');
@@ -230,6 +258,25 @@ const Subscription = () => {
               <select name="planType" value={form.planType} onChange={handleChange} className="border border-orange-300 rounded-lg px-3 py-2 text-gray-900 bg-white focus:border-orange-500 focus:ring-2 focus:ring-orange-200 w-full">
                 {planTypes.map(pt => <option key={pt.value} value={pt.value}>{pt.label}</option>)}
               </select>
+            </div>
+          </div>
+          {/* Meal Timings Inputs */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+            <div>
+              <label className="block font-semibold mb-1 text-gray-700">Breakfast Timing</label>
+              <input name="breakfast" value={form.mealTimings.breakfast} onChange={handleTimingChange} className="border border-orange-300 rounded-lg px-3 py-2 w-full text-black" placeholder="e.g., 8:00–10:00 AM" />
+            </div>
+            <div>
+              <label className="block font-semibold mb-1 text-gray-700">Lunch Timing</label>
+              <input name="lunch" value={form.mealTimings.lunch} onChange={handleTimingChange} className="border border-orange-300 rounded-lg px-3 py-2 w-full text-black" placeholder="e.g., 11:00 AM–3:00 PM" />
+            </div>
+            <div>
+              <label className="block font-semibold mb-1 text-gray-700">Snacks Timing</label>
+              <input name="snacks" value={form.mealTimings.snacks} onChange={handleTimingChange} className="border border-orange-300 rounded-lg px-3 py-2 w-full text-black" placeholder="e.g., 4:00–6:00 PM" />
+            </div>
+            <div>
+              <label className="block font-semibold mb-1 text-gray-700">Dinner Timing</label>
+              <input name="dinner" value={form.mealTimings.dinner} onChange={handleTimingChange} className="border border-orange-300 rounded-lg px-3 py-2 w-full text-black" placeholder="e.g., 7:00–10:00 PM" />
             </div>
           </div>
           <div className="overflow-x-auto rounded-xl border border-orange-100 bg-orange-50">
@@ -346,6 +393,25 @@ const Subscription = () => {
                 <select name="planType" value={editForm.planType} onChange={handleEditChange} className="border border-orange-300 rounded-lg px-3 py-2 text-gray-900 bg-white focus:border-orange-500 focus:ring-2 focus:ring-orange-200 w-full">
                   {planTypes.map(pt => <option key={pt.value} value={pt.value}>{pt.label}</option>)}
                 </select>
+              </div>
+            </div>
+            {/* Meal Timings Inputs (Edit) */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+              <div>
+                <label className="block font-semibold mb-1 text-gray-700">Breakfast Timing</label>
+                <input name="breakfast" value={editForm.mealTimings.breakfast} onChange={handleEditTimingChange} className="border border-orange-300 rounded-lg px-3 py-2 w-full" placeholder="e.g., 8:00–10:00 AM" />
+              </div>
+              <div>
+                <label className="block font-semibold mb-1 text-gray-700">Lunch Timing</label>
+                <input name="lunch" value={editForm.mealTimings.lunch} onChange={handleEditTimingChange} className="border border-orange-300 rounded-lg px-3 py-2 w-full" placeholder="e.g., 11:00 AM–3:00 PM" />
+              </div>
+              <div>
+                <label className="block font-semibold mb-1 text-gray-700">Snacks Timing</label>
+                <input name="snacks" value={editForm.mealTimings.snacks} onChange={handleEditTimingChange} className="border border-orange-300 rounded-lg px-3 py-2 w-full" placeholder="e.g., 4:00–6:00 PM" />
+              </div>
+              <div>
+                <label className="block font-semibold mb-1 text-gray-700">Dinner Timing</label>
+                <input name="dinner" value={editForm.mealTimings.dinner} onChange={handleEditTimingChange} className="border border-orange-300 rounded-lg px-3 py-2 w-full" placeholder="e.g., 7:00–10:00 PM" />
               </div>
             </div>
             <div className="overflow-x-auto rounded-xl border border-orange-100 bg-orange-50">

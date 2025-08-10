@@ -7,6 +7,7 @@ import {
 import apiClient from '../api/apiClient';
 import { useAuth } from '../context/AuthContext';
 import { useCart } from '../context/CartContext';
+import { getMenuItemImageUrl } from '../utils/imageUtils';
 import { motion, AnimatePresence } from 'framer-motion';
 
 // --- A local Accordion component to keep the main code clean ---
@@ -111,7 +112,7 @@ const FoodDetails = () => {
       <div className="grid grid-cols-1 gap-8 lg:grid-cols-2 lg:gap-12">
         {/* --- Image Column --- */}
         <div className="relative h-80 overflow-hidden rounded-xl md:h-[450px]">
-          <img src={food.image ? `http://localhost:5000${food.image}` : '/default-food.png'} alt={food.name} className="h-full w-full object-cover"/>
+          <img src={getMenuItemImageUrl(food.image)} alt={food.name} className="h-full w-full object-cover"/>
           <div className={`absolute top-3 left-3 flex items-center gap-1.5 rounded-full border px-2 py-1 text-xs font-semibold ${categoryBadge.style}`}>
             {React.createElement(categoryBadge.icon)}<span>{categoryBadge.label}</span>
           </div>

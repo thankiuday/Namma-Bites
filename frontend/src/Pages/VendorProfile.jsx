@@ -3,6 +3,9 @@ import { useNavigate } from 'react-router-dom';
 import { useVendorAuth } from '../context/VendorAuthContext';
 import api from '../api/config';
 import { FaUser, FaPhone, FaMapMarkerAlt, FaUtensils, FaCamera, FaQrcode, FaEdit, FaSave, FaTimes, FaArrowLeft, FaLock, FaEye, FaEyeSlash } from 'react-icons/fa';
+import { getVendorImageUrl } from '../utils/imageUtils';
+import UploadProgress from '../components/UploadProgress';
+import useUploadProgress from '../hooks/useUploadProgress';
 
 const VendorProfile = () => {
   const { vendor, checkVendorAuth } = useVendorAuth();
@@ -25,6 +28,13 @@ const VendorProfile = () => {
   const [showOldPassword, setShowOldPassword] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const { 
+    uploadProgress, 
+    uploadStatus, 
+    isUploading, 
+    uploadError, 
+    uploadWithProgress 
+  } = useUploadProgress();
 
   // Update form fields when vendor data changes
   useEffect(() => {
@@ -55,6 +65,11 @@ const VendorProfile = () => {
     try {
       const res = await api.put('/vendor/me', formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
+        onUploadProgress: (progressEvent) => {
+          const progress = Math.round((progressEvent.loaded * 100) / progressEvent.total);
+          // Manually update progress states since we can't use the hook for PUT
+          // This is a temporary solution - the hook could be extended to support PUT
+        }
       });
       if (res.data.success) {
         setProfileMsg('Profile updated successfully!');
@@ -136,7 +151,7 @@ const VendorProfile = () => {
           <div className="flex flex-col sm:flex-row items-center gap-6">
             <div className="relative">
               <img
-                src={vendor.image ? `http://localhost:5000${vendor.image}` : '/default-logo.png'}
+                src={getVendorImageUrl(vendor.image)}
                 alt="Vendor Logo"
                 className="w-24 h-24 sm:w-32 sm:h-32 rounded-full object-cover border-4 border-orange-200 shadow-lg"
               />
@@ -210,7 +225,7 @@ const VendorProfile = () => {
                   <label className="text-sm font-semibold text-gray-700">Payment Scanner QR Code</label>
                 </div>
                 <img 
-                  src={`http://localhost:5000${vendor.scanner}`} 
+                  src={getVendorImageUrl(vendor.scanner)} 
                   alt="Payment Scanner" 
                   className="block mx-auto md:mx-0 w-40 h-40 object-cover rounded-lg border-2 border-orange-200 shadow-sm"
                 />

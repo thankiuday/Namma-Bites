@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { getAllSubscriptionPlans, getSubscriptionPlanById, getUserSubscriptions, getUserSubscriptionQr } from '../api/userApi';
+import { getAllSubscriptionPlans, getSubscriptionPlanById, getUserSubscriptions, getUserSubscriptionQr, cancelUserSubscription } from '../api/userApi';
 import { 
   FaArrowLeft ,
   FaStar, 
@@ -17,7 +17,9 @@ import {
   FaCheckCircle,
   FaFilter,
   FaQrcode,
-  FaFileImage
+  FaFileImage,
+  FaTimesCircle,
+  FaExclamationTriangle
 } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
 import { format } from 'date-fns';
@@ -25,28 +27,21 @@ import axios from 'axios';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
 
-// API base URL for images - uploads are served directly from the server root, not /api
-const API_BASE_URL = 'http://localhost:5000';
+// API URLs
 const BACKEND_API_URL = 'http://localhost:5000/api';
 
-// Helper function to get vendor image URL
-const getVendorImageUrl = (imagePath) => {
-  console.log('getVendorImageUrl called with:', imagePath);
-  if (!imagePath) {
-    console.log('No image path, returning logo.png');
-    return '/logo.png';
-  }
-  if (imagePath.startsWith('http')) {
-    console.log('Image path is already a full URL:', imagePath);
-    return imagePath;
-  }
-  const fullUrl = `${API_BASE_URL}${imagePath}`;
-  console.log('Constructed vendor image URL:', fullUrl);
-  return fullUrl;
-};
+// Import image utilities
+import { getVendorImageUrl, getPaymentProofImageUrl } from '../utils/imageUtils';
 
 const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
 const mealTypes = ['breakfast', 'lunch', 'dinner', 'snacks'];
+// Meal timings displayed under headers
+const defaultMealTimings = {
+  breakfast: '8:00–10:00 AM',
+  lunch: '11:00 AM–3:00 PM',
+  snacks: '4:00–6:00 PM',
+  dinner: '7:00–10:00 PM',
+};
 
 // Add this helper to get YYYY-MM-DD for a given day name in the current week
 function getDateForDay(day) {
@@ -81,6 +76,13 @@ const UserSubscription = () => {
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [prebookLoading, setPrebookLoading] = useState(false);
   const [prebookError, setPrebookError] = useState('');
+
+  // Add state for cancellation functionality
+  const [showCancelModal, setShowCancelModal] = useState(false);
+  const [subscriptionToCancel, setSubscriptionToCancel] = useState(null);
+  const [cancellationReason, setCancellationReason] = useState('');
+  const [cancelLoading, setCancelLoading] = useState(false);
+  const [cancelError, setCancelError] = useState('');
 
   useEffect(() => {
     fetchPlans();
@@ -191,6 +193,50 @@ const UserSubscription = () => {
   function formatDate(date) {
     return date.toISOString().slice(0, 10);
   }
+
+  // Handle subscription cancellation
+  const handleCancelSubscription = async () => {
+    try {
+      setCancelLoading(true);
+      setCancelError('');
+      
+      await cancelUserSubscription(subscriptionToCancel._id, cancellationReason);
+      
+      // Refresh user subscriptions
+      await fetchUserSubs();
+      
+      // Close modal and reset state
+      setShowCancelModal(false);
+      setSubscriptionToCancel(null);
+      setCancellationReason('');
+      
+      // Close subscription details modal if it's open for the cancelled subscription
+      if (selectedUserSub && selectedUserSub._id === subscriptionToCancel._id) {
+        setShowUserSubDetails(false);
+        setSelectedUserSub(null);
+      }
+    } catch (error) {
+      setCancelError(error.response?.data?.message || 'Failed to cancel subscription');
+    } finally {
+      setCancelLoading(false);
+    }
+  };
+
+  // Open cancellation modal
+  const openCancelModal = (subscription) => {
+    setSubscriptionToCancel(subscription);
+    setShowCancelModal(true);
+    setCancelError('');
+    setCancellationReason('');
+  };
+
+  // Close cancellation modal
+  const closeCancelModal = () => {
+    setShowCancelModal(false);
+    setSubscriptionToCancel(null);
+    setCancellationReason('');
+    setCancelError('');
+  };
 
   if (loading) {
     return (
@@ -382,7 +428,7 @@ const UserSubscription = () => {
       <div className="mt-12">
         <h2 className="text-3xl font-bold text-orange-800 mb-6 flex items-center">
           <FaCheckCircle className="mr-2 text-orange-600" />
-          Your Active Subscriptions
+          Your Subscriptions
         </h2>
         {loadingUserSubs ? (
           <div className="flex justify-center items-center h-32">
@@ -404,17 +450,20 @@ const UserSubscription = () => {
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {userSubs
-              .filter(sub => sub.paymentStatus === 'approved' && sub.validated)
+              .filter(sub => (sub.paymentStatus === 'approved' || sub.paymentStatus === 'cancelled') && sub.validated)
               .map((sub) => {
               const plan = sub.subscriptionPlan;
               const vendor = plan?.vendor || sub.vendor;
               const isExpired = sub.paymentStatus === 'expired';
+              const isCancelled = sub.paymentStatus === 'cancelled';
               return (
                 <div
                   key={sub._id}
                   className={`rounded-xl overflow-hidden border transition-all duration-300 max-w-sm sm:max-w-md w-full mx-auto \
                     ${isExpired
                       ? 'bg-gray-100 border-gray-300 opacity-60 grayscale pointer-events-none'
+                      : isCancelled
+                      ? 'bg-red-50 border-red-200 opacity-80'
                       : 'bg-white shadow-lg border-orange-100 hover:shadow-xl hover:border-orange-200'}
                   `}
                   style={isExpired ? { filter: 'grayscale(0.5)', pointerEvents: 'none' } : {}}
@@ -462,25 +511,57 @@ const UserSubscription = () => {
                     </div>
                     <div className="flex justify-between items-center mb-4">
                       <span className="text-orange-700 font-semibold">Status:</span>
-                      <span className={`font-bold ${isExpired ? 'text-gray-500' : 'text-orange-800'}`}>{sub.paymentStatus}</span>
-                      {isExpired && (
-                        <span className="ml-2 px-2 py-1 rounded-full bg-gray-300 text-gray-700 text-xs font-bold flex items-center">
-                          <FaTimes className="mr-1" /> Expired
+                      <div className="flex items-center gap-2">
+                        <span className={`font-bold ${isExpired ? 'text-gray-500' : isCancelled ? 'text-red-600' : 'text-orange-800'}`}>
+                          {sub.paymentStatus}
                         </span>
+                        {isExpired && (
+                          <span className="px-2 py-1 rounded-full bg-gray-300 text-gray-700 text-xs font-bold flex items-center">
+                            <FaTimes className="mr-1" /> Expired
+                          </span>
+                        )}
+                        {isCancelled && (
+                          <span className="px-2 py-1 rounded-full bg-red-200 text-red-800 text-xs font-bold flex items-center">
+                            <FaTimesCircle className="mr-1" /> Cancelled
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                    {/* Meal Timings */}
+                    <div className="mt-3 bg-orange-50 rounded-lg p-3 border border-orange-200">
+                      <div className="text-orange-800 font-bold mb-2 flex items-center">
+                        <FaClock className="mr-2" /> Meal Timings (Everyday)
+                      </div>
+                      <ul className="text-orange-700 text-sm grid grid-cols-2 gap-2">
+                        <li><span className="font-semibold">Breakfast:</span> 8:00–10:00 AM</li>
+                        <li><span className="font-semibold">Lunch:</span> 11:00 AM–3:00 PM</li>
+                        <li><span className="font-semibold">Snacks:</span> 4:00–6:00 PM</li>
+                        <li><span className="font-semibold">Dinner:</span> 7:00–10:00 PM</li>
+                      </ul>
+                    </div>
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => { setSelectedUserSub(sub); setShowUserSubDetails(true); }}
+                        className={`flex-1 py-2 px-4 rounded-lg font-bold flex items-center justify-center transition-all duration-200 \
+                          ${isExpired || isCancelled
+                            ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                            : 'bg-gradient-to-r from-orange-500 to-orange-600 text-white hover:from-orange-600 hover:to-orange-700'}
+                        `}
+                        disabled={isExpired || isCancelled}
+                      >
+                        <FaEye className="mr-2" />
+                        View Details
+                      </button>
+                      {!isExpired && !isCancelled && (
+                        <button
+                          onClick={() => openCancelModal(sub)}
+                          className="py-2 px-4 rounded-lg font-bold flex items-center justify-center transition-all duration-200 bg-red-500 text-white hover:bg-red-600"
+                        >
+                          <FaTimesCircle className="mr-2" />
+                          Cancel
+                        </button>
                       )}
                     </div>
-                    <button
-                      onClick={() => { setSelectedUserSub(sub); setShowUserSubDetails(true); }}
-                      className={`w-full py-2 px-4 rounded-lg font-bold flex items-center justify-center transition-all duration-200 \
-                        ${isExpired
-                          ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                          : 'bg-gradient-to-r from-orange-500 to-orange-600 text-white hover:from-orange-600 hover:to-orange-700'}
-                      `}
-                      disabled={isExpired}
-                    >
-                      <FaEye className="mr-2" />
-                      View Details
-                    </button>
                   </div>
                 </div>
               );
@@ -576,6 +657,17 @@ const UserSubscription = () => {
                       <span className="text-orange-700 font-semibold">Price per day:</span>
                       <span className="font-bold text-orange-800">₹{(selectedPlan.price / selectedPlan.duration).toFixed(2)}</span>
                     </div>
+                    <div className="mt-3 bg-orange-50 rounded-lg p-3 border border-orange-200">
+                      <div className="text-orange-800 font-bold mb-2 flex items-center">
+                        <FaClock className="mr-2" /> Meal Timings (Everyday)
+                      </div>
+                      <ul className="text-orange-700 text-xs sm:text-sm grid grid-cols-2 gap-2">
+                        <li><span className="font-semibold">Breakfast:</span> 8:00–10:00 AM</li>
+                        <li><span className="font-semibold">Lunch:</span> 11:00 AM–3:00 PM</li>
+                        <li><span className="font-semibold">Snacks:</span> 4:00–6:00 PM</li>
+                        <li><span className="font-semibold">Dinner:</span> 7:00–10:00 PM</li>
+                      </ul>
+                    </div>
                   </div>
                 </div>
 
@@ -627,9 +719,14 @@ const UserSubscription = () => {
                         <th className="px-2 sm:px-6 py-2 sm:py-4 text-left font-bold text-white whitespace-nowrap">📅 Day</th>
                         {mealTypes.map(meal => (
                           <th key={meal} className="px-2 sm:px-6 py-2 sm:py-4 text-left font-bold text-white capitalize whitespace-nowrap">
-                            {meal === 'breakfast' ? '🌅 Breakfast' : 
-                             meal === 'lunch' ? '🌞 Lunch' : 
-                             meal === 'dinner' ? '🌙 Dinner' : '🍎 Snacks'}
+                            <div className="flex flex-col">
+                              <span>
+                                {meal === 'breakfast' ? '🌅 Breakfast' : 
+                                 meal === 'lunch' ? '🌞 Lunch' : 
+                                 meal === 'dinner' ? '🌙 Dinner' : '🍎 Snacks'}
+                              </span>
+                              <span className="text-[10px] sm:text-xs font-medium opacity-90">{(selectedPlan?.mealTimings && selectedPlan.mealTimings[meal]) || defaultMealTimings[meal]}</span>
+                            </div>
                           </th>
                         ))}
                       </tr>
@@ -747,9 +844,14 @@ const UserSubscription = () => {
                         <th className="px-2 sm:px-6 py-2 sm:py-4 text-left font-bold text-white whitespace-nowrap">📅 Day</th>
                         {mealTypes.map(meal => (
                           <th key={meal} className="px-2 sm:px-6 py-2 sm:py-4 text-left font-bold text-white capitalize whitespace-nowrap">
-                            {meal === 'breakfast' ? '🌅 Breakfast' : 
-                              meal === 'lunch' ? '🌞 Lunch' : 
-                              meal === 'dinner' ? '🌙 Dinner' : '🍎 Snacks'}
+                            <div className="flex flex-col">
+                              <span>
+                                {meal === 'breakfast' ? '🌅 Breakfast' : 
+                                  meal === 'lunch' ? '🌞 Lunch' : 
+                                  meal === 'dinner' ? '🌙 Dinner' : '🍎 Snacks'}
+                              </span>
+                              <span className="text-[10px] sm:text-xs font-medium opacity-90">{(selectedUserSub?.subscriptionPlan?.mealTimings && selectedUserSub.subscriptionPlan.mealTimings[meal]) || defaultMealTimings[meal]}</span>
+                            </div>
                           </th>
                         ))}
                       </tr>
@@ -778,6 +880,18 @@ const UserSubscription = () => {
                     </tbody>
                   </table>
                 </div>
+                {/* Meal Timings Info */}
+                <div className="mt-4 bg-orange-50 rounded-lg p-3 border border-orange-200">
+                  <div className="text-orange-800 font-bold mb-2 flex items-center">
+                    <FaClock className="mr-2" /> Meal Timings (Everyday)
+                  </div>
+                  <div className="text-orange-700 text-xs sm:text-sm grid grid-cols-2 gap-2">
+                    <div><span className="font-semibold">Breakfast:</span> 8:00–10:00 AM</div>
+                    <div><span className="font-semibold">Lunch:</span> 11:00 AM–3:00 PM</div>
+                    <div><span className="font-semibold">Snacks:</span> 4:00–6:00 PM</div>
+                    <div><span className="font-semibold">Dinner:</span> 7:00–10:00 PM</div>
+                  </div>
+                </div>
               </div>
               {/* Payment Proof and Scanner Section */}
               <div className="mb-6 sm:mb-8 flex flex-col md:flex-row gap-4 items-center md:items-start">
@@ -788,21 +902,21 @@ const UserSubscription = () => {
                       <FaFileImage className="mr-2 text-orange-600" /> Payment Proof
                     </h3>
                     <img
-                      src={selectedUserSub.paymentProof.startsWith('http') ? selectedUserSub.paymentProof : `${API_BASE_URL}${selectedUserSub.paymentProof}`}
+                      src={getPaymentProofImageUrl(selectedUserSub.paymentProof)}
                       alt="Payment Proof"
                       className="w-40 h-40 object-contain rounded-lg border border-orange-200 mb-2 mx-auto"
                       style={{ background: '#fff' }}
                     />
                     <button
                       className="mt-2 px-4 py-2 bg-orange-500 text-white rounded-lg font-bold flex items-center hover:bg-orange-600"
-                      onClick={() => window.open(selectedUserSub.paymentProof.startsWith('http') ? selectedUserSub.paymentProof : `${API_BASE_URL}${selectedUserSub.paymentProof}`, '_blank')}
+                      onClick={() => window.open(getPaymentProofImageUrl(selectedUserSub.paymentProof), '_blank')}
                     >
                       <FaEye className="mr-2" /> View Full Image
                     </button>
                   </div>
                 )}
                 {/* QR Scanner */}
-                {selectedUserSub.paymentStatus !== 'expired' && (
+                {selectedUserSub.paymentStatus !== 'expired' && selectedUserSub.paymentStatus !== 'cancelled' && (
                   <div className="flex-1 bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl p-4 border border-blue-200 flex flex-col items-center justify-center">
                     <h3 className="font-bold text-blue-800 mb-2 flex items-center text-base">
                       <FaQrcode className="mr-2 text-blue-600" /> Subscription QR
@@ -821,16 +935,19 @@ const UserSubscription = () => {
                     )}
                   </div>
                 )}
-                {selectedUserSub.paymentStatus === 'expired' && (
+                {(selectedUserSub.paymentStatus === 'expired' || selectedUserSub.paymentStatus === 'cancelled') && (
                   <div className="flex-1 bg-gradient-to-br from-gray-100 to-gray-200 rounded-xl p-4 border border-gray-300 flex flex-col items-center justify-center">
                     <h3 className="font-bold text-gray-700 mb-2 flex items-center text-base">
                       <FaQrcode className="mr-2 text-gray-500" /> Subscription QR
                     </h3>
-                    <span className="text-gray-500 font-medium">QR not available for expired subscriptions</span>
+                    <span className="text-gray-500 font-medium">
+                      QR not available for {selectedUserSub.paymentStatus} subscriptions
+                    </span>
                   </div>
                 )}
               </div>
               {/* Pre-booking Calendar */}
+              {selectedUserSub.paymentStatus === 'approved' && (
               <div className="mb-8">
                 <h3 className="font-bold text-orange-800 mb-3 flex items-center text-base">
                   Pre-Book Your Meals
@@ -893,6 +1010,7 @@ const UserSubscription = () => {
                   </div>
                 </div>
               </div>
+              )}
               <div className="flex flex-col sm:flex-row justify-end gap-3 sm:space-x-4">
                 <button
                   onClick={() => { setShowUserSubDetails(false); setSelectedUserSub(null); }}
@@ -900,6 +1018,101 @@ const UserSubscription = () => {
                 >
                   <FaTimes className="mr-2" />
                   Close
+                </button>
+                {selectedUserSub.paymentStatus === 'approved' && (
+                  <button
+                    onClick={() => {
+                      setShowUserSubDetails(false);
+                      openCancelModal(selectedUserSub);
+                    }}
+                    className="w-full sm:w-auto px-6 sm:px-8 py-2 sm:py-3 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-all duration-200 font-bold flex items-center justify-center"
+                  >
+                    <FaTimesCircle className="mr-2" />
+                    Cancel Subscription
+                  </button>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Cancellation Confirmation Modal */}
+      {showCancelModal && subscriptionToCancel && (
+        <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-2xl w-full max-w-md shadow-2xl border border-red-200">
+            <div className="p-6">
+              <div className="flex items-center justify-between mb-6">
+                <div className="flex items-center">
+                  <FaExclamationTriangle className="text-red-600 text-2xl mr-3" />
+                  <h2 className="text-xl font-bold text-red-800">Cancel Subscription</h2>
+                </div>
+                <button
+                  onClick={closeCancelModal}
+                  className="text-gray-400 hover:text-gray-600 text-xl font-bold p-1 hover:bg-gray-100 rounded-full transition-colors duration-200"
+                  aria-label="Close modal"
+                >
+                  <FaTimes />
+                </button>
+              </div>
+
+              <div className="mb-6">
+                <p className="text-gray-700 mb-4">
+                  Are you sure you want to cancel your subscription with{' '}
+                  <span className="font-semibold text-orange-700">
+                    {subscriptionToCancel.subscriptionPlan?.vendor?.name || subscriptionToCancel.vendor?.name}
+                  </span>?
+                </p>
+                <p className="text-sm text-red-600 mb-4">
+                  <FaExclamationTriangle className="inline mr-1" />
+                  This action cannot be undone. You will lose access to all remaining meals in your subscription.
+                </p>
+                
+                <div className="mb-4">
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    Reason for cancellation (optional):
+                  </label>
+                  <textarea
+                    value={cancellationReason}
+                    onChange={(e) => setCancellationReason(e.target.value)}
+                    className="w-full border-2 border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-red-300 focus:border-red-500 resize-none"
+                    rows="3"
+                    placeholder="Let us know why you're cancelling..."
+                  />
+                </div>
+              </div>
+
+              {cancelError && (
+                <div className="bg-red-50 border-2 border-red-200 text-red-800 px-4 py-3 rounded-lg mb-4 flex items-center">
+                  <FaTimesCircle className="text-red-600 mr-2" />
+                  <span className="font-semibold">{cancelError}</span>
+                </div>
+              )}
+
+              <div className="flex gap-3">
+                <button
+                  onClick={closeCancelModal}
+                  className="flex-1 px-4 py-3 border-2 border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-all duration-200 font-bold"
+                  disabled={cancelLoading}
+                >
+                  Keep Subscription
+                </button>
+                <button
+                  onClick={handleCancelSubscription}
+                  className="flex-1 px-4 py-3 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-all duration-200 font-bold flex items-center justify-center"
+                  disabled={cancelLoading}
+                >
+                  {cancelLoading ? (
+                    <>
+                      <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent mr-2"></div>
+                      Cancelling...
+                    </>
+                  ) : (
+                    <>
+                      <FaTimesCircle className="mr-2" />
+                      Cancel Subscription
+                    </>
+                  )}
                 </button>
               </div>
             </div>

@@ -20,6 +20,8 @@ const UserProfile = () => {
   const [showQrModal, setShowQrModal] = useState(false);
   const [qrSubId, setQrSubId] = useState(null);
   const [qrValidated, setQrValidated] = useState(false);
+  const [paymentProofModalOpen, setPaymentProofModalOpen] = useState(false);
+  const [paymentProofModalSrc, setPaymentProofModalSrc] = useState(null);
   const [runTour, setRunTour] = useState(false);
 
   React.useEffect(() => {
@@ -300,15 +302,24 @@ const UserProfile = () => {
                     sub.paymentStatus === 'pending' ? 'bg-orange-100 text-orange-800 border border-orange-200' :
                     sub.paymentStatus === 'rejected' ? 'bg-red-100 text-red-800 border border-red-200' :
                     sub.paymentStatus === 'expired' ? 'bg-gray-300 text-gray-700 border border-gray-400' :
+                    sub.paymentStatus === 'cancelled' ? 'bg-red-200 text-red-800 border border-red-300' :
                     'bg-gray-100 text-gray-800 border border-gray-200'
                   }`}>
                     {sub.paymentStatus.charAt(0).toUpperCase() + sub.paymentStatus.slice(1)}
                   </span>
                   {sub.paymentProof && (
-                    <a href={`http://localhost:5000${sub.paymentProof}`} target="_blank" rel="noopener noreferrer" className="text-xs text-orange-600 underline inline-block w-full text-center">View Payment Proof</a>
+                    <button 
+                      onClick={() => {
+                        setPaymentProofModalSrc(`http://localhost:5000${sub.paymentProof}`);
+                        setPaymentProofModalOpen(true);
+                      }}
+                      className="text-xs text-orange-600 underline inline-block w-full text-center hover:text-orange-700 transition-colors cursor-pointer bg-transparent border-none p-0"
+                    >
+                      View Payment Proof
+                    </button>
                   )}
                   {/* Validated QR Button */}
-                  {sub.paymentStatus !== 'expired' ? (
+                  {sub.paymentStatus !== 'expired' && sub.paymentStatus !== 'cancelled' ? (
                     <button
                       className="text-xs text-blue-600 underline mt-1 inline-block w-full text-center"
                       onClick={() => {
@@ -338,6 +349,26 @@ const UserProfile = () => {
             subscriptionId={qrSubId}
             onClose={() => setShowQrModal(false)}
           />
+        )}
+
+        {/* Payment Proof Modal */}
+        {paymentProofModalOpen && (
+          <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-black bg-opacity-80">
+            <button
+              className="mt-8 mb-4 bg-white text-orange-600 font-bold rounded-full px-6 py-2 shadow hover:bg-orange-100 focus:outline-none text-lg"
+              style={{ position: 'fixed', top: '32px', left: '50%', transform: 'translateX(-50%)', zIndex: 60 }}
+              onClick={() => setPaymentProofModalOpen(false)}
+            >
+              Back to Profile
+            </button>
+            <div className="relative flex flex-col items-center justify-center">
+              <img
+                src={paymentProofModalSrc}
+                alt="Payment Proof"
+                className="max-w-[90vw] max-h-[80vh] rounded-lg shadow-lg border-4 border-orange-500 bg-white object-contain"
+              />
+            </div>
+          </div>
         )}
       </section>
 

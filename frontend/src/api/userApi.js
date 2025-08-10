@@ -18,12 +18,15 @@ export const clearCart = () => userApi.delete('/cart');
 export const createUserSubscription = (data) => userApi.post('/subscriptions', data);
 export const getUserSubscriptions = () => userApi.get('/subscriptions');
 export const deleteUserSubscription = (subscriptionId) => userApi.delete(`/subscriptions/${subscriptionId}`);
+export const cancelUserSubscription = (subscriptionId, cancellationReason) => userApi.post(`/subscriptions/${subscriptionId}/cancel`, { cancellationReason });
 export const getUserSubscriptionQr = (subscriptionId) => userApi.get(`/subscriptions/${subscriptionId}/qr`);
 
-export const uploadPaymentProof = (subscriptionId, file) => {
+export const uploadPaymentProof = (subscriptionId, file, onUploadProgress) => {
   const formData = new FormData();
   formData.append('paymentProof', file);
   return userApi.post(`/subscriptions/${subscriptionId}/payment-proof`, formData, {
-    headers: { 'Content-Type': 'multipart/form-data' }
+    headers: { 'Content-Type': 'multipart/form-data' },
+    onUploadProgress,
+    timeout: 120000 // 2 minute timeout
   });
 }; 

@@ -5,6 +5,13 @@ import fs from 'fs';
 import path from 'path';
 import SubscriptionPlan from '../../models/SubscriptionPlan.js';
 import UserSubscription from '../../models/UserSubscription.js';
+import { 
+  uploadVendorImageToCloudinary, 
+  uploadVendorScannerToCloudinary, 
+  uploadMenuItemToCloudinary,
+  deleteImage,
+  extractPublicId 
+} from '../../config/cloudinary.js';
 
 // Create a new vendor
 export const createVendor = async (req, res) => {
@@ -33,10 +40,41 @@ export const createVendor = async (req, res) => {
       });
     }
 
+    // Upload vendor image to Cloudinary
+    let imageUploadResult;
+    try {
+      imageUploadResult = await uploadVendorImageToCloudinary(
+        req.files.image[0].buffer,
+        req.body.name || 'vendor'
+      );
+    } catch (uploadError) {
+      return res.status(400).json({
+        success: false,
+        message: 'Failed to upload vendor image: ' + uploadError.message
+      });
+    }
+
+    let scannerUrl = null;
+    if (req.files?.scanner?.[0]) {
+      try {
+        // Upload scanner image to Cloudinary
+        const scannerUploadResult = await uploadVendorScannerToCloudinary(
+          req.files.scanner[0].buffer,
+          req.body.name || 'vendor'
+        );
+        scannerUrl = scannerUploadResult.secure_url;
+      } catch (uploadError) {
+        return res.status(400).json({
+          success: false,
+          message: 'Failed to upload scanner image: ' + uploadError.message
+        });
+      }
+    }
+
     const vendorData = {
       ...req.body,
-      image: `/uploads/vendor-images/${req.files?.image?.[0]?.filename}`,
-      scanner: req.files?.scanner?.[0] ? `/uploads/vendor-scanner/${req.files.scanner[0].filename}` : undefined,
+      image: imageUploadResult.secure_url,
+      scanner: scannerUrl,
       createdBy: req.admin._id
     };
 
@@ -290,12 +328,46 @@ export const updateCurrentVendorProfile = async (req, res) => {
     
     // Handle image upload
     if (req.file) {
-      vendor.image = `/uploads/vendor-images/${req.file.filename}`;
+      // Delete old image if it exists
+      if (vendor.image) {
+        const oldImagePublicId = extractPublicId(vendor.image);
+        if (oldImagePublicId) {
+          try {
+            await deleteImage(oldImagePublicId);
+          } catch (err) {
+            console.log('Error deleting old vendor image:', err);
+          }
+        }
+      }
+      
+      // Upload new image to Cloudinary
+      const imageUploadResult = await uploadVendorImageToCloudinary(
+        req.file.buffer,
+        vendor._id
+      );
+      vendor.image = imageUploadResult.secure_url;
     }
     
     // Handle scanner upload (if provided)
     if (req.files && req.files.scanner && req.files.scanner[0]) {
-      vendor.scanner = `/uploads/vendor-scanner/${req.files.scanner[0].filename}`;
+      // Delete old scanner image if it exists
+      if (vendor.scanner) {
+        const oldScannerPublicId = extractPublicId(vendor.scanner);
+        if (oldScannerPublicId) {
+          try {
+            await deleteImage(oldScannerPublicId);
+          } catch (err) {
+            console.log('Error deleting old scanner image:', err);
+          }
+        }
+      }
+      
+      // Upload new scanner image to Cloudinary
+      const scannerUploadResult = await uploadVendorScannerToCloudinary(
+        req.files.scanner[0].buffer,
+        vendor._id
+      );
+      vendor.scanner = scannerUploadResult.secure_url;
     }
     
     await vendor.save();
@@ -383,19 +455,51 @@ export const updateCurrentVendorStatus = async (req, res) => {
 // Add a new menu item
 export const addMenuItem = async (req, res) => {
   try {
+    console.log('=== ADD MENU ITEM REQUEST ===');
+    console.log('Request body:', req.body);
+    console.log('File info:', req.file ? { 
+      originalname: req.file.originalname, 
+      mimetype: req.file.mimetype, 
+      size: req.file.size 
+    } : 'No file');
+    console.log('Vendor:', req.vendor ? { id: req.vendor._id, email: req.vendor.email } : 'No vendor');
+
     const { name, price, category, isAvailable, description, ingredients, allergens, preparationTime, calories, rating } = req.body;
     const vendor = req.vendor;
 
+    // Validate vendor
+    if (!vendor) {
+      console.log('ERROR: No vendor found in request');
+      return res.status(401).json({ success: false, message: 'Vendor not authenticated' });
+    }
+
+    // Validate file
     if (!req.file) {
+      console.log('ERROR: No file uploaded');
       return res.status(400).json({ success: false, message: 'Item image is required' });
     }
 
-    const newItem = new MenuItem({
+    // Validate required fields
+    if (!name || !price) {
+      console.log('ERROR: Missing required fields');
+      return res.status(400).json({ success: false, message: 'Name and price are required' });
+    }
+
+    console.log('Starting image upload to Cloudinary...');
+    
+    // Start image upload and database preparation in parallel
+    const imageUploadPromise = uploadMenuItemToCloudinary(
+      req.file.buffer,
+      vendor._id,
+      name
+    );
+
+    // Prepare menu item data while image uploads
+    const menuItemData = {
       name,
-      price,
-      category,
-      isAvailable,
-      image: `/uploads/items-images/${req.file.filename}`,
+      price: parseFloat(price),
+      category: category || 'veg',
+      isAvailable: isAvailable === 'true' || isAvailable === true,
       vendor: vendor._id,
       vendorEmail: vendor.email,
       description: description || '',
@@ -403,13 +507,47 @@ export const addMenuItem = async (req, res) => {
       allergens: allergens ? (Array.isArray(allergens) ? allergens : allergens.split(',').map(a => a.trim())) : [],
       preparationTime: preparationTime || '',
       calories: calories || '',
-      rating: rating || 0
-    });
+      rating: rating ? parseFloat(rating) : 0
+    };
 
+    console.log('Menu item data prepared:', menuItemData);
+
+    // Wait for image upload to complete
+    console.log('Waiting for image upload...');
+    const imageUploadResult = await imageUploadPromise;
+    console.log('Image upload completed:', imageUploadResult.secure_url);
+    
+    menuItemData.image = imageUploadResult.secure_url;
+
+    // Create and save menu item
+    console.log('Creating menu item...');
+    const newItem = new MenuItem(menuItemData);
     await newItem.save();
-    res.status(201).json({ success: true, message: 'Menu item added successfully', item: newItem });
+    console.log('Menu item saved successfully:', newItem._id);
+
+    // Return minimal response for faster response time
+    res.status(201).json({ 
+      success: true, 
+      message: 'Menu item added successfully', 
+      item: {
+        _id: newItem._id,
+        name: newItem.name,
+        price: newItem.price,
+        category: newItem.category,
+        image: newItem.image,
+        isAvailable: newItem.isAvailable
+      }
+    });
   } catch (error) {
-    res.status(500).json({ success: false, message: 'Server error', error: error.message });
+    console.error('=== MENU ITEM CREATION ERROR ===');
+    console.error('Error message:', error.message);
+    console.error('Error stack:', error.stack);
+    res.status(500).json({ 
+      success: false, 
+      message: 'Server error', 
+      error: error.message,
+      details: process.env.NODE_ENV === 'development' ? error.stack : undefined
+    });
   }
 };
 
@@ -455,15 +593,25 @@ export const updateMenuItem = async (req, res) => {
     if (rating !== undefined) item.rating = rating;
 
     if (req.file) {
-      // Delete old image if it exists
+      // Delete old image from Cloudinary if it exists
       if (item.image) {
-        const oldImageName = path.basename(item.image);
-        const oldImagePath = path.resolve('uploads', 'items-images', oldImageName);
-        if (fs.existsSync(oldImagePath)) {
-          fs.unlinkSync(oldImagePath);
+        const oldImagePublicId = extractPublicId(item.image);
+        if (oldImagePublicId) {
+          try {
+            await deleteImage(oldImagePublicId);
+          } catch (err) {
+            console.log('Error deleting old menu item image:', err);
+          }
         }
       }
-      item.image = `/uploads/items-images/${req.file.filename}`;
+      
+      // Upload new image to Cloudinary
+      const imageUploadResult = await uploadMenuItemToCloudinary(
+        req.file.buffer,
+        vendor._id,
+        item.name
+      );
+      item.image = imageUploadResult.secure_url;
     }
 
     await item.save();
@@ -646,7 +794,7 @@ export const createSubscriptionPlan = async (req, res) => {
     if (!vendorId) {
       return res.status(400).json({ success: false, message: 'Vendor is required' });
     }
-    const { duration, price, weekMeals, planType } = req.body;
+    const { duration, price, weekMeals, planType, mealTimings } = req.body;
     if (![7, 15, 30].includes(Number(duration))) {
       return res.status(400).json({ success: false, message: 'Invalid duration' });
     }
@@ -669,7 +817,8 @@ export const createSubscriptionPlan = async (req, res) => {
       duration,
       price,
       weekMeals,
-      planType
+      planType,
+      mealTimings
     });
     await plan.save();
     res.status(201).json({ success: true, message: 'Subscription plan created', data: plan });
@@ -711,19 +860,49 @@ export const getMySubscriptionPlanById = async (req, res) => {
 export const updateMySubscriptionPlan = async (req, res) => {
   try {
     const vendorId = req.vendor._id;
-    const { duration, price, weekMeals, planType } = req.body;
+    const { duration, price, weekMeals, planType, mealTimings } = req.body;
     const plan = await SubscriptionPlan.findOne({ _id: req.params.id, vendor: vendorId });
     if (!plan) return res.status(404).json({ success: false, message: 'Plan not found' });
     if (duration) plan.duration = duration;
     if (price) plan.price = price;
     if (weekMeals) plan.weekMeals = weekMeals;
     if (planType && ['veg', 'non-veg'].includes(planType)) plan.planType = planType;
+    if (mealTimings) plan.mealTimings = { ...plan.mealTimings, ...mealTimings };
     await plan.save();
     res.json({ success: true, message: 'Plan updated', data: plan });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
 }; 
+
+// Delete a subscription plan (vendor only)
+export const deleteMySubscriptionPlan = async (req, res) => {
+  try {
+    const vendorId = req.vendor._id;
+    const planId = req.params.id;
+    const plan = await SubscriptionPlan.findOne({ _id: planId, vendor: vendorId });
+    if (!plan) return res.status(404).json({ success: false, message: 'Plan not found' });
+
+    // Prevent deletion if any ACTIVE user subscriptions reference this plan
+    // Only check for approved and pending subscriptions, not cancelled, rejected, or expired ones
+    const activeSubscriptionCount = await UserSubscription.countDocuments({ 
+      subscriptionPlan: planId,
+      paymentStatus: { $in: ['approved', 'pending'] }
+    });
+    
+    if (activeSubscriptionCount > 0) {
+      return res.status(400).json({ 
+        success: false, 
+        message: `Cannot delete: ${activeSubscriptionCount} active subscription(s) still reference this plan` 
+      });
+    }
+
+    await plan.deleteOne();
+    return res.json({ success: true, message: 'Subscription plan deleted' });
+  } catch (error) {
+    return res.status(500).json({ success: false, message: error.message });
+  }
+};
 
 // Get all pending user subscriptions for this vendor
 export const getPendingUserSubscriptions = async (req, res) => {
@@ -769,9 +948,28 @@ export const approveUserSubscription = async (req, res) => {
 export const getApprovedUserSubscriptions = async (req, res) => {
   try {
     const vendorId = req.vendor._id;
-    const approvedSubs = await UserSubscription.find({ vendor: vendorId, paymentStatus: 'approved' })
+    let approvedSubs = await UserSubscription.find({ vendor: vendorId, paymentStatus: 'approved' })
       .populate('user', 'name email')
       .populate('subscriptionPlan', 'duration price planType');
+    
+    // Auto-expire subscriptions that have passed their end date
+    const today = new Date();
+    today.setHours(0,0,0,0);
+    for (let sub of approvedSubs) {
+      const endDate = new Date(sub.startDate);
+      endDate.setDate(endDate.getDate() + sub.duration);
+      endDate.setHours(0,0,0,0);
+      if (endDate < today) {
+        sub.paymentStatus = 'expired';
+        await sub.save();
+      }
+    }
+    
+    // Re-fetch to get updated statuses (only approved ones now)
+    approvedSubs = await UserSubscription.find({ vendor: vendorId, paymentStatus: 'approved' })
+      .populate('user', 'name email')
+      .populate('subscriptionPlan', 'duration price planType');
+    
     res.json({ success: true, data: approvedSubs });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
@@ -812,7 +1010,7 @@ export const scanSubscriptionQr = async (req, res) => {
       return res.status(400).json({ success: false, message: 'Invalid QR code format' });
     }
 
-    // Populate all weekMeals for the subscription plan
+    // Populate subscription with plan, vendor, and all meals
     const subscription = await UserSubscription.findById(subscriptionId)
       .populate('user', 'name email')
       .populate({
@@ -860,66 +1058,118 @@ export const scanSubscriptionQr = async (req, res) => {
       return res.status(403).json({ success: false, message: 'Not authorized to scan this subscription' });
     }
 
-    // Optimized date calculations
+    // Date validity
     const startDate = new Date(subscription.startDate);
-    if (isNaN(startDate.getTime())) {
-      return res.status(500).json({ success: false, message: 'Invalid start date in subscription' });
-    }
-
     const duration = Number(subscription.duration);
-    if (!Number.isInteger(duration) || duration <= 0) {
-      return res.status(500).json({ success: false, message: 'Invalid duration in subscription' });
-    }
-
-    // Calculate end date efficiently
     const endDate = new Date(startDate);
-    endDate.setDate(endDate.getDate() + duration - 1); // Subtract 1 since start date is inclusive
-    endDate.setHours(23, 59, 59, 999); // Set to end of day
-
-    // Check if expired
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    const isExpired = endDate < today;
-
-    // Only update database if status needs to change
-    if (isExpired && subscription.paymentStatus !== 'expired') {
-      await UserSubscription.findByIdAndUpdate(subscriptionId, { paymentStatus: 'expired' });
-        subscription.paymentStatus = 'expired';
+    endDate.setDate(endDate.getDate() + duration - 1);
+    endDate.setHours(23, 59, 59, 999);
+    const now = new Date();
+    if (now < startDate || now > endDate) {
+      return res.status(403).json({ success: false, message: 'Subscription not active for today' });
     }
 
-    // Get today's weekday name
-    const weekdays = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-    const todayName = weekdays[new Date().getDay()];
+    // Determine current meal slot by vendor-configured timings
     const plan = subscription.subscriptionPlan;
-    let todaysMeals = null;
-    if (plan && plan.weekMeals && plan.weekMeals[todayName]) {
-      todaysMeals = plan.weekMeals[todayName];
+    const timings = plan?.mealTimings || {
+      breakfast: '8:00–10:00 AM',
+      lunch: '11:00 AM–3:00 PM',
+      snacks: '4:00–6:00 PM',
+      dinner: '7:00–10:00 PM'
+    };
+
+    const parseRange = (rangeStr) => {
+      if (!rangeStr || typeof rangeStr !== 'string') return null;
+      // Normalize separators: en dash, hyphen, or 'to'
+      let normalized = rangeStr
+        .replace(/\s*to\s*/gi, '–')
+        .replace(/\s*-\s*/g, '–')
+        .replace(/\s*–\s*/g, '–')
+        .trim();
+      const parts = normalized.split('–').map(s => s.trim());
+      if (parts.length !== 2) return null;
+      let [startStr, endStr] = parts;
+
+      const timeRegex = /^(\d{1,2})(?::(\d{2}))?\s*(AM|PM)?$/i;
+      const parse12 = (s) => {
+        const m = s.match(timeRegex);
+        if (!m) return null;
+        return { h: parseInt(m[1], 10), min: parseInt(m[2] || '0', 10), ampm: (m[3] || '').toUpperCase() };
+      };
+
+      let s = parse12(startStr);
+      let e = parse12(endStr);
+      if (!s || !e) return null;
+      // If only one has AM/PM, inherit to the other
+      if (!s.ampm && e.ampm) s.ampm = e.ampm;
+      if (!e.ampm && s.ampm) e.ampm = s.ampm;
+      // If both missing AM/PM, make a best-effort guess
+      if (!s.ampm && !e.ampm) {
+        s.ampm = s.h >= 12 ? 'PM' : 'AM';
+        e.ampm = e.h >= 12 ? 'PM' : 'AM';
       }
 
-    // Return optimized response
-    res.json({
-      success: true,
-      subscription: {
-        id: subscription._id,
-        user: subscription.user,
-        plan: plan,
-        vendor: subscription.vendor,
-        startDate: subscription.startDate,
-        duration: subscription.duration,
-        paymentStatus: subscription.paymentStatus,
-        validated: subscription.validated,
-        paymentProof: subscription.paymentProof,
-        expired: isExpired,
-        endDate: endDate.toISOString(),
-        todaysMeals: todaysMeals || null
-      }
-    });
+      const to24 = (h, min, ampm) => {
+        let hour = h;
+        if (ampm === 'PM' && hour !== 12) hour += 12;
+        if (ampm === 'AM' && hour === 12) hour = 0;
+        return { h: hour, min };
+      };
+
+      const s24 = to24(s.h, s.min, s.ampm);
+      const e24 = to24(e.h, e.min, e.ampm);
+      return { s: s24, e: e24 };
+    };
+
+    const within = (range) => {
+      if (!range) return false;
+      const nowH = now.getHours();
+      const nowM = now.getMinutes();
+      const startMinutes = range.s.h * 60 + range.s.min;
+      const endMinutes = range.e.h * 60 + range.e.min;
+      const nowMinutes = nowH * 60 + nowM;
+      return nowMinutes >= startMinutes && nowMinutes <= endMinutes;
+    };
+
+    const slots = [
+      { key: 'breakfast', range: parseRange(timings.breakfast) },
+      { key: 'lunch', range: parseRange(timings.lunch) },
+      { key: 'snacks', range: parseRange(timings.snacks) },
+      { key: 'dinner', range: parseRange(timings.dinner) },
+    ];
+
+    const currentSlot = slots.find(s => within(s.range))?.key;
+    if (!currentSlot) {
+      return res.status(403).json({ success: false, message: 'Scan not allowed outside meal timings' });
+    }
+
+    // Optional: ensure there is a planned meal today for this slot
+    const weekdays = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+    const todayName = weekdays[now.getDay()];
+    if (!plan?.weekMeals?.[todayName]?.[currentSlot]) {
+      return res.status(403).json({ success: false, message: `No ${currentSlot} planned for today` });
+    }
+
+    // Build subscription payload expected by frontend
+    const todaysMeals = plan?.weekMeals?.[todayName] || null;
+    const currentMeal = todaysMeals ? todaysMeals[currentSlot] || null : null;
+    const subscriptionPayload = {
+      user: subscription.user || null,
+      plan: plan ? { planType: plan.planType, duration: plan.duration, price: plan.price } : null,
+      startDate: subscription.startDate,
+      duration: subscription.duration,
+      paymentStatus: subscription.paymentStatus,
+      paymentProof: subscription.paymentProof,
+      validated: subscription.validated,
+      todaysMeals,
+      currentMeal,
+      currentSlot,
+    };
+
+    // All good
+    return res.json({ success: true, message: `Scan allowed for ${currentSlot}`, data: { currentSlot }, subscription: subscriptionPayload });
   } catch (error) {
-    console.error('QR scan error:', error);
-    res.status(500).json({ 
-      success: false, 
-      message: 'Error scanning QR code. Please try again.' 
-    });
+    return res.status(500).json({ success: false, message: error.message });
   }
 }; 
 
@@ -931,19 +1181,48 @@ export const getMealPrebookings = async (req, res) => {
     if (!date || !mealType) {
       return res.status(400).json({ success: false, message: 'Date and mealType are required' });
     }
-    // Find all active subscriptions for this vendor
+
+    // Compute weekday name from date (Monday, Tuesday, ...)
+    const d = new Date(date);
+    if (isNaN(d.getTime())) {
+      return res.status(400).json({ success: false, message: 'Invalid date' });
+    }
+    const weekdays = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+    const dayName = weekdays[d.getUTCDay()];
+
+    // Find all approved subscriptions for this vendor that have a booking on this date/meal
     const subs = await UserSubscription.find({
       vendor: vendorId,
       paymentStatus: 'approved',
-      validated: true,
       prebookings: { $elemMatch: { date, mealType, status: 'booked' } }
-    }).populate('user', 'name email');
-    // Map to user info
-    const users = subs.map(sub => ({
-      user: sub.user,
-      subscriptionId: sub._id
-    }));
-    res.json({ success: true, data: users });
+    })
+      .populate('user', 'name email')
+      .populate('subscriptionPlan');
+
+    // For each subscription, find the menu item assigned in the plan for the given day/meal
+    const results = [];
+    for (const sub of subs) {
+      let menuItemInfo = null;
+      const plan = sub.subscriptionPlan;
+      const planMeals = plan?.weekMeals?.[dayName];
+      const menuItemId = planMeals?.[mealType];
+      if (menuItemId) {
+        try {
+          const itemDoc = await MenuItem.findById(menuItemId).select('name image');
+          if (itemDoc) {
+            menuItemInfo = { _id: itemDoc._id, name: itemDoc.name, image: itemDoc.image };
+          }
+        } catch (_) {}
+      }
+      results.push({
+        user: sub.user,
+        subscriptionId: sub._id,
+        menuItem: menuItemInfo
+      });
+    }
+
+    res.set('Cache-Control', 'no-store');
+    res.json({ success: true, data: results });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }

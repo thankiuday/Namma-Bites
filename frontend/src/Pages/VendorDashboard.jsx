@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { FaHome, FaUtensils, FaClipboardList, FaUserCircle, FaSignOutAlt, FaMoneyCheckAlt } from 'react-icons/fa';
+import { FaHome, FaUtensils, FaClipboardList, FaUserCircle, FaSignOutAlt, FaMoneyCheckAlt, FaCalendarAlt, FaUsers, FaUser } from 'react-icons/fa';
 import { useVendorAuth } from '../context/VendorAuthContext';
 import vendorApi, { getPendingUserSubscriptions, approveUserSubscription, getApprovedUserSubscriptions } from '../api/vendorApi';
 import api from '../api/config';
 import VendorNavbar from '../components/vendor/VendorNavbar';
 import { getGreeting } from '../utils/greetings';
+import { getVendorImageUrl, getMenuItemImageUrl } from '../utils/imageUtils';
 import axios from 'axios';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
@@ -111,7 +112,7 @@ const VendorDashboard = () => {
     setPrebookLoading(true);
     try {
       const date = getDateForDay(day);
-      const res = await axios.get(`/api/vendor/prebookings?date=${date}&mealType=${meal}`, { withCredentials: true });
+      const res = await vendorApi.get(`/prebookings`, { params: { date, mealType: meal, _: Date.now() } });
       setPrebookedUsers(res.data.data || []);
     } catch (err) {
       setPrebookedUsers([]);
@@ -131,7 +132,7 @@ const VendorDashboard = () => {
     const summary = {};
     try {
       for (const meal of mealTypes) {
-        const res = await axios.get(`/api/vendor/prebookings?date=${date}&mealType=${meal}`, { withCredentials: true });
+        const res = await vendorApi.get(`/prebookings`, { params: { date, mealType: meal, _: Date.now() } });
         summary[meal] = res.data.data || [];
       }
       setMealPrebookSummary(summary);
@@ -250,6 +251,33 @@ const VendorDashboard = () => {
     return rejectedSubs;
   };
 
+  // Aggregate approved subscriptions by plan to show counts per plan
+  const planSummary = React.useMemo(() => {
+    const map = new Map();
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    approvedSubs.forEach((sub) => {
+      // Only count active subscriptions
+      if (sub.paymentStatus !== 'approved') return;
+      const start = new Date(sub.startDate);
+      const end = new Date(start);
+      // duration is in days; include start day, so subtract 1
+      end.setDate(start.getDate() + (sub.duration || 0) - 1);
+      start.setHours(0, 0, 0, 0);
+      end.setHours(23, 59, 59, 999);
+      if (!(today >= start && today <= end)) return;
+
+      const plan = sub.subscriptionPlan;
+      if (!plan || !plan._id) return;
+      const key = String(plan._id);
+      const label = `${plan.planType || 'Plan'}${plan.duration ? ` • ${plan.duration} days` : ''}`;
+      const current = map.get(key) || { count: 0, label, price: plan.price };
+      current.count += 1;
+      map.set(key, current);
+    });
+    return Array.from(map.entries()).map(([planId, data]) => ({ planId, ...data }));
+  }, [approvedSubs]);
+
   if (pendingLoading || approvedLoading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-green-50 via-white to-green-100 flex flex-col">
@@ -310,7 +338,7 @@ const VendorDashboard = () => {
               <div className="flex flex-col items-center">
                 <div className="rainbow-border-container mb-2">
                   <img
-                    src={vendor.image ? `http://localhost:5000${vendor.image}` : '/default-logo.png'}
+                    src={getVendorImageUrl(vendor.image)}
                     alt="Vendor Logo"
                     className="rainbow-border-img"
                   />
@@ -406,6 +434,106 @@ const VendorDashboard = () => {
               </div>
             )}
           </div>
+          {/* Pre-Booked Meals Section (centered below vendor details) */}
+        <div className="col-span-1 md:col-span-2 w-full bg-white rounded-3xl shadow-2xl p-8 border border-green-100 mb-8 mt-4 mx-auto">
+          <div className="flex flex-col items-center text-center">
+            <div className="inline-flex items-center gap-3 mb-3">
+              <FaCalendarAlt className="text-2xl text-emerald-600" />
+              <h2 className="text-2xl font-extrabold text-emerald-800 tracking-tight">Pre-Booked Meals</h2>
+            </div>
+            <p className="text-emerald-700 mb-6">Pick a date to view meal-wise bookings</p>
+          </div>
+
+          <div className="flex flex-col items-center mb-8">
+            <div className="w-full">
+              <DatePicker
+                selected={calendarDate}
+                onChange={date => setCalendarDate(date)}
+                inline
+                calendarClassName="w-full big-calendar"
+              />
+            </div>
+          </div>
+
+          {summaryLoading ? (
+            <div className="text-center text-emerald-900 font-semibold">Loading pre-booked users...</div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {mealTypes.map(meal => {
+                const items = mealPrebookSummary[meal] || [];
+                const mealTitle = meal.charAt(0).toUpperCase() + meal.slice(1);
+                const icon = <FaUtensils className="text-lg" />;
+                return (
+                  <div key={meal} className="rounded-2xl border border-emerald-100 bg-gradient-to-br from-emerald-50 to-white shadow-lg p-5">
+                    <div className="flex items-center justify-between mb-4">
+                      <div className="flex items-center gap-2">
+                        <span className="text-emerald-700">{icon}</span>
+                        <h3 className="text-lg font-bold text-emerald-800 capitalize">{mealTitle}</h3>
+                      </div>
+                      <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-100 text-emerald-800 font-bold">
+                        <FaUsers /> {items.length}
+                      </span>
+                    </div>
+                    {items.length === 0 ? (
+                      <div className="text-center text-emerald-700">No pre-bookings for this meal.</div>
+                    ) : (
+                      <div className="space-y-2 max-h-40 overflow-auto pr-1">
+                        {items.map(({ user, subscriptionId, menuItem }) => (
+                          <div key={subscriptionId} className="flex items-center gap-3 p-2 rounded-xl bg-white/70 border border-emerald-100">
+                            <div className="w-8 h-8 rounded-full bg-emerald-200 flex items-center justify-center text-emerald-800">
+                              <FaUser />
+                            </div>
+                            <div className="flex-1">
+                              <div className="text-emerald-900 font-semibold leading-tight">{user?.name || 'User'}</div>
+                              <div className="text-emerald-700 text-sm leading-tight">{user?.email || '-'}</div>
+                            </div>
+                            {menuItem && (
+                              <div className="flex items-center gap-2">
+                                {menuItem.image && (
+                                  <img src={getMenuItemImageUrl(menuItem.image)} alt={menuItem.name} className="w-10 h-10 rounded object-cover border" />
+                                )}
+                                <div className="text-emerald-900 text-sm font-semibold">{menuItem.name}</div>
+                              </div>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+          {/* Plan Subscribers Summary (centered, full width) */}
+      <div className="bg-white rounded-3xl shadow-2xl p-8 border border-green-100 mb-8 mt-4 w-full mx-auto">
+        <div className="flex flex-col items-center text-center">
+          <div className="inline-flex items-center gap-3 mb-3">
+            <svg className="w-6 h-6 text-emerald-600" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M3 7h18M3 12h18M3 17h18" /></svg>
+            <h2 className="text-2xl font-extrabold text-emerald-800 tracking-tight">Subscription Plans - Subscribers</h2>
+          </div>
+          <p className="text-emerald-700 mb-6">Overview of how many users subscribed to each plan</p>
+        </div>
+        {approvedLoading ? (
+          <div className="text-center text-emerald-900 font-semibold">Loading summary...</div>
+        ) : planSummary.length === 0 ? (
+          <div className="text-center text-emerald-700">No approved subscriptions to summarize.</div>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 w-full">
+            {planSummary.map(({ planId, label, count, price }) => (
+              <div key={planId} className="rounded-2xl border border-emerald-100 bg-gradient-to-br from-emerald-50 to-white shadow p-5 flex items-center justify-between">
+                <div>
+                  <div className="text-emerald-900 font-bold">{label}</div>
+                  {price ? <div className="text-emerald-700 text-sm">₹{price}</div> : null}
+                </div>
+                <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-100 text-emerald-800 font-bold">
+                  <FaUsers /> {count}
+                </span>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
           {/* Approved User Subscriptions Card */}
           <div className="bg-white rounded-2xl shadow-xl p-8 border border-green-100 col-span-1 md:col-span-2">
             <h2 className="text-xl font-bold text-green-800 mb-4 flex items-center gap-3">
@@ -514,51 +642,9 @@ const VendorDashboard = () => {
               </div>
             )}
           </div>
-          {/* Pre-bookings Section */}
-          <div className="bg-white rounded-2xl shadow-xl p-8 border border-green-100 mb-8 mt-8">
-            <h2 className="text-xl font-bold text-green-700 mb-4 flex items-center gap-2">
-              Pre-Booked Meals
-            </h2>
-            <div className="flex flex-col items-center mb-6">
-              <DatePicker
-                selected={calendarDate}
-                onChange={date => setCalendarDate(date)}
-                inline
-                calendarClassName="w-full text-lg"
-              />
-            </div>
-            {summaryLoading ? (
-              <div className="text-green-600">Loading pre-booked users...</div>
-            ) : (
-              <div className="overflow-x-auto w-full">
-                <table className="min-w-full border border-green-200 rounded-lg">
-                  <thead>
-                    <tr>
-                      <th className="border-b border-green-200 px-4 py-2 bg-green-100">Meal</th>
-                      <th className="border-b border-green-200 px-4 py-2 bg-green-100">Count</th>
-                      <th className="border-b border-green-200 px-4 py-2 bg-green-100">User Names</th>
-                      <th className="border-b border-green-200 px-4 py-2 bg-green-100">Emails</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {mealTypes.map(meal => (
-                      <tr key={meal} className="hover:bg-green-50 transition-colors duration-200">
-                        <td className="border-b border-green-200 px-4 py-2 font-bold capitalize">{meal}</td>
-                        <td className="border-b border-green-200 px-4 py-2">{mealPrebookSummary[meal]?.length || 0}</td>
-                        <td className="border-b border-green-200 px-4 py-2">
-                          {(mealPrebookSummary[meal] || []).map(u => u.user?.name).filter(Boolean).join(', ') || <span className="text-gray-400">-</span>}
-                        </td>
-                        <td className="border-b border-green-200 px-4 py-2">
-                          {(mealPrebookSummary[meal] || []).map(u => u.user?.email).filter(Boolean).join(', ') || <span className="text-gray-400">-</span>}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            )}
-          </div>
+          
         </div>
+        
       </main>
       {/* Footer */}
       <footer className="bg-white text-black py-4 text-center border-t border-gray-200">

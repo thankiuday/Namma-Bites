@@ -1,5 +1,6 @@
 import React, { useState, useRef, useCallback } from 'react';
 import ZxingQrScanner from '../components/ZxingQrScanner';
+import { getMenuItemImageUrl } from '../utils/imageUtils';
 import axios from 'axios';
 import { format } from 'date-fns';
 import { useNavigate } from 'react-router-dom';
@@ -219,7 +220,7 @@ const VendorQrScanner = () => {
                     const meal = subscriptionInfo.todaysMeals[mealType];
                     return meal && meal.name ? (
                       <div key={mealType} className="flex items-center gap-3 bg-orange-50 rounded-lg p-3 border border-orange-100">
-                        {meal.image && <img src={`http://localhost:5000${meal.image}`} alt={meal.name} className="w-14 h-14 object-cover rounded-lg border border-orange-200" />}
+                        {meal.image && <img src={getMenuItemImageUrl(meal.image)} alt={meal.name} className="w-14 h-14 object-cover rounded-lg border border-orange-200" />}
                         <div>
                           <div className="font-semibold capitalize text-orange-800">{mealType}</div>
                           <div className="font-bold text-gray-900">{meal.name}</div>

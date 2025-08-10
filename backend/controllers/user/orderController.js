@@ -3,6 +3,7 @@ import MenuItem from '../../models/MenuItem.js';
 import Vendor from '../../models/Vendor.js';
 import User from '../../models/User.js';
 import jwt from 'jsonwebtoken';
+import { uploadPaymentProofToCloudinary } from '../../config/cloudinary.js';
 
 // Create a new order
 export const createOrder = async (req, res) => {
@@ -49,7 +50,15 @@ export const uploadOrderPaymentProof = async (req, res) => {
     if (!req.file) {
       return res.status(400).json({ success: false, message: 'No file uploaded' });
     }
-    order.paymentProof = `/uploads/payment-proofs/${req.file.filename}`;
+
+    // Upload payment proof to Cloudinary (reuse the payment proof function with order ID)
+    const paymentProofUploadResult = await uploadPaymentProofToCloudinary(
+      req.file.buffer,
+      req.user._id,
+      `order-${orderId}`
+    );
+
+    order.paymentProof = paymentProofUploadResult.secure_url;
     await order.save();
     res.json({ success: true, data: order });
   } catch (error) {

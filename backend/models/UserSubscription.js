@@ -8,7 +8,7 @@ const userSubscriptionSchema = new mongoose.Schema({
   duration: { type: Number, required: true },
   paymentStatus: {
     type: String,
-    enum: ['pending', 'approved', 'rejected', 'expired'],
+    enum: ['pending', 'approved', 'rejected', 'expired', 'cancelled'],
     default: 'pending'
   },
   paymentProof: { type: String }, // file path or URL
@@ -20,6 +20,8 @@ const userSubscriptionSchema = new mongoose.Schema({
       status: { type: String, enum: ['booked', 'cancelled'], default: 'booked' }
     }
   ],
+  cancelledAt: { type: Date }, // timestamp when subscription was cancelled
+  cancellationReason: { type: String }, // optional reason for cancellation
 }, { timestamps: true });
 
 const UserSubscription = mongoose.model('UserSubscription', userSubscriptionSchema);

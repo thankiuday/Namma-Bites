@@ -1,29 +1,45 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { FaArrowLeft, FaCheckCircle, FaUpload, FaQrcode } from 'react-icons/fa';
 import axios from 'axios';
+import UploadProgress from '../components/UploadProgress';
+import useUploadProgress from '../hooks/useUploadProgress';
+import LazyImage from '../components/LazyImage';
 
 const API_BASE_URL = 'http://localhost:5000/api';
 const SERVER_BASE_URL = 'http://localhost:5000';
 
 const Checkout = () => {
-  const { cart, clearCart } = useCart();
+  const { cart, clearCart, fetchCart } = useCart();
   const { user } = useAuth();
+  
+  // Force fresh cart fetch when component mounts
+  useEffect(() => {
+    fetchCart();
+  }, [fetchCart]);
   const [paymentProof, setPaymentProof] = useState(null);
   const [proofPreview, setProofPreview] = useState(null);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
   const navigate = useNavigate();
+  const { 
+    uploadProgress, 
+    uploadStatus, 
+    isUploading, 
+    uploadError, 
+    uploadWithProgress 
+  } = useUploadProgress();
 
   // Assume all items are from the same vendor
   const vendor = cart.length > 0 ? cart[0].vendor : null;
   // Use only vendor.scanner for QR
   const vendorQr = vendor?.scanner ? (vendor.scanner.startsWith('http') ? vendor.scanner : `${SERVER_BASE_URL}${vendor.scanner}`) : null;
-  // Debug log
-  console.log('Vendor:', vendor);
-  console.log('Vendor QR:', vendorQr);
+  // Debug: Log if vendor has scanner data
+  if (vendor && !vendor.scanner) {
+    console.log(`ℹ️ Vendor "${vendor.name}" does not have a QR scanner uploaded yet.`);
+  }
 
   const subtotal = cart.reduce((total, item) => total + (item.price * item.quantity), 0);
   const total = subtotal;
@@ -57,13 +73,16 @@ const Checkout = () => {
         { withCredentials: true }
       );
       const order = orderRes.data.data;
-      // 2. Upload payment proof
+      // 2. Upload payment proof with progress
       const formData = new FormData();
       formData.append('paymentProof', paymentProof);
-      await axios.post(
+      await uploadWithProgress(
         `${API_BASE_URL}/users/orders/${order._id}/payment-proof`,
         formData,
-        { withCredentials: true, headers: { 'Content-Type': 'multipart/form-data' } }
+        { 
+          headers: { 'Content-Type': 'multipart/form-data' },
+          axiosConfig: { withCredentials: true }
+        }
       );
       // 3. Clear cart and redirect
       await clearCart();
@@ -104,9 +123,21 @@ const Checkout = () => {
           <div className="bg-orange-50 rounded-xl p-4 border border-orange-200 mb-2 flex flex-col items-center">
             <h3 className="text-lg font-bold text-orange-700 mb-2 flex items-center"><FaQrcode className="mr-2" />Vendor QR for Payment</h3>
             {vendorQr ? (
-              <img src={vendorQr} alt="Vendor QR" className="w-40 h-40 object-contain rounded-lg border border-orange-200 bg-white" />
+              <LazyImage 
+                src={vendorQr} 
+                alt="Vendor QR" 
+                className="w-40 h-40"
+                imgClassName="w-40 h-40 object-contain rounded-lg border border-orange-200 bg-white" 
+              />
             ) : (
-              <span className="text-orange-400 font-medium">QR not available</span>
+              <div className="text-center p-4">
+                <span className="text-orange-400 font-medium">QR Scanner not available</span>
+                {vendor && (
+                  <p className="text-orange-300 text-xs mt-1">
+                    {vendor.name} hasn't uploaded a payment QR code yet.
+                  </p>
+                )}
+              </div>
             )}
           </div>
           {/* Payment Proof Upload */}
@@ -120,14 +151,14 @@ const Checkout = () => {
               required
             />
             {proofPreview && (
-              <img src={proofPreview} alt="Preview" className="w-32 h-32 object-contain rounded-lg border border-orange-200 bg-white mt-2" />
+              <LazyImage src={proofPreview} alt="Preview" className="w-32 h-32" imgClassName="w-32 h-32 object-contain rounded-lg border border-orange-200 bg-white mt-2" />
             )}
             {/* Order Summary */}
             <div className="bg-orange-50 rounded-xl p-4 border border-orange-200 mt-4">
               <h3 className="text-lg font-bold text-orange-700 mb-2">Order Summary</h3>
               {cart.map(item => (
                 <div key={item._id} className="flex items-center gap-3 mb-2">
-                  <img src={item.image ? (item.image.startsWith('http') ? item.image : `${SERVER_BASE_URL}${item.image}`) : '/default-food.png'} alt={item.name} className="w-10 h-10 object-cover rounded" />
+                  <LazyImage src={item.image ? (item.image.startsWith('http') ? item.image : `${SERVER_BASE_URL}${item.image}`) : '/default-food.png'} alt={item.name} className="w-10 h-10" imgClassName="w-10 h-10 object-cover rounded" />
                   <div className="flex-grow">
                     <div className="font-semibold text-gray-800">{item.name}</div>
                     <div className="text-xs text-gray-500">Qty: {item.quantity}</div>
@@ -141,13 +172,23 @@ const Checkout = () => {
               </div>
             </div>
             {error && <div className="text-red-600 text-sm font-semibold mt-1">{error}</div>}
+            
+            {/* Upload Progress Indicator */}
+            <UploadProgress 
+              progress={uploadProgress}
+              status={uploadStatus}
+              isVisible={isUploading}
+              error={uploadError}
+              className="mt-3"
+            />
+            
             <button
               type="submit"
-              disabled={submitting || !paymentProof}
+              disabled={submitting || !paymentProof || isUploading}
               className="w-full bg-gradient-to-r from-orange-500 to-orange-600 text-white py-3 px-4 rounded-lg hover:from-orange-600 hover:to-orange-700 transition-all duration-200 font-bold flex items-center justify-center mt-2 disabled:opacity-60 disabled:cursor-not-allowed"
             >
               <FaUpload className="mr-2" />
-              {submitting ? 'Placing Order...' : 'Place Order'}
+              {submitting || isUploading ? 'Placing Order...' : 'Place Order'}
             </button>
           </form>
         </div>

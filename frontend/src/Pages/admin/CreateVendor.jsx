@@ -4,11 +4,20 @@ import api from '../../api/config';
 import { toast } from 'react-toastify';
 import AdminLayout from '../../components/admin/AdminLayout';
 import { FaEye, FaEyeSlash } from 'react-icons/fa';
+import UploadProgress from '../../components/UploadProgress';
+import useUploadProgress from '../../hooks/useUploadProgress';
 
 const CreateVendor = () => {
     const navigate = useNavigate();
     const [loading, setLoading] = useState(false);
     const [showPassword, setShowPassword] = useState(false);
+    const { 
+        uploadProgress, 
+        uploadStatus, 
+        isUploading, 
+        uploadError, 
+        uploadWithProgress 
+    } = useUploadProgress();
     const [error, setError] = useState(''); // Add error state
     const [formData, setFormData] = useState({
         name: '',
@@ -63,7 +72,7 @@ const CreateVendor = () => {
                 formDataToSend.append('scanner', formData.scanner);
             }
             
-            const response = await api.post('/vendor/create', formDataToSend, {
+            const response = await uploadWithProgress('/vendor/create', formDataToSend, {
                 headers: {
                     'Content-Type': 'multipart/form-data',
                 }
@@ -222,14 +231,23 @@ const CreateVendor = () => {
                         />
                     </div>
 
+                    {/* Upload Progress Indicator */}
+                    <UploadProgress 
+                        progress={uploadProgress}
+                        status={uploadStatus}
+                        isVisible={isUploading}
+                        error={uploadError}
+                        className="mb-4"
+                    />
+
                     <button
                         type="submit"
-                        disabled={loading}
+                        disabled={loading || isUploading}
                         className={`w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-orange-600 hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500 ${
-                            loading ? 'opacity-50 cursor-not-allowed' : ''
+                            loading || isUploading ? 'opacity-50 cursor-not-allowed' : ''
                         }`}
                     >
-                        {loading ? 'Creating...' : 'Create Vendor'}
+                        {loading || isUploading ? 'Creating...' : 'Create Vendor'}
                     </button>
                 </form>
             </div>

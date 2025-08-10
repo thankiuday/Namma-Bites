@@ -2,6 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { FaArrowLeft, FaUpload, FaCheckCircle, FaHourglassHalf, FaTimesCircle } from 'react-icons/fa';
 import { uploadPaymentProof, getUserSubscriptions } from '../api/userApi';
+import { getVendorImageUrl } from '../utils/imageUtils';
+import UploadProgress from '../components/UploadProgress';
+import useUploadProgress from '../hooks/useUploadProgress';
 
 const PaymentStatus = () => {
   const { subscriptionId } = useParams();
@@ -12,6 +15,13 @@ const PaymentStatus = () => {
   const [error, setError] = useState('');
   const [subscription, setSubscription] = useState(null);
   const [scannerUrl, setScannerUrl] = useState('');
+  const { 
+    uploadProgress, 
+    uploadStatus, 
+    isUploading, 
+    uploadError, 
+    uploadWithProgress 
+  } = useUploadProgress();
 
   useEffect(() => {
     async function fetchSubscription() {
@@ -20,7 +30,7 @@ const PaymentStatus = () => {
         const sub = res.data.data.find(s => s._id === subscriptionId);
         setSubscription(sub);
         if (sub && sub.vendor && sub.vendor.scanner) {
-          setScannerUrl(`http://localhost:5000${sub.vendor.scanner}`);
+          setScannerUrl(getVendorImageUrl(sub.vendor.scanner));
         }
       }
     }
@@ -41,7 +51,16 @@ const PaymentStatus = () => {
     setUploading(true);
     setError('');
     try {
-      await uploadPaymentProof(subscriptionId, file);
+      const formData = new FormData();
+      formData.append('paymentProof', file);
+      await uploadWithProgress(
+        `/subscriptions/${subscriptionId}/payment-proof`, 
+        formData,
+        { 
+          headers: { 'Content-Type': 'multipart/form-data' },
+          axiosConfig: { withCredentials: true }
+        }
+      );
       setStatus('pending');
     } catch (err) {
       setError('Failed to upload payment proof. Please try again.');
@@ -87,13 +106,23 @@ const PaymentStatus = () => {
                 disabled={uploading}
               />
               {error && <div className="text-red-600 text-sm font-semibold mt-1">{error}</div>}
+              
+              {/* Upload Progress Indicator */}
+              <UploadProgress 
+                progress={uploadProgress}
+                status={uploadStatus}
+                isVisible={isUploading}
+                error={uploadError}
+                className="mt-3"
+              />
+              
               <button
                 type="submit"
-                disabled={uploading}
+                disabled={uploading || isUploading}
                 className="w-full bg-gradient-to-r from-orange-500 to-orange-600 text-white py-3 px-4 rounded-lg hover:from-orange-600 hover:to-orange-700 transition-all duration-200 font-bold flex items-center justify-center mt-2 disabled:opacity-60 disabled:cursor-not-allowed"
               >
                 <FaUpload className="mr-2" />
-                {uploading ? 'Uploading...' : 'Submit Payment Proof'}
+                {uploading || isUploading ? 'Uploading...' : 'Submit Payment Proof'}
               </button>
             </form>
           </>

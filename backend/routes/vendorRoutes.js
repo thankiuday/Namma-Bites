@@ -1,8 +1,9 @@
 import express from 'express';
-import multer from 'multer';
-import path from 'path';
-import { fileURLToPath } from 'url';
-import fs from 'fs';
+import { 
+  uploadVendorImage, 
+  uploadVendorScanner, 
+  uploadMenuItem 
+} from '../config/cloudinary.js';
 import { 
   createVendor, 
   getAllVendors, 
@@ -30,6 +31,7 @@ import {
   getMySubscriptionPlans,
   getMySubscriptionPlanById,
   updateMySubscriptionPlan,
+  deleteMySubscriptionPlan,
   getPendingUserSubscriptions,
   approveUserSubscription,
   getApprovedUserSubscriptions,
@@ -41,88 +43,6 @@ import { getVendorOrders, acceptOrder, rejectOrder, markOrderReady, completeOrde
 import { authenticateAdmin, authenticateVendor, authenticateUser } from '../middleware/user/authMiddleware.js';
 
 const router = express.Router();
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-
-// Create upload directory if it doesn't exist
-const vendorImagesDir = path.join(__dirname, '../../uploads/vendor-images');
-if (!fs.existsSync(vendorImagesDir)) {
-    fs.mkdirSync(vendorImagesDir, { recursive: true });
-}
-
-const itemImagesDir = path.join(__dirname, '../../uploads/items-images');
-if (!fs.existsSync(itemImagesDir)) {
-    fs.mkdirSync(itemImagesDir, { recursive: true });
-}
-
-// Configure multer for VENDOR image upload
-const vendorStorage = multer.diskStorage({
-  destination: function (req, file, cb) {
-    if (file.fieldname === 'image') {
-      cb(null, vendorImagesDir);
-    } else if (file.fieldname === 'scanner') {
-      cb(null, vendorScannerDir);
-    } else {
-      cb(new Error('Invalid field name'), null);
-    }
-  },
-  filename: function (req, file, cb) {
-    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-    cb(null, uniqueSuffix + path.extname(file.originalname));
-  }
-});
-
-// Configure multer for MENU ITEM image upload
-const itemStorage = multer.diskStorage({
-    destination: function (req, file, cb) {
-        cb(null, itemImagesDir);
-    },
-    filename: function (req, file, cb) {
-        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-        cb(null, uniqueSuffix + path.extname(file.originalname));
-    }
-});
-
-// Configure multer for VENDOR SCANNER image upload
-const vendorScannerDir = path.join(__dirname, '../../uploads/vendor-scanner');
-if (!fs.existsSync(vendorScannerDir)) {
-  fs.mkdirSync(vendorScannerDir, { recursive: true });
-}
-const scannerStorage = multer.diskStorage({
-  destination: function (req, file, cb) {
-    cb(null, vendorScannerDir);
-  },
-  filename: function (req, file, cb) {
-    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-    cb(null, uniqueSuffix + path.extname(file.originalname));
-  }
-});
-export const uploadVendorScanner = multer({ storage: scannerStorage });
-
-const fileFilter = (req, file, cb) => {
-    // Accept images only
-    if (!file.originalname.match(/\.(jpg|JPG|jpeg|JPEG|png|PNG|gif|GIF)$/)) {
-        req.fileValidationError = 'Only image files are allowed!';
-        return cb(new Error('Only image files are allowed!'), false);
-    }
-    cb(null, true);
-};
-
-const uploadVendorImage = multer({ 
-    storage: vendorStorage,
-    fileFilter: fileFilter,
-    limits: {
-        fileSize: 5 * 1024 * 1024 // 5MB max file size
-    }
-});
-
-const uploadItemImage = multer({
-    storage: itemStorage,
-    fileFilter: fileFilter,
-    limits: {
-        fileSize: 10 * 1024 * 1024 // 10MB max file size
-    }
-});
 
 // === PUBLIC ROUTES ===
 // Note: These must be defined before any routes with parameters like /:id
@@ -157,7 +77,7 @@ router.get('/me', authenticateVendor, getSelfVendor);
 
 // Update current vendor profile (protected, vendor only)
 router.put('/me', authenticateVendor, uploadVendorImage.fields([
-  { name: 'logo', maxCount: 1 },
+  { name: 'image', maxCount: 1 },
   { name: 'scanner', maxCount: 1 }
 ]), updateCurrentVendorProfile);
 
@@ -171,10 +91,10 @@ router.post('/change-password', authenticateVendor, changeVendorPassword);
 router.get('/menu-items', authenticateVendor, getMenuItemsByVendor);
 
 // Add a new menu item (protected, vendor only)
-router.post('/menu-items', authenticateVendor, uploadItemImage.single('image'), addMenuItem);
+router.post('/menu-items', authenticateVendor, uploadMenuItem.single('image'), addMenuItem);
 
 // Update a menu item (protected, vendor only)
-router.put('/menu-items/:id', authenticateVendor, uploadItemImage.single('image'), updateMenuItem);
+router.put('/menu-items/:id', authenticateVendor, uploadMenuItem.single('image'), updateMenuItem);
 
 // Delete a menu item (protected, vendor only)
 router.delete('/menu-items/:id', authenticateVendor, deleteMenuItem);
@@ -190,6 +110,8 @@ router.get('/subscription-plans/:id', authenticateVendor, getMySubscriptionPlanB
 
 // Update a subscription plan by ID
 router.put('/subscription-plans/:id', authenticateVendor, updateMySubscriptionPlan);
+// Delete a subscription plan by ID
+router.delete('/subscription-plans/:id', authenticateVendor, deleteMySubscriptionPlan);
 
 // Vendor user subscription approval routes
 router.get('/user-subscriptions/pending', authenticateVendor, getPendingUserSubscriptions);

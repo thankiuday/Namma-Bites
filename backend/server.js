@@ -33,19 +33,12 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 
-// Set CORP header for uploads
-app.use('/uploads', (req, res, next) => {
-  res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
-  next();
-});
-
 // Serve uploads directory (must be before React catch-all)
 const uploadsDir = path.resolve(__dirname, '../uploads');
 app.use('/uploads', (req, res, next) => {
-  const filePath = path.join(uploadsDir, req.path);
+  res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
   next();
-});
-app.use('/uploads', express.static(uploadsDir));
+}, express.static(uploadsDir));
 
 // Rate limiting with Redis
 const generalLimiter = rateLimit({

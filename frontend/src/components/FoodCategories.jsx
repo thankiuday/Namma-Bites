@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import apiClient from '../api/apiClient'; // Using generic apiClient for public endpoints
 import { useNavigate } from 'react-router-dom';
+import { getVendorImageUrl } from '../utils/imageUtils';
+import LazyImage from './LazyImage';
 
 const BrowseVendors = () => {
   const [vendors, setVendors] = useState([]);
@@ -48,10 +50,11 @@ const BrowseVendors = () => {
             onClick={() => navigate(`/vendor-details/${vendor._id}`)}
           >
             <div className="w-20 h-20 md:w-32 md:h-32 rounded-full overflow-hidden border-4 border-orange-600 group-hover:border-orange-500 transition-all duration-300">
-              <img
-                src={`http://localhost:5000${vendor.image}`}
+              <LazyImage
+                src={getVendorImageUrl(vendor.image)}
                 alt={vendor.name}
-                className="w-full h-full object-cover transform transition-transform duration-300 group-hover:scale-110"
+                className="w-full h-full"
+                imgClassName="w-full h-full object-cover transform transition-transform duration-300 group-hover:scale-110"
               />
             </div>
             {/* FIX: Added 'text-center' to ensure the text itself is centered */}
