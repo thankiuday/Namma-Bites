@@ -25,6 +25,14 @@ export const protect = async (req, res, next) => {
         });
       }
 
+      // Check if admin is approved (except super-admin)
+      if (req.admin.role !== 'super-admin' && !req.admin.isApproved) {
+        return res.status(401).json({
+          success: false,
+          message: 'Your account is pending approval from the Super Admin.'
+        });
+      }
+
       next();
     } catch (error) {
       res.status(401).json({

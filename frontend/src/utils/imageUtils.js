@@ -17,9 +17,11 @@ export const getImageUrl = (imagePath, fallbackImage = '/logo.png') => {
     return imagePath;
   }
 
-  // If it's a local path (starts with /uploads), construct the full URL
+  // If it's a local path (starts with /uploads), construct the full URL using SERVER origin (without /api)
   if (imagePath.startsWith('/uploads/')) {
-    return `${import.meta.env.VITE_API_URL || 'http://localhost:5000'}${imagePath}`;
+    const apiBase = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+    const serverBase = apiBase.replace(/\/?api\/?$/, '');
+    return `${serverBase}${imagePath}`;
   }
 
   // If it's a relative path, treat it as local

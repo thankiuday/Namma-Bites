@@ -315,10 +315,21 @@ export const logoutVendor = (req, res) => {
 // Update current vendor profile
 export const updateCurrentVendorProfile = async (req, res) => {
   try {
+    console.log('=== UPDATE VENDOR PROFILE REQUEST ===');
+    console.log('Request body:', req.body);
+    console.log('Files info:', req.files ? Object.keys(req.files).map(key => ({
+      field: key,
+      count: req.files[key]?.length || 0,
+      details: req.files[key]?.map(f => ({ originalname: f.originalname, size: f.size }))
+    })) : 'No files');
+    
     const vendor = req.vendor;
     if (!vendor) {
+      console.log('ERROR: No vendor found in request');
       return res.status(401).json({ success: false, message: 'Vendor not authenticated' });
     }
+    
+    console.log('Vendor found:', { id: vendor._id, email: vendor.email });
     
     // Update basic fields
     if (req.body.name) vendor.name = req.body.name;
@@ -326,8 +337,8 @@ export const updateCurrentVendorProfile = async (req, res) => {
     if (req.body.address) vendor.address = req.body.address;
     if (req.body.cuisine) vendor.cuisine = req.body.cuisine;
     
-    // Handle image upload
-    if (req.file) {
+    // Handle image upload (logo field from frontend)
+    if (req.files && req.files.image && req.files.image[0]) {
       // Delete old image if it exists
       if (vendor.image) {
         const oldImagePublicId = extractPublicId(vendor.image);
@@ -342,7 +353,7 @@ export const updateCurrentVendorProfile = async (req, res) => {
       
       // Upload new image to Cloudinary
       const imageUploadResult = await uploadVendorImageToCloudinary(
-        req.file.buffer,
+        req.files.image[0].buffer,
         vendor._id
       );
       vendor.image = imageUploadResult.secure_url;
@@ -370,11 +381,17 @@ export const updateCurrentVendorProfile = async (req, res) => {
       vendor.scanner = scannerUploadResult.secure_url;
     }
     
+    console.log('Saving vendor with updated data...');
     await vendor.save();
+    console.log('Vendor saved successfully');
+    
     const vendorObj = vendor.toObject();
     delete vendorObj.password;
     res.status(200).json({ success: true, message: 'Profile updated', data: vendorObj });
   } catch (error) {
+    console.error('=== UPDATE VENDOR PROFILE ERROR ===');
+    console.error('Error message:', error.message);
+    console.error('Error stack:', error.stack);
     res.status(500).json({ success: false, message: 'Error updating profile', error: error.message });
   }
 };

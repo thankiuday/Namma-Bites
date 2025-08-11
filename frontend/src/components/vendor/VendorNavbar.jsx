@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { FaHome, FaUtensils, FaClipboardList, FaUserCircle, FaSignOutAlt, FaMoneyCheckAlt, FaQrcode } from 'react-icons/fa';
+import { FaHome, FaUtensils, FaClipboardList, FaUserCircle, FaSignOutAlt, FaMoneyCheckAlt, FaQrcode, FaCog, FaFont } from 'react-icons/fa';
+import { useFontSize } from '../../context/FontSizeContext';
 
 const vendorLinks = [
   { name: 'Home', path: '/vendor/dashboard', icon: <FaHome className="w-5 h-5" /> },
@@ -14,6 +15,23 @@ const vendorLinks = [
 const VendorNavbar = () => {
   const navigate = useNavigate();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const { increaseFontSize, decreaseFontSize, resetFontSize, getCurrentFontSize } = useFontSize();
+  const settingsRef = useRef(null);
+
+  // Close settings dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (settingsRef.current && !settingsRef.current.contains(event.target)) {
+        setIsSettingsOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
 
   const handleLogout = () => {
     localStorage.removeItem('vendorToken');
@@ -39,6 +57,54 @@ const VendorNavbar = () => {
               <span>{link.name}</span>
             </button>
           ))}
+          {/* Settings Dropdown */}
+          <div className="relative" ref={settingsRef}>
+            <button
+              onClick={() => setIsSettingsOpen(!isSettingsOpen)}
+              className="flex items-center space-x-2 text-black hover:text-green-600 transition-colors duration-200"
+            >
+              <FaCog className="w-5 h-5" />
+              <span>Settings</span>
+            </button>
+
+            {/* Settings Dropdown Menu */}
+            {isSettingsOpen && (
+              <div className="absolute right-0 mt-2 w-64 bg-white rounded-lg shadow-xl border border-gray-200 z-50">
+                <div className="p-4">
+                  <div className="flex items-center gap-2 mb-3">
+                    <FaFont className="w-4 h-4 text-green-600" />
+                    <span className="text-sm font-semibold text-gray-700">Font Size</span>
+                  </div>
+                  <div className="space-y-2">
+                    <div className="text-xs text-gray-600 mb-2">
+                      Current: {getCurrentFontSize().label}
+                    </div>
+                    <div className="flex gap-2">
+                      <button
+                        onClick={decreaseFontSize}
+                        className="flex-1 px-3 py-2 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 transition-colors text-sm font-medium"
+                      >
+                        A-
+                      </button>
+                      <button
+                        onClick={resetFontSize}
+                        className="flex-1 px-3 py-2 bg-green-100 text-green-700 rounded-md hover:bg-green-200 transition-colors text-sm font-medium"
+                      >
+                        Reset
+                      </button>
+                      <button
+                        onClick={increaseFontSize}
+                        className="flex-1 px-3 py-2 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 transition-colors text-sm font-medium"
+                      >
+                        A+
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+
           <button
             onClick={handleLogout}
             className="flex items-center space-x-2 text-red-400 hover:text-red-600 transition-colors duration-200 ml-4"
@@ -68,6 +134,42 @@ const VendorNavbar = () => {
               <span>{link.name}</span>
             </button>
           ))}
+          {/* Settings section for mobile */}
+          <div className="border-t border-gray-200 pt-3 mt-3">
+            <div className="px-4 py-2">
+              <div className="flex items-center gap-2 mb-3">
+                <FaCog className="w-4 h-4 text-green-600" />
+                <span className="text-sm font-semibold text-gray-700">Settings</span>
+              </div>
+              <div className="space-y-2">
+                <div className="flex items-center gap-2 mb-2">
+                  <FaFont className="w-3 h-3 text-green-600" />
+                  <span className="text-xs text-gray-600">Font Size: {getCurrentFontSize().label}</span>
+                </div>
+                <div className="flex gap-2">
+                  <button
+                    onClick={decreaseFontSize}
+                    className="flex-1 px-3 py-2 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 transition-colors text-sm font-medium"
+                  >
+                    A-
+                  </button>
+                  <button
+                    onClick={resetFontSize}
+                    className="flex-1 px-3 py-2 bg-green-100 text-green-700 rounded-md hover:bg-green-200 transition-colors text-sm font-medium"
+                  >
+                    Reset
+                  </button>
+                  <button
+                    onClick={increaseFontSize}
+                    className="flex-1 px-3 py-2 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 transition-colors text-sm font-medium"
+                  >
+                    A+
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+
           <button
             onClick={() => { setIsMenuOpen(false); handleLogout(); }}
             className="w-full flex items-center space-x-2 text-red-400 hover:text-red-600 transition-colors duration-200 px-4 py-2 text-base"

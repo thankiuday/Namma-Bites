@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { FaUsers, FaStore, FaPlus, FaUserFriends, FaStoreAlt, FaCheckCircle, FaClock } from 'react-icons/fa';
+import { FaUsers, FaStore, FaPlus, FaUserFriends, FaStoreAlt, FaCheckCircle, FaClock, FaCrown } from 'react-icons/fa';
 import api from '../api/config';
 import AdminLayout from '../components/admin/AdminLayout';
 import { useAdminAuth } from '../context/AdminAuthContext';
@@ -108,7 +108,7 @@ const AdminDashboard = () => {
         ) : (
           <>
             {/* Quick Actions */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+            <div className={`grid grid-cols-1 sm:grid-cols-2 gap-6 mb-8 ${admin?.role === 'super-admin' ? 'lg:grid-cols-4' : 'lg:grid-cols-3'}`}>
               <AnimatedButton
                 onClick={() => navigate('/admin/users')}
                 className="flex items-center p-6 bg-white border-2 border-gray-200 rounded-lg hover:border-orange-600 hover:shadow-md transition-all duration-200"
@@ -153,6 +153,24 @@ const AdminDashboard = () => {
                   <p className="text-gray-600">Add a new vendor to the platform</p>
                 </div>
               </AnimatedButton>
+
+              {/* Super Admin Panel - Only visible to Super Admins */}
+              {admin?.role === 'super-admin' && (
+                <AnimatedButton
+                  onClick={() => navigate('/admin/super-panel')}
+                  className="flex items-center p-6 bg-gradient-to-r from-purple-50 to-purple-100 border-2 border-purple-200 rounded-lg hover:border-purple-600 hover:shadow-md transition-all duration-200"
+                  variant="primary"
+                  size="lg"
+                >
+                  <div className="p-3 bg-purple-100 rounded-lg mr-4">
+                    <FaCrown className="w-6 h-6 text-purple-600" />
+                  </div>
+                  <div className="text-left">
+                    <h3 className="text-lg font-semibold text-gray-800">Super Admin Panel</h3>
+                    <p className="text-gray-600">Manage admin approvals</p>
+                  </div>
+                </AnimatedButton>
+              )}
             </div>
 
             {/* Stats */}

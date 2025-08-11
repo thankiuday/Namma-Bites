@@ -3,6 +3,7 @@ import vendorApi, { acceptOrder, rejectOrder, markOrderReady, completeOrder } fr
 import { toast } from 'react-toastify';
 import { FaArrowLeft, FaCheckCircle, FaTimesCircle, FaClock, FaQrcode, FaUpload } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
+import LazyImage from '../components/LazyImage';
 
 const SERVER_BASE_URL = 'http://localhost:5000';
 
@@ -62,6 +63,8 @@ const VendorOrders = () => {
   const [actionLoading, setActionLoading] = useState('');
   const [sortBy, setSortBy] = useState('newest');
   const [stateFilter, setStateFilter] = useState('');
+  const [paymentProofModalOpen, setPaymentProofModalOpen] = useState(false);
+  const [paymentProofModalSrc, setPaymentProofModalSrc] = useState(null);
   const navigate = useNavigate();
 
   const fetchOrders = async () => {
@@ -247,7 +250,12 @@ const VendorOrders = () => {
                 <div className="border-t border-b py-3 sm:py-4 my-3 sm:my-4">
                   {order.items.map((item, index) => (
                     <div key={index} className="flex items-center gap-3 mb-2 last:mb-0">
-                      <img src={item.picture ? (item.picture.startsWith('http') ? item.picture : `${SERVER_BASE_URL}${item.picture}`) : '/default-food.png'} alt={item.name} className="w-10 h-10 object-cover rounded" />
+                      <LazyImage 
+                        src={item.picture ? (item.picture.startsWith('http') ? item.picture : `${SERVER_BASE_URL}${item.picture}`) : '/default-food.png'} 
+                        alt={item.name} 
+                        className="w-10 h-10"
+                        imgClassName="w-10 h-10 object-cover rounded"
+                      />
                       <span className="text-gray-700 text-sm sm:text-base flex-1">{item.quantity}x {item.name}</span>
                       <span className="text-gray-900 text-sm sm:text-base">₹{item.price * item.quantity}</span>
                     </div>
@@ -257,16 +265,26 @@ const VendorOrders = () => {
                 <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 sm:gap-0">
                   <div className="flex flex-col gap-1">
                     {order.paymentProof && (
-                      <a href={`${SERVER_BASE_URL}${order.paymentProof}`} target="_blank" rel="noopener noreferrer" className="flex items-center text-xs text-orange-600 underline"><FaUpload className="mr-1" />View Payment Proof</a>
+                      <button 
+                        onClick={() => {
+                          const proofSrc = order.paymentProof && (order.paymentProof.startsWith('http') ? order.paymentProof : `${SERVER_BASE_URL}${order.paymentProof}`);
+                          setPaymentProofModalSrc(proofSrc);
+                          setPaymentProofModalOpen(true);
+                        }}
+                        className="flex items-center text-xs text-orange-600 underline hover:text-orange-700 transition-colors cursor-pointer bg-transparent border-none p-0"
+                      >
+                        <FaUpload className="mr-1" />View Payment Proof
+                      </button>
                     )}
                     {order.qrCode && (order.state === 'preparing' || order.state === 'ready') && (
                       <div className="flex items-center mt-2 gap-4">
                         <span className="flex items-center">
                           <FaQrcode className="text-orange-600 mr-2" />
-                          <img
+                          <LazyImage
                             src={`https://api.qrserver.com/v1/create-qr-code/?data=${encodeURIComponent(order.qrCode)}&size=100x100`}
                             alt="Order QR"
-                            className="w-20 h-20 object-contain rounded border border-orange-200 bg-white cursor-pointer hover:scale-105 transition-transform"
+                            className="w-20 h-20"
+                            imgClassName="w-20 h-20 object-contain rounded border border-orange-200 bg-white cursor-pointer hover:scale-105 transition-transform"
                           />
                         </span>
                         <button
@@ -328,6 +346,26 @@ const VendorOrders = () => {
                 )}
               </div>
             ))}
+          </div>
+        )}
+
+        {/* Payment Proof Modal */}
+        {paymentProofModalOpen && (
+          <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-black bg-opacity-80">
+            <button
+              className="mt-8 mb-4 bg-white text-orange-600 font-bold rounded-full px-6 py-2 shadow hover:bg-orange-100 focus:outline-none text-lg"
+              style={{ position: 'fixed', top: '32px', left: '50%', transform: 'translateX(-50%)', zIndex: 60 }}
+              onClick={() => setPaymentProofModalOpen(false)}
+            >
+              Back to Orders
+            </button>
+            <div className="relative flex flex-col items-center justify-center">
+              <img
+                src={paymentProofModalSrc}
+                alt="Payment Proof"
+                className="max-w-[90vw] max-h-[80vh] rounded-lg shadow-lg border-4 border-orange-500 bg-white object-contain"
+              />
+            </div>
           </div>
         )}
       </div>

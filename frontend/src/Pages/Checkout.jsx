@@ -7,6 +7,7 @@ import axios from 'axios';
 import UploadProgress from '../components/UploadProgress';
 import useUploadProgress from '../hooks/useUploadProgress';
 import LazyImage from '../components/LazyImage';
+import { validateImageFile } from '../utils/validation';
 
 const API_BASE_URL = 'http://localhost:5000/api';
 const SERVER_BASE_URL = 'http://localhost:5000';
@@ -46,10 +47,19 @@ const Checkout = () => {
 
   const handleProofChange = (e) => {
     const file = e.target.files[0];
-    setPaymentProof(file);
+    setError('');
     if (file) {
+      const check = validateImageFile(file, { maxMB: 8 });
+      if (!check.ok) {
+        setPaymentProof(null);
+        setProofPreview(null);
+        setError(check.message);
+        return;
+      }
+      setPaymentProof(file);
       setProofPreview(URL.createObjectURL(file));
     } else {
+      setPaymentProof(null);
       setProofPreview(null);
     }
   };
@@ -58,7 +68,7 @@ const Checkout = () => {
     e.preventDefault();
     setError('');
     if (!paymentProof) {
-      setError('Please upload payment proof.');
+      setError('Please upload payment proof (JPG/PNG/WEBP up to 8MB).');
       return;
     }
     setSubmitting(true);
@@ -143,6 +153,7 @@ const Checkout = () => {
           {/* Payment Proof Upload */}
           <form onSubmit={handleSubmit} className="flex flex-col gap-4">
             <label className="block text-orange-700 font-semibold mb-1">Upload Payment Proof</label>
+            <p className="text-xs text-orange-500 mb-1">Accepted: JPG, PNG, WEBP (max 8MB). Ensure details are readable.</p>
             <input
               type="file"
               accept="image/*"
@@ -153,9 +164,12 @@ const Checkout = () => {
             {proofPreview && (
               <LazyImage src={proofPreview} alt="Preview" className="w-32 h-32" imgClassName="w-32 h-32 object-contain rounded-lg border border-orange-200 bg-white mt-2" />
             )}
+            {error && <div className="text-red-600 text-sm font-semibold mt-1">{error}</div>}
+            
             {/* Order Summary */}
             <div className="bg-orange-50 rounded-xl p-4 border border-orange-200 mt-4">
               <h3 className="text-lg font-bold text-orange-700 mb-2">Order Summary</h3>
+              <p className="text-xs text-orange-500 mb-2">Please verify items, quantity and total before submitting.</p>
               {cart.map(item => (
                 <div key={item._id} className="flex items-center gap-3 mb-2">
                   <LazyImage src={item.image ? (item.image.startsWith('http') ? item.image : `${SERVER_BASE_URL}${item.image}`) : '/default-food.png'} alt={item.name} className="w-10 h-10" imgClassName="w-10 h-10 object-cover rounded" />
@@ -171,7 +185,6 @@ const Checkout = () => {
                 <span>₹{total}</span>
               </div>
             </div>
-            {error && <div className="text-red-600 text-sm font-semibold mt-1">{error}</div>}
             
             {/* Upload Progress Indicator */}
             <UploadProgress 

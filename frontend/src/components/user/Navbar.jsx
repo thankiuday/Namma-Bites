@@ -1,8 +1,9 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { FaSignOutAlt, FaHome, FaUsers, FaStore, FaUserPlus } from 'react-icons/fa';
+import { FaSignOutAlt, FaHome, FaUsers, FaStore, FaUserPlus, FaCog, FaFont } from 'react-icons/fa';
 import { useAuth } from '../../context/AuthContext';
 import { useCart } from '../../context/CartContext';
+import { useFontSize } from '../../context/FontSizeContext';
 import logo from '../../../public/logo.png';
 
 const defaultStudentLinks = [
@@ -26,9 +27,26 @@ const iconMap = {
 
 const Navbar = ({ links = defaultStudentLinks, isAdmin = false }) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const { user, logout } = useAuth();
   const { cart } = useCart();
+  const { increaseFontSize, decreaseFontSize, resetFontSize, getCurrentFontSize } = useFontSize();
   const navigate = useNavigate();
+  const settingsRef = useRef(null);
+
+  // Close settings dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (settingsRef.current && !settingsRef.current.contains(event.target)) {
+        setIsSettingsOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
 
   // Calculate total items in cart
   const cartItemCount = cart.reduce((total, item) => total + item.quantity, 0);
@@ -88,13 +106,72 @@ const Navbar = ({ links = defaultStudentLinks, isAdmin = false }) => {
               </Link>
             ))}
             {isAuthenticated && (
-              <button
-                onClick={handleLogout}
-                className="text-black hover:text-orange-600 px-2 lg:px-2.5 py-2 rounded-md text-base font-medium flex items-center gap-1 lg:gap-2"
-              >
-                <FaSignOutAlt className="text-base lg:text-lg" /> 
-                <span className="hidden lg:inline">Logout</span>
-              </button>
+              <>
+                {/* Settings Dropdown */}
+                <div className="relative" ref={settingsRef}>
+                  <button
+                    onClick={() => setIsSettingsOpen(!isSettingsOpen)}
+                    className="text-black hover:text-orange-600 px-2 lg:px-2.5 py-2 rounded-md text-base font-medium flex items-center gap-1 lg:gap-2"
+                  >
+                    <FaCog className="text-base lg:text-lg" />
+                    <span className="hidden lg:inline">Settings</span>
+                  </button>
+
+                  {/* Settings Dropdown Menu */}
+                  {isSettingsOpen && (
+                    <div className="absolute right-0 mt-2 w-64 bg-white rounded-lg shadow-xl border border-gray-200 z-50">
+                      <div className="p-4">
+                        <div className="flex items-center gap-2 mb-3">
+                          <FaFont className="w-4 h-4 text-orange-600" />
+                          <span className="text-sm font-semibold text-gray-700">Font Size</span>
+                        </div>
+                        <div className="space-y-2">
+                          <div className="text-xs text-gray-600 mb-2">
+                            Current: {getCurrentFontSize().label}
+                          </div>
+                          <div className="flex gap-2">
+                            <button
+                              onClick={() => {
+                                console.log('Decrease font size clicked');
+                                decreaseFontSize();
+                              }}
+                              className="flex-1 px-3 py-2 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 transition-colors text-sm font-medium"
+                            >
+                              A-
+                            </button>
+                            <button
+                              onClick={() => {
+                                console.log('Reset font size clicked');
+                                resetFontSize();
+                              }}
+                              className="flex-1 px-3 py-2 bg-orange-100 text-orange-700 rounded-md hover:bg-orange-200 transition-colors text-sm font-medium"
+                            >
+                              Reset
+                            </button>
+                            <button
+                              onClick={() => {
+                                console.log('Increase font size clicked');
+                                increaseFontSize();
+                              }}
+                              className="flex-1 px-3 py-2 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 transition-colors text-sm font-medium"
+                            >
+                              A+
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                <button
+                  onClick={handleLogout}
+                  className="text-black hover:text-orange-600 px-2 lg:px-2.5 py-2 rounded-md text-base font-medium flex items-center gap-1 lg:gap-2"
+                >
+                  <FaSignOutAlt className="text-base lg:text-lg" /> 
+                  <span className="hidden lg:inline">Logout</span>
+                </button>
+              </>
             )}
           </div>
 
@@ -151,15 +228,62 @@ const Navbar = ({ links = defaultStudentLinks, isAdmin = false }) => {
             </Link>
           ))}
           {isAuthenticated && (
-            <button
-              onClick={() => {
-                handleLogout();
-                setIsMenuOpen(false);
-              }}
-              className="w-full text-left block px-3 py-3 rounded-md text-lg font-medium text-black hover:text-orange-600 hover:bg-orange-50 flex items-center gap-3 transition-colors"
-            >
-              <FaSignOutAlt className="text-lg h-5 w-5" /> Logout
-            </button>
+            <>
+              {/* Settings section for mobile */}
+              <div className="border-t border-gray-200 pt-3 mt-3">
+                <div className="px-3 py-2">
+                  <div className="flex items-center gap-2 mb-3">
+                    <FaCog className="w-4 h-4 text-orange-600" />
+                    <span className="text-sm font-semibold text-gray-700">Settings</span>
+                  </div>
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-2 mb-2">
+                      <FaFont className="w-3 h-3 text-orange-600" />
+                      <span className="text-xs text-gray-600">Font Size: {getCurrentFontSize().label}</span>
+                    </div>
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => {
+                          console.log('Mobile: Decrease font size clicked');
+                          decreaseFontSize();
+                        }}
+                        className="flex-1 px-3 py-2 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 transition-colors text-sm font-medium"
+                      >
+                        A-
+                      </button>
+                      <button
+                        onClick={() => {
+                          console.log('Mobile: Reset font size clicked');
+                          resetFontSize();
+                        }}
+                        className="flex-1 px-3 py-2 bg-orange-100 text-orange-700 rounded-md hover:bg-orange-200 transition-colors text-sm font-medium"
+                      >
+                        Reset
+                      </button>
+                      <button
+                        onClick={() => {
+                          console.log('Mobile: Increase font size clicked');
+                          increaseFontSize();
+                        }}
+                        className="flex-1 px-3 py-2 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 transition-colors text-sm font-medium"
+                      >
+                        A+
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <button
+                onClick={() => {
+                  handleLogout();
+                  setIsMenuOpen(false);
+                }}
+                className="w-full text-left block px-3 py-3 rounded-md text-lg font-medium text-black hover:text-orange-600 hover:bg-orange-50 flex items-center gap-3 transition-colors"
+              >
+                <FaSignOutAlt className="text-lg h-5 w-5" /> Logout
+              </button>
+            </>
           )}
         </div>
       </div>

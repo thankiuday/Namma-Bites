@@ -5,7 +5,7 @@ import api from '../api/config';
 import { FaUser, FaPhone, FaMapMarkerAlt, FaUtensils, FaCamera, FaQrcode, FaEdit, FaSave, FaTimes, FaArrowLeft, FaLock, FaEye, FaEyeSlash } from 'react-icons/fa';
 import { getVendorImageUrl } from '../utils/imageUtils';
 import UploadProgress from '../components/UploadProgress';
-import useUploadProgress from '../hooks/useUploadProgress';
+import { validateImageFile, isNonEmpty, isStrongPassword } from '../utils/validation';
 
 const VendorProfile = () => {
   const { vendor, checkVendorAuth } = useVendorAuth();
@@ -19,6 +19,7 @@ const VendorProfile = () => {
   const [scanner, setScanner] = useState(null);
   const [email] = useState(vendor?.email || '');
   const [profileMsg, setProfileMsg] = useState('');
+  const [isUpdating, setIsUpdating] = useState(false);
 
   // Change password state
   const [oldPassword, setOldPassword] = useState('');
@@ -28,13 +29,12 @@ const VendorProfile = () => {
   const [showOldPassword, setShowOldPassword] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const { 
-    uploadProgress, 
-    uploadStatus, 
-    isUploading, 
-    uploadError, 
-    uploadWithProgress 
-  } = useUploadProgress();
+  
+  // Upload progress states (manual implementation since we're using PUT)
+  const [uploadProgress, setUploadProgress] = useState(0);
+  const [uploadStatus, setUploadStatus] = useState('');
+  const [isUploading, setIsUploading] = useState(false);
+  const [uploadError, setUploadError] = useState('');
 
   // Update form fields when vendor data changes
   useEffect(() => {
@@ -48,43 +48,115 @@ const VendorProfile = () => {
 
   const handleProfileUpdate = async (e) => {
     e.preventDefault();
+    
+    // Clear previous messages
+    setProfileMsg('');
+    setUploadError('');
+
+    // Basic input trims and checks
+    const nameTrim = String(name || '').trim();
+    const phoneTrim = String(phone || '').trim();
+    const addressTrim = String(address || '').trim();
+    const cuisineTrim = String(cuisine || '').trim();
+
+    if (!nameTrim) {
+      setProfileMsg('Name is required');
+      return;
+    }
+    if (phoneTrim && !/^\d{10}$/.test(phoneTrim)) {
+      setProfileMsg('Phone must be a 10-digit number');
+      return;
+    }
+
+    if (logo) {
+      const check = validateImageFile(logo, { maxMB: 5 });
+      if (!check.ok) {
+        setProfileMsg(check.message);
+        return;
+      }
+    }
+    if (scanner) {
+      const check = validateImageFile(scanner, { maxMB: 5 });
+      if (!check.ok) {
+        setProfileMsg(check.message);
+        return;
+      }
+    }
+    
     const formData = new FormData();
-    formData.append('name', name);
-    formData.append('phone', phone);
-    formData.append('address', address);
-    formData.append('cuisine', cuisine);
-    if (logo) formData.append('logo', logo);
+    formData.append('name', nameTrim);
+    formData.append('phone', phoneTrim);
+    formData.append('address', addressTrim);
+    formData.append('cuisine', cuisineTrim);
+    if (logo) formData.append('image', logo);
     if (scanner) formData.append('scanner', scanner);
 
     // Only proceed if there is something to update
-    if (!name && !phone && !address && !cuisine && !logo && !scanner) {
+    if (!nameTrim && !phoneTrim && !addressTrim && !cuisineTrim && !logo && !scanner) {
       setProfileMsg('Please provide at least one field to update.');
       return;
     }
+
+    // Set loading states
+    setIsUpdating(true);
+    setIsUploading(true);
+    setUploadProgress(0);
+    setUploadStatus('Uploading...');
 
     try {
       const res = await api.put('/vendor/me', formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
         onUploadProgress: (progressEvent) => {
           const progress = Math.round((progressEvent.loaded * 100) / progressEvent.total);
-          // Manually update progress states since we can't use the hook for PUT
-          // This is a temporary solution - the hook could be extended to support PUT
+          setUploadProgress(progress);
+          if (progress < 100) {
+            setUploadStatus(`Uploading... ${progress}%`);
+          } else {
+            setUploadStatus('Processing...');
+          }
         }
       });
+      
       if (res.data.success) {
+        setUploadStatus('Upload successful!');
         setProfileMsg('Profile updated successfully!');
         setEditMode(false);
+        setLogo(null);
+        setScanner(null);
         await checkVendorAuth(); // Refresh vendor data to show new logo/name
       } else {
-        setProfileMsg(res.data.message || 'Failed to update profile.');
+        setUploadError(res.data.message || 'Failed to update profile.');
+        setUploadStatus('Upload failed');
       }
     } catch (err) {
-      setProfileMsg(err.response?.data?.message || 'Error updating profile.');
+      const errorMsg = err.response?.data?.message || 'Error updating profile.';
+      setUploadError(errorMsg);
+      setUploadStatus('Upload failed');
+      setProfileMsg(errorMsg);
+    } finally {
+      setIsUpdating(false);
+      setIsUploading(false);
+      // Reset progress after a delay
+      setTimeout(() => {
+        setUploadProgress(0);
+        setUploadStatus('');
+        setUploadError('');
+      }, 3000);
     }
   };
 
   const handlePasswordChange = async (e) => {
     e.preventDefault();
+    setPasswordMsg('');
+
+    if (!isNonEmpty(oldPassword)) {
+      setPasswordMsg('Current password is required');
+      return;
+    }
+    if (!isStrongPassword(newPassword, { min: 6 })) {
+      setPasswordMsg('New password must be at least 6 characters');
+      return;
+    }
     if (newPassword !== confirmPassword) {
       setPasswordMsg('New passwords do not match.');
       return;
@@ -350,20 +422,42 @@ const VendorProfile = () => {
                 </p>
               </div>
               
+              {/* Upload Progress Indicator */}
+              {isUploading && (
+                <UploadProgress
+                  progress={uploadProgress}
+                  status={uploadStatus}
+                  isVisible={isUploading}
+                  error={uploadError}
+                  className="mb-4"
+                />
+              )}
+
               <div className="flex flex-col sm:flex-row justify-end gap-3 pt-4 border-t border-gray-200">
                 <button 
                   type="button" 
                   onClick={() => setEditMode(false)} 
-                  className="px-6 py-3 border-2 border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors duration-200 font-semibold"
+                  disabled={isUpdating}
+                  className="px-6 py-3 border-2 border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors duration-200 font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   Cancel
                 </button>
                 <button 
                   type="submit" 
-                  className="px-6 py-3 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-lg hover:from-orange-600 hover:to-orange-700 transition-all duration-200 font-semibold shadow-lg flex items-center gap-2"
+                  disabled={isUpdating}
+                  className="px-6 py-3 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-lg hover:from-orange-600 hover:to-orange-700 transition-all duration-200 font-semibold shadow-lg flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  <FaSave className="w-4 h-4" />
-                  Save Changes
+                  {isUpdating ? (
+                    <>
+                      <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent"></div>
+                      Updating...
+                    </>
+                  ) : (
+                    <>
+                      <FaSave className="w-4 h-4" />
+                      Save Changes
+                    </>
+                  )}
                 </button>
               </div>
               

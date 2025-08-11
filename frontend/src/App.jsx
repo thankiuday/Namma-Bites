@@ -4,6 +4,7 @@ import Navbar from './components/user/Navbar';
 import Footer from './components/Footer';
 import { AuthProvider } from './context/AuthContext';
 import { CartProvider } from './context/CartContext';
+import { FontSizeProvider } from './context/FontSizeContext';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { VendorAuthProvider } from './context/VendorAuthContext';
@@ -18,16 +19,20 @@ import ScrollToTop from './components/ScrollToTop';
 
 // Group Vendor routes to be wrapped by its provider
 const VendorRoutes = () => (
-  <VendorAuthProvider>
-    <AnimatedVendorRoutes />
-  </VendorAuthProvider>
+  <FontSizeProvider>
+    <VendorAuthProvider>
+      <AnimatedVendorRoutes />
+    </VendorAuthProvider>
+  </FontSizeProvider>
 );
 
 // Group Admin routes to be wrapped by its provider
 const AdminRoutes = () => (
-  <AdminAuthProvider>
-    <AnimatedAdminRoutes />
-  </AdminAuthProvider>
+  <FontSizeProvider>
+    <AdminAuthProvider>
+      <AnimatedAdminRoutes />
+    </AdminAuthProvider>
+  </FontSizeProvider>
 );
 
 const AppContent = () => {
@@ -74,11 +79,13 @@ function App() {
         <Route
           path="/*"
           element={
-            <AuthProvider>
-              <CartProvider>
-                <AppContent />
-              </CartProvider>
-            </AuthProvider>
+            <FontSizeProvider>
+              <AuthProvider>
+                <CartProvider>
+                  <AppContent />
+                </CartProvider>
+              </AuthProvider>
+            </FontSizeProvider>
           }
         />
       </Routes>

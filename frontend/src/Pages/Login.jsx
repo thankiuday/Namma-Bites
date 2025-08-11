@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import logo from '../../public/logo.png';
 import AnimatedButton from '../components/AnimatedButton';
+import { isNonEmpty } from '../utils/validation';
 
 const Login = () => {
   const navigate = useNavigate();
@@ -31,13 +32,32 @@ const Login = () => {
     setLoading(true);
     setError('');
 
+    // Client-side validation
+    const usernameTrim = String(formData.username || '').trim();
+    const passwordTrim = String(formData.password || '').trim();
+    if (!isNonEmpty(usernameTrim)) {
+      setLoading(false);
+      setError('Username is required');
+      return;
+    }
+    if (usernameTrim.length < 3) {
+      setLoading(false);
+      setError('Username must be at least 3 characters');
+      return;
+    }
+    if (!isNonEmpty(passwordTrim)) {
+      setLoading(false);
+      setError('Password is required');
+      return;
+    }
+
     try {
       const response = await fetch('http://localhost:5000/api/auth/login', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(formData),
+        body: JSON.stringify({ ...formData, username: usernameTrim, password: passwordTrim }),
         credentials: 'include'
       });
 
@@ -108,6 +128,7 @@ const Login = () => {
                 placeholder="Enter your username"
                 className="mt-1 block w-full px-3 py-2 sm:py-3 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-orange-500 focus:border-orange-500 text-gray-900 text-base"
               />
+              <p className="mt-1 text-xs text-gray-500">At least 3 characters. Avoid leading/trailing spaces.</p>
             </div>
 
             {/* Password */}
@@ -125,6 +146,7 @@ const Login = () => {
                 placeholder="Enter your password"
                 className="mt-1 block w-full px-3 py-2 sm:py-3 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-orange-500 focus:border-orange-500 text-gray-900 text-base"
               />
+              <p className="mt-1 text-xs text-gray-500">Use a strong password. Minimum 6+ characters recommended.</p>
             </div>
 
             {/* Remember Me Checkbox */}

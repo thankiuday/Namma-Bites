@@ -4,12 +4,13 @@ import PageTransition from './PageTransition';
 
 // Import admin pages
 import AdminLogin from '../Pages/AdminLogin';
-import AdminRegister from '../pages/AdminRegister';
+import AdminRegister from '../Pages/AdminRegister';
 import AdminDashboard from '../Pages/AdminDashboard';
 import AdminUsers from '../Pages/AdminUsers';
 import AdminVendors from '../Pages/AdminVendors';
 import CreateVendor from '../Pages/admin/CreateVendor';
 import AdminProfile from '../Pages/AdminProfile';
+import SuperAdminPanel from '../Pages/SuperAdminPanel';
 
 // Protected Route Components
 import AdminProtectedRoute from './admin/AdminProtectedRoute';
@@ -62,6 +63,13 @@ const AnimatedAdminRoutes = () => {
           <AdminProtectedRoute>
             <PageTransition>
               <AdminProfile />
+            </PageTransition>
+          </AdminProtectedRoute>
+        } />
+        <Route path="/super-panel" element={
+          <AdminProtectedRoute>
+            <PageTransition>
+              <SuperAdminPanel />
             </PageTransition>
           </AdminProtectedRoute>
         } />

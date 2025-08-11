@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { FaHome, FaUtensils, FaClipboardList, FaUserCircle, FaSignOutAlt, FaMoneyCheckAlt, FaCalendarAlt, FaUsers, FaUser } from 'react-icons/fa';
+import { FaHome, FaUtensils, FaClipboardList, FaUserCircle, FaSignOutAlt, FaMoneyCheckAlt, FaCalendarAlt, FaUsers, FaUser, FaEye } from 'react-icons/fa';
 import { useVendorAuth } from '../context/VendorAuthContext';
 import vendorApi, { getPendingUserSubscriptions, approveUserSubscription, getApprovedUserSubscriptions } from '../api/vendorApi';
 import api from '../api/config';
 import VendorNavbar from '../components/vendor/VendorNavbar';
 import { getGreeting } from '../utils/greetings';
-import { getVendorImageUrl, getMenuItemImageUrl } from '../utils/imageUtils';
+import { getVendorImageUrl, getMenuItemImageUrl, getPaymentProofImageUrl } from '../utils/imageUtils';
 import axios from 'axios';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
@@ -409,14 +409,24 @@ const VendorDashboard = () => {
                       <div className="text-gray-700 mb-1">Duration: {sub.duration} days</div>
                     </div>
                     <div className="flex flex-col items-center gap-2">
-                      {sub.paymentProof && (
-                        <button
-                          onClick={() => setModalImage(`http://localhost:5000${sub.paymentProof}`)}
-                          className="focus:outline-none"
-                          title="View Payment Proof"
-                        >
-                          <img src={`http://localhost:5000${sub.paymentProof}`} alt="Payment Proof" className="w-24 h-24 object-cover rounded border hover:shadow-lg transition" />
-                        </button>
+                      {sub.paymentProof ? (
+                        <>
+                          <button
+                            onClick={() => setModalImage(getPaymentProofImageUrl(sub.paymentProof))}
+                            className="focus:outline-none"
+                            title="View Payment Proof"
+                          >
+                            <img src={getPaymentProofImageUrl(sub.paymentProof)} alt="Payment Proof" className="w-24 h-24 object-cover rounded border hover:shadow-lg transition" />
+                          </button>
+                          <button
+                            onClick={() => setModalImage(getPaymentProofImageUrl(sub.paymentProof))}
+                            className="text-xs text-orange-700 hover:text-orange-800 underline inline-flex items-center gap-1"
+                          >
+                            <FaEye className="w-3 h-3" /> Click to view payment proof
+                          </button>
+                        </>
+                      ) : (
+                        <span className="text-xs text-gray-500">No payment proof uploaded</span>
                       )}
                       <div className="flex gap-2 mt-2">
                         <button
@@ -576,7 +586,7 @@ const VendorDashboard = () => {
                       <div className="text-gray-700 mb-1">Duration: {sub.duration} days</div>
                       {sub.paymentProof && (
                         <button
-                          onClick={() => setModalImage(`http://localhost:5000${sub.paymentProof}`)}
+                          onClick={() => setModalImage(getPaymentProofImageUrl(sub.paymentProof))}
                           className="mt-2 text-orange-700 underline text-sm font-semibold hover:text-orange-900 focus:outline-none"
                         >
                           Click here to see payment proof
@@ -630,7 +640,7 @@ const VendorDashboard = () => {
                       <div className="text-gray-700 mb-1">Duration: {sub.duration} days</div>
                       {sub.paymentProof && (
                         <button
-                          onClick={() => setModalImage(`http://localhost:5000${sub.paymentProof}`)}
+                          onClick={() => setModalImage(getPaymentProofImageUrl(sub.paymentProof))}
                           className="mt-2 text-orange-700 underline text-sm font-semibold hover:text-orange-900 focus:outline-none"
                         >
                           Click here to see payment proof

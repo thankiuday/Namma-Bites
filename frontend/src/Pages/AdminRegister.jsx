@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { FaSignInAlt, FaUserPlus, FaBars, FaTimes } from 'react-icons/fa';
 import axios from '../api/config';
 import logo from '../../public/logo.png';
+import { isNonEmpty, isValidEmail, isStrongPassword, trimObjectStrings } from '../utils/validation';
 
 const AdminRegister = () => {
   const navigate = useNavigate();
@@ -15,6 +16,7 @@ const AdminRegister = () => {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [success, setSuccess] = useState('');
 
   const handleChange = (e) => {
     setFormData({
@@ -26,9 +28,23 @@ const AdminRegister = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
+    setSuccess('');
 
-    // Validate passwords match
-    if (formData.password !== formData.confirmPassword) {
+    const data = trimObjectStrings(formData);
+
+    if (!isNonEmpty(data.name)) {
+      setError('Full name is required');
+      return;
+    }
+    if (!isValidEmail(data.email)) {
+      setError('Please enter a valid email');
+      return;
+    }
+    if (!isStrongPassword(data.password, { min: 6 })) {
+      setError('Password must be at least 6 characters');
+      return;
+    }
+    if (data.password !== data.confirmPassword) {
       setError('Passwords do not match');
       return;
     }
@@ -36,14 +52,26 @@ const AdminRegister = () => {
     setLoading(true);
 
     try {
-      const response = await axios.post('/admin/register/first', {
-        name: formData.name,
-        email: formData.email,
-        password: formData.password
+      const response = await axios.post('/admin/register', {
+        name: data.name,
+        email: data.email,
+        password: data.password
       });
 
       if (response.data.success) {
-        navigate('/admin/dashboard');
+        if (response.data.admin) {
+          // Super admin registered - redirect to dashboard
+          navigate('/admin/dashboard');
+        } else {
+          // Regular admin registered - show success message
+          setSuccess(response.data.message);
+          setFormData({
+            name: '',
+            email: '',
+            password: '',
+            confirmPassword: ''
+          });
+        }
       } else {
         setError(response.data.message || 'Registration failed');
       }
@@ -70,6 +98,12 @@ const AdminRegister = () => {
             </div>
           )}
 
+          {success && (
+            <div className="bg-green-50 text-green-600 p-4 rounded-lg mb-6 font-medium">
+              {success}
+            </div>
+          )}
+
           <form onSubmit={handleSubmit} className="space-y-6">
             <div>
               <label htmlFor="name" className="block text-sm font-medium text-gray-700">
@@ -85,6 +119,7 @@ const AdminRegister = () => {
                 className="mt-1 block w-full px-3 py-2 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-orange-600 focus:border-transparent text-gray-900"
                 placeholder="Enter your full name"
               />
+              <p className="mt-1 text-xs text-gray-500">Your real name as it will appear to other admins.</p>
             </div>
 
             <div>
@@ -101,6 +136,7 @@ const AdminRegister = () => {
                 className="mt-1 block w-full px-3 py-2 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-orange-600 focus:border-transparent text-gray-900"
                 placeholder="Enter your email"
               />
+              <p className="mt-1 text-xs text-gray-500">Use a valid work email (e.g., name@example.com)</p>
             </div>
 
             <div>
@@ -118,6 +154,7 @@ const AdminRegister = () => {
                 className="mt-1 block w-full px-3 py-2 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-orange-600 focus:border-transparent text-gray-900"
                 placeholder="Enter your password"
               />
+              <p className="mt-1 text-xs text-gray-500">Minimum 6 characters. Use letters and numbers for better security.</p>
             </div>
 
             <div>
@@ -135,6 +172,7 @@ const AdminRegister = () => {
                 className="mt-1 block w-full px-3 py-2 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-orange-600 focus:border-transparent text-gray-900"
                 placeholder="Confirm your password"
               />
+              <p className="mt-1 text-xs text-gray-500">Re-enter the same password to confirm.</p>
             </div>
 
             <button

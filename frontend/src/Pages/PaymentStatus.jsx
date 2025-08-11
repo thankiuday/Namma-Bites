@@ -5,6 +5,8 @@ import { uploadPaymentProof, getUserSubscriptions } from '../api/userApi';
 import { getVendorImageUrl } from '../utils/imageUtils';
 import UploadProgress from '../components/UploadProgress';
 import useUploadProgress from '../hooks/useUploadProgress';
+import { validateImageFile } from '../utils/validation';
+import { API_URL } from '../api/config';
 
 const PaymentStatus = () => {
   const { subscriptionId } = useParams();
@@ -38,14 +40,25 @@ const PaymentStatus = () => {
   }, [subscriptionId]);
 
   const handleFileChange = (e) => {
-    setFile(e.target.files[0]);
+    const f = e.target.files[0];
     setError('');
+    if (f) {
+      const check = validateImageFile(f, { maxMB: 8 });
+      if (!check.ok) {
+        setFile(null);
+        setError(check.message);
+        return;
+      }
+      setFile(f);
+    } else {
+      setFile(null);
+    }
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!file) {
-      setError('Please upload a payment proof image.');
+      setError('Please upload a payment proof image (JPG/PNG/WEBP up to 8MB).');
       return;
     }
     setUploading(true);
@@ -54,7 +67,7 @@ const PaymentStatus = () => {
       const formData = new FormData();
       formData.append('paymentProof', file);
       await uploadWithProgress(
-        `/subscriptions/${subscriptionId}/payment-proof`, 
+        `${API_URL}/users/subscriptions/${subscriptionId}/payment-proof`, 
         formData,
         { 
           headers: { 'Content-Type': 'multipart/form-data' },
@@ -98,6 +111,7 @@ const PaymentStatus = () => {
             </div>
             <form onSubmit={handleSubmit} className="flex flex-col gap-4">
               <label className="block text-orange-700 font-semibold mb-1">Upload Payment Proof (screenshot)</label>
+              <p className="text-xs text-orange-500 mb-1">Accepted: JPG, PNG, WEBP (max 8MB). Upload a clear screenshot of your payment.</p>
               <input
                 type="file"
                 accept="image/*"

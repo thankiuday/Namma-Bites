@@ -27,6 +27,15 @@ export const authenticateAdmin = async (req, res, next) => {
           message: 'Admin not found'
         });
       }
+
+      // Check if admin is approved (except super-admin)
+      if (admin.role !== 'super-admin' && !admin.isApproved) {
+        return res.status(401).json({
+          success: false,
+          message: 'Your account is pending approval from the Super Admin.'
+        });
+      }
+
       req.admin = admin;
       next();
     } catch (jwtError) {
@@ -43,6 +52,25 @@ export const authenticateAdmin = async (req, res, next) => {
       message: 'Authentication failed'
     });
   }
+};
+
+// Check if admin is super admin (use after authenticateAdmin)
+export const requireSuperAdmin = (req, res, next) => {
+  if (!req.admin) {
+    return res.status(401).json({
+      success: false,
+      message: 'Authentication required'
+    });
+  }
+
+  if (req.admin.role !== 'super-admin') {
+    return res.status(403).json({
+      success: false,
+      message: 'Access denied. Super Admin privileges required.'
+    });
+  }
+
+  next();
 };
 
 export const authenticateVendor = async (req, res, next) => {

@@ -4,6 +4,7 @@ import { FaSignInAlt, FaUserPlus, FaEnvelope, FaLock, FaRedo, FaBars, FaTimes } 
 import adminApi from '../api/adminApi';
 import logo from '../../public/logo.png';
 import { useAdminAuth } from '../context/AdminAuthContext';
+import { isNonEmpty, isValidEmail } from '../utils/validation';
 
 const AdminLogin = () => {
   const navigate = useNavigate();
@@ -39,8 +40,21 @@ const AdminLogin = () => {
     setError('');
     setLoading(true);
 
+    const emailTrim = String(formData.email || '').trim();
+    const passwordTrim = String(formData.password || '').trim();
+    if (!isValidEmail(emailTrim)) {
+      setLoading(false);
+      setError('Please enter a valid email');
+      return;
+    }
+    if (!isNonEmpty(passwordTrim)) {
+      setLoading(false);
+      setError('Password is required');
+      return;
+    }
+
     try {
-      const response = await adminApi.post('/login', formData);
+      const response = await adminApi.post('/login', { email: emailTrim, password: passwordTrim });
       console.log('Admin login response:', response.data.admin);
       if (response.data.success) {
         login(response.data.admin);
@@ -106,6 +120,7 @@ const AdminLogin = () => {
                   className="block w-full pl-10 pr-3 py-2 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-orange-600 focus:border-transparent text-gray-900"
                   placeholder="Enter your email"
                 />
+                <p className="mt-1 text-xs text-gray-500">Enter a valid email like name@example.com</p>
               </div>
             </div>
 
@@ -127,6 +142,7 @@ const AdminLogin = () => {
                   className="block w-full pl-10 pr-3 py-2 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-orange-600 focus:border-transparent text-gray-900"
                   placeholder="Enter your password"
                 />
+                <p className="mt-1 text-xs text-gray-500">Minimum 6 characters recommended.</p>
               </div>
             </div>
 

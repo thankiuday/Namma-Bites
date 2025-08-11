@@ -8,6 +8,7 @@
   font-family: 'Poppins', 'Oswald', 'Inter', sans-serif;
   line-height: 1.5;
   font-weight: 400;
+  --font-scale: 1; /* Default font scale */
 
   color-scheme: light dark;
   color: rgba(255, 255, 255, 0.87);
@@ -17,6 +18,78 @@
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+}
+
+/* Dynamic font scaling utility classes */
+.text-scaled {
+  font-size: calc(1rem * var(--font-scale));
+}
+
+.text-scaled-sm {
+  font-size: calc(0.875rem * var(--font-scale));
+}
+
+.text-scaled-lg {
+  font-size: calc(1.125rem * var(--font-scale));
+}
+
+.text-scaled-xl {
+  font-size: calc(1.25rem * var(--font-scale));
+}
+
+.text-scaled-2xl {
+  font-size: calc(1.5rem * var(--font-scale));
+}
+
+.text-scaled-3xl {
+  font-size: calc(1.875rem * var(--font-scale));
+}
+
+/* Apply font scaling to common text elements */
+.font-scaled p,
+.font-scaled span,
+.font-scaled div,
+.font-scaled label,
+.font-scaled button {
+  font-size: calc(1rem * var(--font-scale));
+}
+
+.font-scaled h1 { font-size: calc(2.25rem * var(--font-scale)); }
+.font-scaled h2 { font-size: calc(1.875rem * var(--font-scale)); }
+.font-scaled h3 { font-size: calc(1.5rem * var(--font-scale)); }
+.font-scaled h4 { font-size: calc(1.25rem * var(--font-scale)); }
+.font-scaled h5 { font-size: calc(1.125rem * var(--font-scale)); }
+.font-scaled h6 { font-size: calc(1rem * var(--font-scale)); }
+
+/* Global font scaling - scale the root font size */
+html {
+  font-size: calc(16px * var(--font-scale));
+}
+
+/* Override Tailwind text size classes to use our scaling */
+.text-xs { font-size: calc(0.75rem * var(--font-scale)) !important; }
+.text-sm { font-size: calc(0.875rem * var(--font-scale)) !important; }
+.text-base { font-size: calc(1rem * var(--font-scale)) !important; }
+.text-lg { font-size: calc(1.125rem * var(--font-scale)) !important; }
+.text-xl { font-size: calc(1.25rem * var(--font-scale)) !important; }
+.text-2xl { font-size: calc(1.5rem * var(--font-scale)) !important; }
+.text-3xl { font-size: calc(1.875rem * var(--font-scale)) !important; }
+.text-4xl { font-size: calc(2.25rem * var(--font-scale)) !important; }
+.text-5xl { font-size: calc(3rem * var(--font-scale)) !important; }
+.text-6xl { font-size: calc(3.75rem * var(--font-scale)) !important; }
+
+/* Additional font size debugging - add a visible indicator */
+body::before {
+  content: "Font Scale: " attr(data-font-scale);
+  position: fixed;
+  top: 0;
+  right: 0;
+  background: rgba(0,0,0,0.8);
+  color: white;
+  padding: 4px 8px;
+  font-size: 12px;
+  z-index: 9999;
+  display: none; /* Hide debug indicator */
 }
 
 /* Custom placeholder styles */
