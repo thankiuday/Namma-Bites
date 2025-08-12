@@ -44,12 +44,12 @@ const VendorQrScanner = () => {
       // Make parallel API calls to both endpoints
       const [subscriptionResponse, orderResponse] = await Promise.allSettled([
         axios.post(
-          `${API_BASE_URL}/api/vendor/scan-qr`,
+          `${API_BASE_URL}/vendor/scan-qr`,
           { qrData: data },
           { withCredentials: true }
         ),
         axios.post(
-            `${API_BASE_URL}/api/vendor/orders/scan-qr`,
+            `${API_BASE_URL}/vendor/orders/scan-qr`,
             { qrData: data },
             { withCredentials: true }
         )

@@ -12,6 +12,26 @@ const api = axios.create({
   }
 });
 
+// Global network activity tracker for UX overlays
+let activeRequests = 0;
+const subscribers = new Set();
+
+const notifyNetworkSubscribers = () => {
+  subscribers.forEach((fn) => {
+    try { fn(activeRequests); } catch (_) {}
+  });
+};
+
+export const networkActivity = {
+  subscribe(callback) {
+    subscribers.add(callback);
+    return () => subscribers.delete(callback);
+  },
+  getActiveCount() {
+    return activeRequests;
+  }
+};
+
 let isRefreshing = false;
 let failedQueue = [];
 
@@ -29,6 +49,12 @@ const processQueue = (error, token = null) => {
 // Request interceptor
 api.interceptors.request.use(
   (config) => {
+    // Track network activity for non-GET requests
+    const method = (config.method || 'get').toLowerCase();
+    if (method !== 'get') {
+      activeRequests += 1;
+      notifyNetworkSubscribers();
+    }
     // Vendor self endpoints (always use vendor token)
     if (config.url === '/vendor/self' || config.url === '/vendor/me') {
       const vendorToken = localStorage.getItem('vendorToken');
@@ -61,6 +87,14 @@ api.interceptors.request.use(
     return config;
   },
   (error) => {
+    // Decrement on request setup error
+    try {
+      const method = (error.config?.method || 'get').toLowerCase();
+      if (method !== 'get') {
+        activeRequests = Math.max(0, activeRequests - 1);
+        notifyNetworkSubscribers();
+      }
+    } catch (_) {}
     console.error('Request interceptor error:', error);
     return Promise.reject(error);
   }
@@ -69,9 +103,25 @@ api.interceptors.request.use(
 // Response interceptor
 api.interceptors.response.use(
   (response) => {
+    // Decrement on success for non-GET
+    try {
+      const method = (response.config?.method || 'get').toLowerCase();
+      if (method !== 'get') {
+        activeRequests = Math.max(0, activeRequests - 1);
+        notifyNetworkSubscribers();
+      }
+    } catch (_) {}
     return response;
   },
   async (error) => {
+    // Decrement on error for non-GET
+    try {
+      const method = (error.config?.method || 'get').toLowerCase();
+      if (method !== 'get') {
+        activeRequests = Math.max(0, activeRequests - 1);
+        notifyNetworkSubscribers();
+      }
+    } catch (_) {}
     const originalRequest = error.config;
     const url = originalRequest.url;
 

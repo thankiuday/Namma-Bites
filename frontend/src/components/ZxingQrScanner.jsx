@@ -33,18 +33,21 @@ const ZxingQrScanner = ({ onResult, onError, facingMode = 'environment', width =
 
     // Optimized camera constraints for better performance
     const constraints = {
-      video: { 
-        facingMode,
-        width: { ideal: 1280, max: 1920 },
-        height: { ideal: 720, max: 1080 },
-        frameRate: { ideal: 30, max: 60 }
+      video: {
+        // Use exact when requesting front camera to encourage mobile to pick selfie camera
+        ...(facingMode === 'user' ? { facingMode: { exact: 'user' } } : { facingMode: 'environment' }),
+        width: { ideal: 1280 },
+        height: { ideal: 720 },
+        frameRate: { ideal: 30 }
       }
     };
 
     const startScanning = async () => {
       try {
+        // Request permission explicitly to avoid Safari/Chrome issues
+        await navigator.mediaDevices.getUserMedia({ video: constraints.video });
         await codeReader.decodeFromVideoDevice(
-          null, 
+          undefined,
           videoRef.current, 
           (result, err) => {
             if (!isMounted) return;
@@ -75,9 +78,7 @@ const ZxingQrScanner = ({ onResult, onError, facingMode = 'environment', width =
       if (scanTimeoutRef.current) {
         clearTimeout(scanTimeoutRef.current);
       }
-      if (codeReader.stopContinuousDecode) {
-        codeReader.stopContinuousDecode();
-      }
+      try { codeReader.reset && codeReader.reset(); } catch (_) {}
     };
   }, [facingMode, debouncedOnResult, onError]);
 
