@@ -16,6 +16,7 @@ import AnimatedRoutes from './components/AnimatedRoutes';
 import AnimatedAdminRoutes from './components/AnimatedAdminRoutes';
 import AnimatedVendorRoutes from './components/AnimatedVendorRoutes';
 import ScrollToTop from './components/ScrollToTop';
+import RouteLoader from './components/RouteLoader';
 
 // Group Vendor routes to be wrapped by its provider
 const VendorRoutes = () => (
@@ -71,6 +72,7 @@ function App() {
   return (
     <Router>
       <ScrollToTop />
+      <RouteLoader />
       <Routes>
         {/* Vendor and Admin routes (do NOT wrap with AuthProvider) */}
         <Route path="/vendor/*" element={<VendorRoutes />} />

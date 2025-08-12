@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/vite.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Vite + React</title>
+    <title>Namma Bites</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
@@ -12,8 +12,15 @@
       rel="stylesheet"
     />
   </head>
-  <body >
-    <div id="root"></div>
+  <body style="background: #fff;">
+    <div id="root">
+      <style>
+        /* Light, brand placeholder to avoid initial dark flash before React mounts */
+        .boot-splash{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#fff, #fff7ed);z-index:9998}
+        .boot-splash img{width:80px;height:80px;filter:drop-shadow(0 2px 4px rgba(0,0,0,.08))}
+      </style>
+      <div class="boot-splash"></div>
+    </div>
     <script type="module" src="/src/main.jsx"></script>
   </body>
 </html>
