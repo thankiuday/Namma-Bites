@@ -142,13 +142,16 @@ const Notifications = () => {
       {/* Notification Bell */}
       <div className="relative inline-block">
         <button
-          onClick={() => {
-            // If opening and there are unread, zero immediately for visible change
-            if (!showNotifications && unreadCount > 0) {
+          onClick={async () => {
+            // Optimistically zero and persist, then mark all read server-side
+            if (unreadCount > 0) {
               setUnreadCount(0);
               try { localStorage.setItem(storageKey, '0'); } catch {}
+              try { await userApi.post('/notifications/mark-all-read'); } catch {}
             }
-            setShowNotifications(!showNotifications);
+            // Always navigate to dedicated notifications page
+            setShowNotifications(false);
+            navigate('/notifications');
           }}
           className="relative p-2 text-orange-600 hover:text-orange-700 transition-colors"
         >
