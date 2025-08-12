@@ -12,6 +12,8 @@ import UserProfile from '../Pages/UserProfile';
 import ChangePassword from '../Pages/ChangePassword';
 import Cart from '../Pages/Cart';
 import Orders from '../Pages/Orders';
+import Notifications from '../Pages/Notifications';
+import NotificationDetail from '../Pages/NotificationDetail';
 import FoodDetails from '../pages/FoodDetails';
 import Register from '../Pages/Register';
 import VendorDetails from '../Pages/VendorDetails';
@@ -119,6 +121,20 @@ const AnimatedRoutes = () => {
           <ProtectedRoute>
             <PageTransition>
               <Orders />
+            </PageTransition>
+          </ProtectedRoute>
+        } />
+        <Route path="/notifications" element={
+          <ProtectedRoute>
+            <PageTransition>
+              <Notifications />
+            </PageTransition>
+          </ProtectedRoute>
+        } />
+        <Route path="/notifications/:notificationId" element={
+          <ProtectedRoute>
+            <PageTransition>
+              <NotificationDetail />
             </PageTransition>
           </ProtectedRoute>
         } />

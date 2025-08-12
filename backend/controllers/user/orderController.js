@@ -4,6 +4,8 @@ import Vendor from '../../models/Vendor.js';
 import User from '../../models/User.js';
 import jwt from 'jsonwebtoken';
 import { uploadPaymentProofToCloudinary } from '../../config/cloudinary.js';
+import { calculateEstimatedTime, getQueuePosition } from '../../utils/timeEstimation.js';
+import { recordPrepTimeAnalytics } from '../../utils/prepTimeAnalytics.js';
 
 // Create a new order
 export const createOrder = async (req, res) => {
@@ -25,12 +27,22 @@ export const createOrder = async (req, res) => {
         quantity: item.quantity,
       };
     }));
+    // Get vendor details for time estimation
+    const vendorDoc = await Vendor.findById(vendor);
+    if (!vendorDoc) {
+      throw new Error('Vendor not found');
+    }
+
+    // Calculate estimated preparation time
+    const estimatedTime = await calculateEstimatedTime(vendorDoc, orderItems);
+
     const order = await Order.create({
       user,
       vendor,
       items: orderItems,
       paymentProof,
       state: 'pending',
+      estimatedPreparationTime: estimatedTime
     });
     res.status(201).json({ success: true, data: order });
   } catch (error) {
@@ -113,4 +125,52 @@ export const getOrderQr = async (req, res) => {
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
-}; 
+};
+
+// Get estimated time and queue position for an order
+export const getOrderEstimate = async (req, res) => {
+  try {
+    const { orderId } = req.params;
+    const userId = req.user._id;
+    
+    const order = await Order.findOne({ _id: orderId, user: userId })
+      .populate('vendor')
+      .populate('items.menuItem');
+      
+    if (!order) {
+      return res.status(404).json({ success: false, message: 'Order not found' });
+    }
+
+    // Get current queue position
+    const queuePosition = await getQueuePosition(order);
+
+    // If order is completed or rejected, return actual times
+    if (order.state === 'completed' || order.state === 'rejected') {
+      return res.json({
+        success: true,
+        data: {
+          state: order.state,
+          estimatedTime: order.estimatedPreparationTime,
+          actualTime: order.actualPreparationTime,
+          queuePosition: null,
+          stateTimestamps: order.stateTimestamps
+        }
+      });
+    }
+
+    // For active orders, calculate current estimate
+    const currentEstimate = await calculateEstimatedTime(order.vendor, order.items, order._id);
+    
+    res.json({
+      success: true,
+      data: {
+        state: order.state,
+        estimatedTime: currentEstimate,
+        queuePosition,
+        stateTimestamps: order.stateTimestamps
+      }
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};

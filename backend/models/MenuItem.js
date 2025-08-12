@@ -30,8 +30,10 @@ const menuItemSchema = new mongoose.Schema({
     type: String,
   }],
   preparationTime: {
-    type: String,
-    default: '',
+    type: Number,
+    required: true,
+    min: 1,
+    default: 15, // default 15 minutes if not specified
   },
   calories: {
     type: String,

@@ -5,6 +5,7 @@ import { useVendorAuth } from '../context/VendorAuthContext';
 import vendorApi, { getPendingUserSubscriptions, approveUserSubscription, getApprovedUserSubscriptions } from '../api/vendorApi';
 import api from '../api/config';
 import VendorNavbar from '../components/vendor/VendorNavbar';
+import SendNotification from '../components/vendor/SendNotification';
 import { getGreeting } from '../utils/greetings';
 import { getVendorImageUrl, getMenuItemImageUrl, getPaymentProofImageUrl } from '../utils/imageUtils';
 import axios from 'axios';
@@ -383,6 +384,18 @@ const VendorDashboard = () => {
                 </div>
               </div>
             )}
+          </div>
+          {/* Send Notification Card */}
+          <div className="bg-white rounded-2xl shadow-xl p-8 border border-blue-100 mb-8">
+            <h2 className="text-xl font-bold text-blue-800 mb-4 flex items-center gap-3">
+              <span className="inline-flex items-center justify-center">
+                <svg className="w-8 h-8 text-blue-700 align-middle" fill="none" stroke="currentColor" strokeWidth="3" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+                </svg>
+              </span>
+              Send Notifications
+            </h2>
+            <SendNotification />
           </div>
           {/* Pending User Subscriptions Card */}
           <div className="bg-white rounded-2xl shadow-xl p-8 border border-orange-100 mb-8">

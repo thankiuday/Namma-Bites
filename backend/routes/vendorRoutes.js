@@ -40,6 +40,7 @@ import {
   getMealPrebookings
 } from '../controllers/vendor/vendorController.js';
 import { getVendorOrders, acceptOrder, rejectOrder, markOrderReady, completeOrder, scanOrderQr } from '../controllers/vendor/orderController.js';
+import { createNotification, getVendorNotifications, updateNotification } from '../controllers/notificationController.js';
 import { authenticateAdmin, authenticateVendor, authenticateUser } from '../middleware/user/authMiddleware.js';
 
 const router = express.Router();
@@ -130,6 +131,11 @@ router.post('/orders/scan-qr', authenticateVendor, scanOrderQr);
 
 // Pre-bookings route for vendors
 router.get('/prebookings', authenticateVendor, getMealPrebookings);
+
+// Notification routes
+router.post('/notifications/vendor', authenticateVendor, createNotification);
+router.get('/notifications/vendor', authenticateVendor, getVendorNotifications);
+router.patch('/notifications/vendor/:notificationId', authenticateVendor, updateNotification);
 
 // === ADMIN-ONLY ROUTES ===
 

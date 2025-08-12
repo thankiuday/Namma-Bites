@@ -8,14 +8,13 @@ import { FaCheckCircle, FaClock, FaStore, FaArrowRight } from 'react-icons/fa';
 const API_BASE_URL = 'http://localhost:5000/api';
 const SERVER_BASE_URL = 'http://localhost:5000';
 
-const getEstimatedTime = (items) => {
-  // Example: sum up all item.prepTime (fallback to 10 min per item)
-  if (!items) return 15;
-  let total = 0;
-  for (const item of items) {
-    total += item.prepTime || 10;
-  }
-  return total;
+// Helper to format minutes nicely
+const formatMinutes = (mins) => {
+  if (!mins && mins !== 0) return 'Calculating...';
+  if (mins < 60) return `${mins} min`;
+  const h = Math.floor(mins / 60);
+  const m = mins % 60;
+  return `${h}h ${m}m`;
 };
 
 const OrderConfirmation = () => {
@@ -24,6 +23,9 @@ const OrderConfirmation = () => {
   const [order, setOrder] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [estimate, setEstimate] = useState(null);
+  const [queuePosition, setQueuePosition] = useState(null);
+  const [estimating, setEstimating] = useState(false);
 
   useEffect(() => {
     const fetchOrder = async () => {
@@ -40,6 +42,33 @@ const OrderConfirmation = () => {
     };
     fetchOrder();
   }, [orderId]);
+
+  // Fetch dynamic estimate (initial + every 60s)
+  useEffect(() => {
+    if (!order) return;
+    let timer;
+
+    const fetchEstimate = async () => {
+      try {
+        setEstimating(true);
+        const res = await axios.get(`${API_BASE_URL}/users/orders/${orderId}/estimate`, { withCredentials: true });
+        if (res.data?.success) {
+          setEstimate(res.data.data?.estimatedTime ?? null);
+          setQueuePosition(res.data.data?.queuePosition ?? null);
+        }
+      } catch (e) {
+        // ignore transient errors
+      } finally {
+        setEstimating(false);
+      }
+    };
+
+    // initial fetch
+    fetchEstimate();
+    // poll every 60s while on confirmation page
+    timer = setInterval(fetchEstimate, 60000);
+    return () => clearInterval(timer);
+  }, [order, orderId]);
 
   if (loading) {
     return (
@@ -62,8 +91,9 @@ const OrderConfirmation = () => {
     );
   }
 
-  const estimatedTime = getEstimatedTime(order.items);
   const vendor = order.vendor;
+  const initialEstimate = order.estimatedPreparationTime || null;
+  const shownEstimate = estimate ?? initialEstimate;
 
   return (
     <motion.div
@@ -97,7 +127,12 @@ const OrderConfirmation = () => {
           <FaClock className="text-blue-500 text-2xl" />
           <div>
             <div className="font-semibold text-blue-700">Estimated Preparation Time</div>
-            <div className="text-lg font-bold text-blue-900">{estimatedTime} min</div>
+            <div className="text-lg font-bold text-blue-900">
+              {formatMinutes(shownEstimate)} {estimating ? '(updating...)' : ''}
+            </div>
+            {queuePosition ? (
+              <div className="text-sm text-blue-700">Queue position: {queuePosition}</div>
+            ) : null}
           </div>
         </div>
         {vendor && (

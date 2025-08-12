@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { FaSignOutAlt, FaHome, FaUsers, FaStore, FaUserPlus, FaCog, FaFont } from 'react-icons/fa';
+import { FaSignOutAlt, FaHome, FaUsers, FaStore, FaUserPlus, FaCog, FaFont, FaBell } from 'react-icons/fa';
+import Notifications from '../Notifications';
 import { useAuth } from '../../context/AuthContext';
 import { useCart } from '../../context/CartContext';
 import { useFontSize } from '../../context/FontSizeContext';
@@ -164,6 +165,11 @@ const Navbar = ({ links = defaultStudentLinks, isAdmin = false }) => {
                   )}
                 </div>
 
+                {/* Notifications */}
+                <div className="relative">
+                  <Notifications />
+                </div>
+
                 <button
                   onClick={handleLogout}
                   className="text-black hover:text-orange-600 px-2 lg:px-2.5 py-2 rounded-md text-base font-medium flex items-center gap-1 lg:gap-2"
@@ -274,12 +280,17 @@ const Navbar = ({ links = defaultStudentLinks, isAdmin = false }) => {
                 </div>
               </div>
 
+              {/* Notifications for mobile */}
+              <div className="px-3 py-3 border-t border-gray-200">
+                <Notifications />
+              </div>
+
               <button
                 onClick={() => {
                   handleLogout();
                   setIsMenuOpen(false);
                 }}
-                className="w-full text-left block px-3 py-3 rounded-md text-lg font-medium text-black hover:text-orange-600 hover:bg-orange-50 flex items-center gap-3 transition-colors"
+                className="w-full text-left block px-3 py-3 rounded-md text-lg font-medium text-black hover:text-orange-600 hover:bg-orange-50 flex items-center gap-3 transition-colors border-t border-gray-200"
               >
                 <FaSignOutAlt className="text-lg h-5 w-5" /> Logout
               </button>

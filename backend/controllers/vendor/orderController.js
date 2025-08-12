@@ -1,4 +1,6 @@
 import Order from '../../models/Order.js';
+import { recordPrepTimeAnalytics } from '../../utils/prepTimeAnalytics.js';
+import Notification from '../../models/Notification.js';
 import jwt from 'jsonwebtoken';
 
 // Get all orders for the logged-in vendor
@@ -74,8 +76,35 @@ export const markOrderReady = async (req, res) => {
     if (order.state !== 'preparing') {
       return res.status(400).json({ success: false, message: 'Order is not in preparing state' });
     }
+
+    // Calculate actual preparation time
+    const prepStartTime = new Date(order.stateTimestamps.preparing);
+    const prepEndTime = new Date();
+    const actualPrepTime = Math.round((prepEndTime - prepStartTime) / (1000 * 60)); // Convert to minutes
+
     order.state = 'ready';
+    order.actualPreparationTime = actualPrepTime;
+    order.stateTimestamps.ready = prepEndTime;
     await order.save();
+
+    // Send notification to the user that their order is ready
+    try {
+      await Notification.create({
+        title: 'Your order is ready for pickup',
+        message: `Order #${order.orderNumber || ''} is ready. Please collect it at the counter.`.trim(),
+        type: 'order_update',
+        recipients: 'user',
+        recipientUser: order.user,
+        sender: req.vendor._id,
+        senderModel: 'Vendor',
+        vendorId: req.vendor._id,
+        order: order._id,
+        linkPath: `/orders`,
+        validUntil: new Date(Date.now() + 24 * 60 * 60 * 1000) // 24 hours
+      });
+    } catch (e) {
+      // Log and continue without failing the main flow
+    }
     res.json({ success: true, data: order });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
@@ -96,6 +125,10 @@ export const completeOrder = async (req, res) => {
     }
     order.state = 'completed';
     await order.save();
+    
+    // Record analytics after order is completed
+    await recordPrepTimeAnalytics(order);
+    
     res.json({ success: true, data: order });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
@@ -161,6 +194,9 @@ export const scanOrderQr = async (req, res) => {
       { state: 'completed' },
       { new: true }
     ).populate('user', 'name email').populate('items.menuItem');
+
+    // Record analytics after order is completed
+    await recordPrepTimeAnalytics(updatedOrder);
 
     res.json({ 
       success: true, 

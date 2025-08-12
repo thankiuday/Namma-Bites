@@ -408,18 +408,23 @@ const MenuEntry = () => {
                   placeholder="e.g. Dairy, Nuts (optional)"
                 />
               </div>
-              <div>
-                <label htmlFor="preparationTime" className="block text-sm font-medium text-gray-700">Preparation Time</label>
-                <input
-                  type="text"
-                  id="preparationTime"
-                  value={preparationTime}
-                  onChange={(e) => setPreparationTime(e.target.value)}
-                  className="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 text-sm text-black"
-                  placeholder="e.g. 20 mins"
-                  required
-                />
-              </div>
+                              <div>
+                  <label htmlFor="preparationTime" className="block text-sm font-medium text-gray-700">
+                    Preparation Time (minutes)
+                    <span className="ml-1 text-xs text-gray-500">Required for accurate delivery estimates</span>
+                  </label>
+                  <input
+                    type="number"
+                    id="preparationTime"
+                    value={preparationTime}
+                    onChange={(e) => setPreparationTime(e.target.value)}
+                    className="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 text-sm text-black"
+                    placeholder="e.g. 20"
+                    min="1"
+                    required
+                  />
+                  <p className="mt-1 text-xs text-gray-500">Enter the average time needed to prepare this item (in minutes)</p>
+                </div>
               <div>
                 <label htmlFor="calories" className="block text-sm font-medium text-gray-700">Calories</label>
                 <input
@@ -724,15 +729,21 @@ const MenuEntry = () => {
                     />
                   </div>
                   <div>
-                    <label htmlFor="editPreparationTime" className="block text-sm font-medium text-gray-700">Preparation Time</label>
+                    <label htmlFor="editPreparationTime" className="block text-sm font-medium text-gray-700">
+                      Preparation Time (minutes)
+                      <span className="ml-1 text-xs text-gray-500">Required for accurate delivery estimates</span>
+                    </label>
                     <input
-                      type="text"
+                      type="number"
                       id="editPreparationTime"
                       value={editPreparationTime}
                       onChange={(e) => setEditPreparationTime(e.target.value)}
                       className="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm text-black text-sm sm:text-base focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-                      placeholder="e.g. 20 mins"
+                      placeholder="e.g. 20"
+                      min="1"
+                      required
                     />
+                    <p className="mt-1 text-xs text-gray-500">Enter the average time needed to prepare this item (in minutes)</p>
                   </div>
                   <div>
                     <label htmlFor="editCalories" className="block text-sm font-medium text-gray-700">Calories</label>

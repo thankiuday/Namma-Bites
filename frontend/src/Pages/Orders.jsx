@@ -4,6 +4,7 @@ import axios from 'axios';
 import Joyride from 'react-joyride';
 import { useNavigate } from 'react-router-dom';
 import LazyImage from '../components/LazyImage';
+import OrderTimeEstimate from '../components/OrderTimeEstimate';
 
 const API_BASE_URL = 'http://localhost:5000/api';
 const SERVER_BASE_URL = 'http://localhost:5000';
@@ -248,19 +249,46 @@ const Orders = () => {
                   <p className="text-gray-700 text-sm sm:text-base">Placed on {new Date(order.createdAt).toLocaleString()}</p>
                   <p className="text-xs text-orange-900 font-semibold mt-1">Vendor: {order.vendor?.name}</p>
                 </div>
-                <div className="flex items-center gap-2">
-                  {getStatusIcon(order.state)}
-                  <span className={`font-medium text-sm sm:text-base ${
-                    order.state === 'completed' ? 'text-green-500' :
-                    order.state === 'preparing' ? 'text-orange-500' :
-                    order.state === 'ready' ? 'text-blue-500' :
-                    order.state === 'pending' ? 'text-orange-400' :
-                    'text-red-500'
-                  }`}>
-                    {getStatusText(order.state)}
-                  </span>
-                </div>
+                                  <div className="flex flex-col gap-1">
+                    <div className="flex items-center gap-2">
+                      {getStatusIcon(order.state)}
+                      <span className={`font-medium text-sm sm:text-base ${
+                        order.state === 'completed' ? 'text-green-500' :
+                        order.state === 'preparing' ? 'text-orange-500' :
+                        order.state === 'ready' ? 'text-blue-500' :
+                        order.state === 'pending' ? 'text-orange-400' :
+                        'text-red-500'
+                      }`}>
+                        {getStatusText(order.state)}
+                      </span>
+                    </div>
+                    {order.actualPreparationTime && order.estimatedPreparationTime && (
+                      <div className="text-xs">
+                        <span className={
+                          order.actualPreparationTime <= order.estimatedPreparationTime 
+                            ? 'text-green-600' 
+                            : 'text-orange-600'
+                        }>
+                          {order.actualPreparationTime <= order.estimatedPreparationTime
+                            ? '✓ Prepared on time'
+                            : `⏰ Took ${order.actualPreparationTime - order.estimatedPreparationTime}min longer`
+                          }
+                        </span>
+                      </div>
+                    )}
+                  </div>
               </div>
+              
+              {/* Show time estimate for active orders */}
+              {(order.state === 'pending' || order.state === 'preparing' || order.state === 'ready') && (
+                <div className="mb-4">
+                  <OrderTimeEstimate 
+                    orderId={order._id}
+                    vendorId={order.vendor._id}
+                    onError={(err) => setError(err)}
+                  />
+                </div>
+              )}
 
               <div className="border-t border-b py-3 sm:py-4 my-3 sm:my-4">
                 {order.items.map((item, index) => (

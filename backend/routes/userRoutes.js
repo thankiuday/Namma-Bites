@@ -22,7 +22,8 @@ import {
   prebookMeal,
   cancelUserSubscription
 } from '../controllers/user/userController.js';
-import { createOrder, uploadOrderPaymentProof, getUserOrders, getOrderQr, getUserOrderById } from '../controllers/user/orderController.js';
+import { createOrder, uploadOrderPaymentProof, getUserOrders, getOrderQr, getUserOrderById, getOrderEstimate } from '../controllers/user/orderController.js';
+import { getUserNotifications, getNotificationById, markAllUserNotificationsRead, getUnreadNotificationsCount } from '../controllers/notificationController.js';
 import { authenticateAdmin, authenticateUser } from '../middleware/user/authMiddleware.js';
 import { uploadPaymentProof as uploadPaymentProofMulter } from '../config/cloudinary.js';
 
@@ -60,6 +61,13 @@ router.post('/orders/:orderId/payment-proof', authenticateUser, uploadPaymentPro
 router.get('/orders', authenticateUser, getUserOrders);
 router.get('/orders/:orderId', authenticateUser, getUserOrderById);
 router.get('/orders/:orderId/qr', authenticateUser, getOrderQr);
+router.get('/orders/:orderId/estimate', authenticateUser, getOrderEstimate);
+
+// --- Notification routes ---
+router.get('/notifications/user', authenticateUser, getUserNotifications);
+router.get('/notifications/:notificationId', authenticateUser, getNotificationById);
+router.post('/notifications/mark-all-read', authenticateUser, markAllUserNotificationsRead);
+router.get('/notifications/unread-count', authenticateUser, getUnreadNotificationsCount);
 
 // --- Admin-only routes (generic, must come last) ---
 router.get('/', authenticateAdmin, getAllUsers);

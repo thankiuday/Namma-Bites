@@ -65,7 +65,32 @@ const vendorSchema = new mongoose.Schema({
     updatedAt: {
         type: Date,
         default: Date.now
-    }
+    },
+    capacity: {
+        maxOrdersPerHour: {
+            type: Number,
+            default: 20
+        },
+        averagePreparationTime: {
+            type: Number,
+            default: 15 // in minutes
+        }
+    },
+    operatingHours: {
+        monday: { open: { type: String, default: '09:00' }, close: { type: String, default: '21:00' } },
+        tuesday: { open: { type: String, default: '09:00' }, close: { type: String, default: '21:00' } },
+        wednesday: { open: { type: String, default: '09:00' }, close: { type: String, default: '21:00' } },
+        thursday: { open: { type: String, default: '09:00' }, close: { type: String, default: '21:00' } },
+        friday: { open: { type: String, default: '09:00' }, close: { type: String, default: '21:00' } },
+        saturday: { open: { type: String, default: '09:00' }, close: { type: String, default: '21:00' } },
+        sunday: { open: { type: String, default: '09:00' }, close: { type: String, default: '21:00' } }
+    },
+    peakHours: [{
+        day: { type: String, enum: ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'] },
+        start: String,
+        end: String,
+        multiplier: { type: Number, default: 1.5 }
+    }]
 });
 
 // Hash password before saving
