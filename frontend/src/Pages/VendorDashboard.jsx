@@ -9,8 +9,7 @@ import SendNotification from '../components/vendor/SendNotification';
 import { getGreeting } from '../utils/greetings';
 import { getVendorImageUrl, getMenuItemImageUrl, getPaymentProofImageUrl } from '../utils/imageUtils';
 import axios from 'axios';
-import DatePicker from 'react-datepicker';
-import 'react-datepicker/dist/react-datepicker.css';
+// Calendar UI removed to avoid react-datepicker peer dep conflict in production
 
 const vendorLinks = [
   { name: 'Home', path: '/vendor/dashboard', icon: <FaHome className="w-5 h-5" /> },
@@ -468,12 +467,12 @@ const VendorDashboard = () => {
           </div>
 
           <div className="flex flex-col items-center mb-8">
-            <div className="w-full">
-              <DatePicker
-                selected={calendarDate}
-                onChange={date => setCalendarDate(date)}
-                inline
-                calendarClassName="w-full big-calendar"
+            <div className="w-full max-w-sm">
+              <input
+                type="date"
+                value={calendarDate.toISOString().slice(0,10)}
+                onChange={e => setCalendarDate(new Date(e.target.value))}
+                className="w-full border-2 border-emerald-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-emerald-300 focus:border-emerald-500 bg-white text-gray-800 font-medium"
               />
             </div>
           </div>

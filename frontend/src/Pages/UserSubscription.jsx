@@ -24,8 +24,7 @@ import {
 import { useNavigate } from 'react-router-dom';
 import { format } from 'date-fns';
 import axios from 'axios';
-import DatePicker from 'react-datepicker';
-import 'react-datepicker/dist/react-datepicker.css';
+// DatePicker removed to avoid peer dep conflict with React 19 in production
 
 // API URLs
 const BACKEND_API_URL = import.meta.env.VITE_API_URL || '/api';
@@ -948,68 +947,54 @@ const UserSubscription = () => {
               </div>
               {/* Pre-booking Calendar */}
               {selectedUserSub.paymentStatus === 'approved' && (
-              <div className="mb-8">
-                <h3 className="font-bold text-orange-800 mb-3 flex items-center text-base">
-                  Pre-Book Your Meals
-                </h3>
-                <div className="flex flex-col items-center w-full">
-                  <div className="w-full">
-                    <DatePicker
-                      selected={selectedDate}
-                      onChange={date => setSelectedDate(date)}
-                      inline
-                      calendarClassName="w-full text-lg big-calendar"
-                      minDate={new Date(selectedUserSub.startDate)}
-                      maxDate={(() => {
-                        const d = new Date(selectedUserSub.startDate);
-                        d.setDate(d.getDate() + selectedUserSub.duration - 1);
-                        return d;
-                      })()}
-                    />
-                  </div>
-                  <div className="mt-6 w-full max-w-md mx-auto">
-                    <h4 className="font-semibold text-orange-700 mb-2 text-center">Select meals for {selectedDate.toLocaleDateString()}</h4>
-                    <div className="grid grid-cols-2 gap-4">
-                      {mealTypes.map(meal => {
-                        const dateStr = formatDate(selectedDate);
-                        const prebooked = selectedUserSub.prebookings?.find(pb => pb.date === dateStr && pb.mealType === meal && pb.status === 'booked');
-                        const isExpired = selectedUserSub.paymentStatus === 'expired';
-                        return (
-                          <button
-                            key={meal}
-                            disabled={isExpired || prebookLoading}
-                            className={`px-4 py-3 rounded-xl font-bold text-base transition-all duration-200 shadow text-center ${prebooked ? 'bg-green-500 text-white' : 'bg-gray-200 text-gray-700'} ${isExpired ? 'opacity-50 cursor-not-allowed' : 'hover:bg-orange-500 hover:text-white'}`}
-                            onClick={async () => {
-                              if (isExpired) return;
-                              setPrebookLoading(true);
-                              setPrebookError('');
-                              try {
-                                const status = prebooked ? 'cancelled' : 'booked';
-                                const res = await axios.post(
-                                  `${BACKEND_API_URL}/users/subscriptions/${selectedUserSub._id}/prebook`,
-                                  { date: dateStr, mealType: meal, status },
-                                  { withCredentials: true }
-                                );
-                                setSelectedUserSub(sub => ({
-                                  ...sub,
-                                  prebookings: res.data.data
-                                }));
-                              } catch (err) {
-                                setPrebookError('Failed to update pre-booking.');
-                              } finally {
-                                setPrebookLoading(false);
-                              }
-                            }}
-                          >
-                            {meal.charAt(0).toUpperCase() + meal.slice(1)}<br/>{prebooked ? 'Booked' : 'Not Booked'}
-                          </button>
-                        );
-                      })}
+                <div className="mb-8">
+                  <h3 className="font-bold text-orange-800 mb-3 flex items-center text-base">
+                    Pre-Book Your Meals
+                  </h3>
+                  <div className="flex flex-col items-center w-full">
+                    <div className="mt-6 w-full max-w-md mx-auto">
+                      <h4 className="font-semibold text-orange-700 mb-2 text-center">Select meals for today</h4>
+                      <div className="grid grid-cols-2 gap-4">
+                        {mealTypes.map(meal => {
+                          const dateStr = formatDate(new Date());
+                          const prebooked = selectedUserSub.prebookings?.find(pb => pb.date === dateStr && pb.mealType === meal && pb.status === 'booked');
+                          const isExpired = selectedUserSub.paymentStatus === 'expired';
+                          return (
+                            <button
+                              key={meal}
+                              disabled={isExpired || prebookLoading}
+                              className={`px-4 py-3 rounded-xl font-bold text-base transition-all duration-200 shadow text-center ${prebooked ? 'bg-green-500 text-white' : 'bg-gray-200 text-gray-700'} ${isExpired ? 'opacity-50 cursor-not-allowed' : 'hover:bg-orange-500 hover:text-white'}`}
+                              onClick={async () => {
+                                if (isExpired) return;
+                                setPrebookLoading(true);
+                                setPrebookError('');
+                                try {
+                                  const status = prebooked ? 'cancelled' : 'booked';
+                                  const res = await axios.post(
+                                    `${BACKEND_API_URL}/users/subscriptions/${selectedUserSub._id}/prebook`,
+                                    { date: dateStr, mealType: meal, status },
+                                    { withCredentials: true }
+                                  );
+                                  setSelectedUserSub(sub => ({
+                                    ...sub,
+                                    prebookings: res.data.data
+                                  }));
+                                } catch (err) {
+                                  setPrebookError('Failed to update pre-booking.');
+                                } finally {
+                                  setPrebookLoading(false);
+                                }
+                              }}
+                            >
+                              {meal.charAt(0).toUpperCase() + meal.slice(1)}<br/>{prebooked ? 'Booked' : 'Not Booked'}
+                            </button>
+                          );
+                        })}
+                      </div>
+                      {prebookError && <div className="text-red-600 text-center mt-2">{prebookError}</div>}
                     </div>
-                    {prebookError && <div className="text-red-600 text-center mt-2">{prebookError}</div>}
                   </div>
                 </div>
-              </div>
               )}
               <div className="flex flex-col sm:flex-row justify-end gap-3 sm:space-x-4">
                 <button
