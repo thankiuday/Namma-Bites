@@ -1,6 +1,8 @@
 import Redis from 'ioredis';
 
-const redisClient = new Redis('rediss://default:AbvwAAIjcDEzNzRiMTg0ZjY3NTg0NDc2OWVmN2M2YzRiNGE0ODk3ZHAxMA@integral-pelican-48112.upstash.io:6379');
+// Use REDIS_URL from environment (Render/Upstash), fallback to localhost if needed
+const redisUrl = process.env.REDIS_URL || 'redis://127.0.0.1:6379';
+const redisClient = new Redis(redisUrl);
 
 redisClient.on('error', (err) => {
   console.error('Redis Client Error:', err);

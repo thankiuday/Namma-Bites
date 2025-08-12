@@ -5,8 +5,8 @@ import axios from 'axios';
 import { fadeInUp, scaleIn, pulse } from '../utils/animations';
 import { FaCheckCircle, FaClock, FaStore, FaArrowRight } from 'react-icons/fa';
 
-const API_BASE_URL = 'http://localhost:5000/api';
-const SERVER_BASE_URL = 'http://localhost:5000';
+const API_BASE_URL = import.meta.env.VITE_API_URL;
+const SERVER_BASE_URL = import.meta.env.VITE_SERVER_URL || '';
 
 // Helper to format minutes nicely
 const formatMinutes = (mins) => {

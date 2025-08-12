@@ -67,17 +67,17 @@ router.post('/signup', validateSignup, async (req, res) => {
     // Store refresh token in Redis
     await storeRefreshToken(user._id.toString(), refreshToken, 7 * 24 * 60 * 60); // 7 days
 
-    // Set cookies
+    // Set cookies (secure for production)
     res.cookie('accessToken', accessToken, {
-      httpOnly: false, // Temporarily set to false for debugging
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
+      httpOnly: true,
+      secure: true,
+      sameSite: 'none',
       maxAge: 15 * 60 * 1000 // 15 minutes
     });
     res.cookie('refreshToken', refreshToken, {
-      httpOnly: false, // Allow JavaScript access for token refresh
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
+      httpOnly: true,
+      secure: true,
+      sameSite: 'none',
       maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
     });
 
@@ -141,17 +141,17 @@ router.post('/login', [
       rememberMe ? 30 * 24 * 60 * 60 : 7 * 24 * 60 * 60
     );
 
-    // Set cookies
+    // Set cookies (secure for production)
     res.cookie('accessToken', accessToken, {
-      httpOnly: false, // Temporarily set to false for debugging
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
+      httpOnly: true,
+      secure: true,
+      sameSite: 'none',
       maxAge: 15 * 60 * 1000 // 15 minutes
     });
     res.cookie('refreshToken', refreshToken, {
-      httpOnly: false, // Allow JavaScript access for token refresh
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
+      httpOnly: true,
+      secure: true,
+      sameSite: 'none',
       maxAge: (rememberMe ? 30 : 7) * 24 * 60 * 60 * 1000 // 7 or 30 days
     });
 
@@ -198,22 +198,18 @@ router.post('/refresh-token', async (req, res) => {
     // Store new refresh token in Redis
     await storeRefreshToken(user._id.toString(), newRefreshToken, 7 * 24 * 60 * 60);
 
-    // Set new tokens as cookies
+    // Set new tokens as cookies (secure)
     res.cookie('accessToken', newAccessToken, {
-      httpOnly: false, // Temporarily set to false for debugging
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
-      maxAge: 15 * 60 * 1000, // 15 minutes
-      path: '/',
-      domain: process.env.NODE_ENV === 'production' ? undefined : 'localhost'
+      httpOnly: true,
+      secure: true,
+      sameSite: 'none',
+      maxAge: 15 * 60 * 1000
     });
     res.cookie('refreshToken', newRefreshToken, {
-      httpOnly: false, // Allow JavaScript access for token refresh
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
-      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
-      path: '/',
-      domain: process.env.NODE_ENV === 'production' ? undefined : 'localhost'
+      httpOnly: true,
+      secure: true,
+      sameSite: 'none',
+      maxAge: 7 * 24 * 60 * 60 * 1000
     });
 
     res.json({ 
