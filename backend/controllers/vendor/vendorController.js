@@ -280,10 +280,11 @@ export const loginVendor = async (req, res) => {
     const vendorObj = vendor.toObject();
     delete vendorObj.password;
     
+    const isProduction = process.env.NODE_ENV === 'production';
     res.cookie('vendorToken', token, {
       httpOnly: true,
-      secure: false, // for localhost development
-      sameSite: 'Lax', // use Lax for localhost
+      secure: isProduction, // required for cross-site cookies over HTTPS
+      sameSite: isProduction ? 'None' : 'Lax', // allow cross-site cookie when frontend is on a different domain
       maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
     });
     
@@ -303,10 +304,11 @@ export const loginVendor = async (req, res) => {
 
 // Vendor logout
 export const logoutVendor = (req, res) => {
+  const isProduction = process.env.NODE_ENV === 'production';
   res.cookie('vendorToken', '', {
     httpOnly: true,
-    secure: false, // for localhost development
-    sameSite: 'Lax', // use Lax for localhost
+    secure: isProduction,
+    sameSite: isProduction ? 'None' : 'Lax',
     expires: new Date(0)
   });
   res.status(200).json({ success: true, message: 'Logged out successfully' });
