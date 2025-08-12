@@ -33,9 +33,12 @@ export const VendorAuthProvider = ({ children }) => {
     }
   };
 
-  const login = (vendorData) => {
+  const login = (vendorData, token) => {
     setVendor(vendorData);
-    // No need to store token in local storage, it's an HttpOnly cookie
+    // Persist vendor token for Authorization header on subsequent requests (if server also sets cookie)
+    if (token) {
+      localStorage.setItem('vendorToken', token.startsWith('Bearer ') ? token : `Bearer ${token}`);
+    }
   };
 
   const logout = async () => {

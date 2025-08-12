@@ -82,17 +82,19 @@ api.interceptors.response.use(
       // Get current path
       const currentPath = window.location.pathname;
 
-      // Admin endpoints or currently on admin route
-      if (url.startsWith('/admin') || currentPath.startsWith('/admin')) {
-        localStorage.removeItem('adminToken');
-        window.location.href = '/admin/login';
-        return Promise.reject(error);
-      }
+    // Admin endpoints or currently on admin route
+    if (url.startsWith('/admin') || currentPath.startsWith('/admin')) {
+      // Clear any persisted admin token and let the route guard redirect
+      localStorage.removeItem('adminToken');
+      return Promise.reject(error);
+    }
 
       // Vendor endpoints or currently on vendor route
       if (url.startsWith('/vendor') || currentPath.startsWith('/vendor')) {
+        // Clear any persisted vendor token
         localStorage.removeItem('vendorToken');
-        window.location.href = '/vendor/login';
+        // Do NOT hard-redirect here to avoid post-login bounce due to early 401s
+        // Let route guards/context handle redirects as needed
         return Promise.reject(error);
       }
 

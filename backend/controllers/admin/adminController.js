@@ -41,10 +41,11 @@ export const login = async (req, res) => {
     );
 
     // Set token as HTTP-only cookie
+    const isProduction = process.env.NODE_ENV === 'production';
     res.cookie('adminToken', token, {
       httpOnly: true,
-      secure: false,
-      sameSite: 'lax',
+      secure: isProduction,
+      sameSite: isProduction ? 'None' : 'Lax',
       maxAge: 24 * 60 * 60 * 1000,
       path: '/'
     });

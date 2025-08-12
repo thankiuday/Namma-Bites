@@ -1,11 +1,13 @@
-import axios from 'axios';
+import api from './config';
 
-const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
-
-const vendorApi = axios.create({
-  baseURL: API_BASE + '/vendor',
-  withCredentials: true, // Use cookies for authentication
-});
+// Wrapper around shared axios instance to ensure vendor endpoints
+// always go through the interceptors (adds Authorization from vendorToken when present)
+const vendorApi = {
+  get: (url, config) => api.get(`/vendor${url}`, config),
+  post: (url, data, config) => api.post(`/vendor${url}`, data, config),
+  put: (url, data, config) => api.put(`/vendor${url}`, data, config),
+  delete: (url, config) => api.delete(`/vendor${url}`, config),
+};
 
 export default vendorApi;
 
@@ -20,4 +22,4 @@ export const getApprovedUserSubscriptions = () => vendorApi.get('/user-subscript
 export const acceptOrder = (orderId) => vendorApi.post(`/orders/${orderId}/accept`);
 export const rejectOrder = (orderId) => vendorApi.post(`/orders/${orderId}/reject`);
 export const markOrderReady = (orderId) => vendorApi.post(`/orders/${orderId}/ready`);
-export const completeOrder = (orderId) => vendorApi.post(`/orders/${orderId}/complete`); 
+export const completeOrder = (orderId) => vendorApi.post(`/orders/${orderId}/complete`);

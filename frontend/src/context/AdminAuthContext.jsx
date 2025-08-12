@@ -37,8 +37,11 @@ export const AdminAuthProvider = ({ children }) => {
     }
   };
 
-  const login = (adminData) => {
+  const login = (adminData, token) => {
     setAdmin(adminData);
+    if (token) {
+      localStorage.setItem('adminToken', token.startsWith('Bearer ') ? token : `Bearer ${token}`);
+    }
   };
 
   const logout = async () => {

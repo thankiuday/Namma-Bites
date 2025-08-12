@@ -57,7 +57,8 @@ const AdminLogin = () => {
       const response = await adminApi.post('/login', { email: emailTrim, password: passwordTrim });
       console.log('Admin login response:', response.data.admin);
       if (response.data.success) {
-        login(response.data.admin);
+        const token = response.data.token || response.data.accessToken;
+        login(response.data.admin, token);
         navigate('/admin/dashboard');
       } else {
         setError(response.data.message || 'Login failed. Please check your credentials.');

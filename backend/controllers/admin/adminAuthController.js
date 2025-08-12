@@ -147,6 +147,16 @@ export const loginAdmin = async (req, res) => {
     const accessToken = generateToken(admin._id);
     const refreshToken = generateRefreshToken(admin._id);
 
+    const isProduction = process.env.NODE_ENV === 'production';
+    // Set adminToken cookie as well for middleware compatibility
+    res.cookie('adminToken', accessToken, {
+      httpOnly: true,
+      secure: isProduction,
+      sameSite: isProduction ? 'None' : 'Lax',
+      maxAge: 60 * 60 * 1000, // 1h to match access token
+      path: '/'
+    });
+
     res.status(200).json({
       success: true,
       message: 'Login successful',

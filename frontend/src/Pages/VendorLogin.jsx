@@ -50,7 +50,9 @@ const VendorLogin = () => {
       const response = await vendorApi.post('/login', formData);
       console.log('Vendor login response:', response.data);
       if (response.data.success) {
-        login(response.data.vendor);
+        // Also pass back token if API returns one (for Authorization header)
+        const token = response.data.token || response.data.vendorToken || response.data.accessToken;
+        login(response.data.vendor, token);
         navigate('/vendor/dashboard');
       } else {
         setError(response.data.message || 'Invalid credentials');
