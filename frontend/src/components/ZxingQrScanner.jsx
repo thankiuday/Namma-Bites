@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useCallback } from 'react';
+import React, { useEffect, useRef, useCallback, useState } from 'react';
 import { BrowserMultiFormatReader } from '@zxing/browser';
 
 const ZxingQrScanner = ({ onResult, onError, facingMode = 'environment', width = 300, height = 300 }) => {
@@ -6,6 +6,7 @@ const ZxingQrScanner = ({ onResult, onError, facingMode = 'environment', width =
   const codeReaderRef = useRef(null);
   const lastResultRef = useRef('');
   const scanTimeoutRef = useRef(null);
+  const [deviceId, setDeviceId] = useState(undefined);
 
   // Debounced result handler to prevent multiple rapid scans
   const debouncedOnResult = useCallback((result) => {
@@ -31,39 +32,79 @@ const ZxingQrScanner = ({ onResult, onError, facingMode = 'environment', width =
     codeReaderRef.current = codeReader;
     let isMounted = true;
 
-    // Optimized camera constraints for better performance
-    const constraints = {
-      video: {
-        // Use exact when requesting front camera to encourage mobile to pick selfie camera
-        ...(facingMode === 'user' ? { facingMode: { exact: 'user' } } : { facingMode: 'environment' }),
-        width: { ideal: 1280 },
-        height: { ideal: 720 },
-        frameRate: { ideal: 30 }
+    // Helper: pick deviceId matching desired facing mode
+    const pickDeviceIdForFacing = async (desiredFacing) => {
+      try {
+        // Try enumerate directly
+        let devices = await navigator.mediaDevices.enumerateDevices();
+        // If labels are empty, request temp permission to reveal labels
+        if (!devices.some((d) => d.label)) {
+          try {
+            const tmp = await navigator.mediaDevices.getUserMedia({ video: true });
+            tmp.getTracks().forEach((t) => t.stop());
+            devices = await navigator.mediaDevices.enumerateDevices();
+          } catch (_) {
+            // ignore, we'll fallback to constraints
+          }
+        }
+        const videos = devices.filter((d) => d.kind === 'videoinput');
+        if (videos.length === 0) return undefined;
+        const matchFront = (label) => /front|user|face/i.test(label);
+        const matchBack = (label) => /back|rear|environment/i.test(label);
+        if (desiredFacing === 'user') {
+          const front = videos.find((v) => matchFront(v.label));
+          return (front || videos[0]).deviceId;
+        }
+        const back = videos.find((v) => matchBack(v.label));
+        return (back || videos[0]).deviceId;
+      } catch (_) {
+        return undefined;
       }
     };
 
     const startScanning = async () => {
       try {
-        // Request permission explicitly to avoid Safari/Chrome issues
-        await navigator.mediaDevices.getUserMedia({ video: constraints.video });
-        await codeReader.decodeFromVideoDevice(
-          undefined,
-          videoRef.current, 
-          (result, err) => {
-            if (!isMounted) return;
-            
-            if (result) {
-              debouncedOnResult(result.getText());
-            } else if (err && onError) {
-              // Only show non-common errors
-              if (err.name !== 'NotFoundException' && 
-                  !err.message?.includes('No MultiFormat Readers')) {
-                onError(err);
+        // Prefer deviceId selection when available
+        const desiredFacing = facingMode === 'user' ? 'user' : 'environment';
+        const selectedId = await pickDeviceIdForFacing(desiredFacing);
+        setDeviceId(selectedId);
+        if (selectedId) {
+          await codeReader.decodeFromVideoDevice(
+            selectedId,
+            videoRef.current,
+            (result, err) => {
+              if (!isMounted) return;
+              if (result) {
+                debouncedOnResult(result.getText());
+              } else if (err && onError) {
+                if (err.name !== 'NotFoundException' && !err.message?.includes('No MultiFormat Readers')) {
+                  onError(err);
+                }
               }
             }
-          }, 
-          constraints
-        );
+          );
+        } else {
+          // Fallback to facingMode constraints
+          const constraints = {
+            video: desiredFacing === 'user' ? { facingMode: { exact: 'user' } } : { facingMode: 'environment' }
+          };
+          await navigator.mediaDevices.getUserMedia({ video: constraints.video });
+          await codeReader.decodeFromVideoDevice(
+            undefined,
+            videoRef.current,
+            (result, err) => {
+              if (!isMounted) return;
+              if (result) {
+                debouncedOnResult(result.getText());
+              } else if (err && onError) {
+                if (err.name !== 'NotFoundException' && !err.message?.includes('No MultiFormat Readers')) {
+                  onError(err);
+                }
+              }
+            },
+            constraints
+          );
+        }
       } catch (error) {
         if (isMounted && onError) {
           onError(error);
@@ -93,6 +134,8 @@ const ZxingQrScanner = ({ onResult, onError, facingMode = 'environment', width =
         background: '#fff',
         objectFit: 'cover'
       }} 
+      playsInline
+      muted
     />
   );
 };

@@ -1,9 +1,10 @@
-import React, { useState, useRef, useCallback } from 'react';
+import React, { useState, useRef, useCallback, useEffect } from 'react';
 import ZxingQrScanner from '../components/ZxingQrScanner';
 import { getMenuItemImageUrl } from '../utils/imageUtils';
 import axios from 'axios';
 import { format } from 'date-fns';
 import { useNavigate } from 'react-router-dom';
+import { useCameraAccess } from '../hooks/useCameraAccess';
 
 const API_BASE_URL = (import.meta.env.VITE_API_URL || '/api').replace(/\/$/, '');
 
@@ -16,6 +17,8 @@ const VendorQrScanner = () => {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [facingMode, setFacingMode] = useState('user');
+  const isSecure = typeof window !== 'undefined' ? window.isSecureContext : true;
+  const { state: cameraState, error: cameraError, requesting, requestAccess, checkPermission } = useCameraAccess();
 
   // Add request deduplication
   const processingRef = useRef(false);
@@ -104,6 +107,20 @@ const VendorQrScanner = () => {
     console.error('Camera error:', err);
   };
 
+  // Auto-request camera access when loading the scanner page
+  useEffect(() => {
+    (async () => {
+      const st = await checkPermission();
+      if (st !== 'granted') {
+        // Request with current facing mode preference
+        const constraints = {
+          video: facingMode === 'user' ? { facingMode: { exact: 'user' } } : { facingMode: 'environment' }
+        };
+        await requestAccess(constraints);
+      }
+    })();
+  }, [checkPermission, requestAccess, facingMode]);
+
   // Handler for react-html5-qrcode
   const onScanSuccess = (decodedText, decodedResult) => {
     handleScan(decodedText);
@@ -148,6 +165,39 @@ const VendorQrScanner = () => {
         >
           Switch Camera ({facingMode === 'environment' ? 'Back' : 'Front'})
         </button>
+        {/* Permission state messaging */}
+        {cameraState !== 'granted' && (
+          <div className="w-full mb-4 p-3 rounded-lg text-center text-sm font-medium border-2 bg-orange-50 text-orange-800 border-orange-200">
+            {cameraState === 'prompt' && 'Please allow camera access to scan QR codes.'}
+            {cameraState === 'denied' && 'Camera access is blocked. Enable it from your browser settings and try again.'}
+            {cameraState === 'unsupported' && 'Camera API not supported on this browser/device.'}
+            {!isSecure && (
+              <div className="mt-1 text-xs text-red-600">
+                This page is not served over HTTPS (secure context). Most browsers only allow camera access on HTTPS.
+              </div>
+            )}
+            {cameraError && <div className="mt-1 text-xs text-red-600">{cameraError}</div>}
+            {(cameraState === 'prompt' || cameraState === 'denied') && (
+              <button
+                onClick={() => requestAccess({ video: facingMode === 'user' ? { facingMode: { exact: 'user' } } : { facingMode: 'environment' } })}
+                className="mt-2 inline-flex items-center gap-2 px-3 py-1 bg-orange-600 text-white rounded-md hover:bg-orange-700 disabled:opacity-60"
+                disabled={requesting}
+              >
+                {requesting ? (
+                  <>
+                    <span className="inline-block h-4 w-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                    Requesting...
+                  </>
+                ) : 'Request Camera Access'}
+              </button>
+            )}
+            {cameraState === 'denied' && (
+              <div className="mt-2 text-xs text-orange-700">
+                Tip: Go to your browser settings → Site permissions → Camera → Allow, then return and press Request again.
+              </div>
+            )}
+          </div>
+        )}
         <div className="w-full flex justify-center mb-6">
           <div className="w-[90vw] max-w-xs aspect-square rounded-xl overflow-hidden border-4 border-orange-200 bg-orange-50 shadow-inner flex items-center justify-center">
             <ZxingQrScanner
@@ -158,6 +208,9 @@ const VendorQrScanner = () => {
               height={300}
             />
           </div>
+        </div>
+        <div className="text-xs text-gray-500 mb-4">
+          If the front camera doesn’t open, try switching cameras or enable camera access in your browser settings, then retry.
         </div>
         {loading && (
           <div className="flex items-center justify-center mb-4">

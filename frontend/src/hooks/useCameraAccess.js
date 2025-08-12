@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 export function useCameraAccess() {
   const [state, setState] = useState('unknown');
   const [error, setError] = useState('');
+  const [requesting, setRequesting] = useState(false);
   const lastStreamRef = useRef(null);
 
   const stopStream = useCallback(() => {
@@ -47,9 +48,11 @@ export function useCameraAccess() {
 
   const requestAccess = useCallback(async (constraints = { video: true }) => {
     setError('');
+    setRequesting(true);
     if (!navigator.mediaDevices?.getUserMedia) {
       setState('unsupported');
       setError('Camera API not supported in this browser.');
+      setRequesting(false);
       return false;
     }
     try {
@@ -57,6 +60,7 @@ export function useCameraAccess() {
       lastStreamRef.current = stream;
       setState('granted');
       stopStream();
+      setRequesting(false);
       return true;
     } catch (err) {
       const message = err?.message || String(err);
@@ -70,6 +74,7 @@ export function useCameraAccess() {
         // Could still be prompt on some platforms
         setState('prompt');
       }
+      setRequesting(false);
       return false;
     }
   }, [stopStream]);
@@ -80,7 +85,7 @@ export function useCameraAccess() {
     return () => stopStream();
   }, [checkPermission, stopStream]);
 
-  return { state, error, checkPermission, requestAccess };
+  return { state, error, requesting, checkPermission, requestAccess };
 }
 
 
