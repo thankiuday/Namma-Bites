@@ -2,8 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { getSubscriptionPlanById, createUserSubscription } from '../api/userApi';
 import { FaArrowLeft, FaCalendarAlt, FaClock, FaCheckCircle, FaExclamationTriangle } from 'react-icons/fa';
-import DatePicker from 'react-datepicker';
-import 'react-datepicker/dist/react-datepicker.css';
+// DatePicker removed due to React 19 peer constraints; using native input
 import { format } from 'date-fns';
 
 const SubscriptionStart = () => {
@@ -115,18 +114,18 @@ const SubscriptionStart = () => {
             </div>
           )}
           <label className="block text-orange-700 font-semibold mb-1">Select Start Date</label>
-          <DatePicker
-            selected={startDateObj}
-            onChange={date => {
-              setStartDateObj(date);
-              setStartDate(date ? format(date, 'yyyy-MM-dd') : '');
+          <input
+            type="date"
+            value={startDate}
+            min={format(new Date(), 'yyyy-MM-dd')}
+            onChange={(e) => {
+              const value = e.target.value;
+              setStartDate(value);
+              setStartDateObj(value ? new Date(value) : null);
               setDateError('');
             }}
-            minDate={new Date()}
-            dateFormat="yyyy-MM-dd"
-            placeholderText="Select a start date"
             className="w-full border-2 border-orange-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-orange-300 focus:border-orange-500 bg-white text-gray-800 font-medium"
-            aria-label="Select start date using calendar"
+            aria-label="Select start date"
             required
           />
           {/* End Date Display */}
