@@ -125,16 +125,27 @@ app.use((req, res, next) => {
   next();
 });
 
-// Serve vendor pictures
+// Serve vendor pictures (static assets checked into repo)
 app.use('/vendorPicture', express.static(path.join(__dirname, '../frontend/vendorPicture')));
 
-// Serve static files from the React frontend app
-app.use(express.static(path.join(path.resolve(), '../frontend/dist')));
+// Frontend static serving (only if a build exists)
+const clientDistPath = path.resolve(__dirname, '../frontend/dist');
+const clientIndexHtmlPath = path.join(clientDistPath, 'index.html');
 
-// Handle React routing, return all requests to React app
-app.get('*', (req, res) => {
-  res.sendFile(path.join(path.resolve(), '../frontend/dist', 'index.html'));
-});
+if (fs.existsSync(clientIndexHtmlPath)) {
+  // Serve built frontend
+  app.use(express.static(clientDistPath));
+  app.get('*', (req, res) => {
+    res.sendFile(clientIndexHtmlPath);
+  });
+} else {
+  // No frontend build present (e.g., deploying API-only on Render)
+  console.warn('Frontend build not found at:', clientIndexHtmlPath, '\nSkipping static frontend serving.');
+  // Provide a simple root response for health checks
+  app.get('/', (req, res) => {
+    res.json({ status: 'ok', service: 'namma-bites-backend', frontend: 'not-served' });
+  });
+}
 
 // Error handling middleware
 app.use((err, req, res, next) => {
