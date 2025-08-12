@@ -5,7 +5,7 @@ import { FaArrowLeft, FaCheckCircle, FaTimesCircle, FaClock, FaQrcode, FaUpload 
 import { useNavigate } from 'react-router-dom';
 import LazyImage from '../components/LazyImage';
 
-const SERVER_BASE_URL = 'http://localhost:5000';
+const SERVER_BASE_URL = (import.meta.env.VITE_API_URL || '').replace(/\/api$/, '') || '';
 
 const stateColors = {
   completed: 'bg-green-100 text-green-700 border-green-300',

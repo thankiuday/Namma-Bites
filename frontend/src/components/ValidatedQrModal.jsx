@@ -3,7 +3,7 @@ import QRCode from 'react-qr-code';
 import { getUserSubscriptionQr } from '../api/userApi';
 import axios from 'axios';
 
-const API_BASE_URL = 'http://localhost:5000';
+const API_BASE_URL = (import.meta.env.VITE_API_URL || '/api').replace(/\/$/, '').replace(/\/api$/, '');
 
 const ValidatedQrModal = ({ subscriptionId, onClose }) => {
   const [qrData, setQrData] = useState('');

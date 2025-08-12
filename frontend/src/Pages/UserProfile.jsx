@@ -5,7 +5,7 @@ import { useAuth } from '../context/AuthContext';
 import userApi, { getUserSubscriptions, deleteUserSubscription } from '../api/userApi';
 import ValidatedQrModal from '../components/ValidatedQrModal';
 import { getGreeting } from '../utils/greetings';
-import Joyride from 'react-joyride';
+// Joyride removed for production build
 
 const UserProfile = () => {
   const navigate = useNavigate();
@@ -22,36 +22,13 @@ const UserProfile = () => {
   const [qrValidated, setQrValidated] = useState(false);
   const [paymentProofModalOpen, setPaymentProofModalOpen] = useState(false);
   const [paymentProofModalSrc, setPaymentProofModalSrc] = useState(null);
-  const [runTour, setRunTour] = useState(false);
+  // const [runTour, setRunTour] = useState(false);
 
-  React.useEffect(() => {
-    if (!localStorage.getItem('onboardingProfileTourCompleted')) {
-      setRunTour(true);
-    }
-  }, []);
+  // Tour logic removed
 
-  const handleTourCallback = (data) => {
-    if (data.status === 'finished' || data.status === 'skipped') {
-      setRunTour(false);
-      localStorage.setItem('onboardingProfileTourCompleted', 'true');
-    }
-  };
+  // const handleTourCallback = () => {};
 
-  const tourSteps = [
-    {
-      target: '.onboard-profile-info',
-      content: 'This is your profile hub. View and update your personal information here.',
-      disableBeacon: true,
-    },
-    {
-      target: '.onboard-profile-edit',
-      content: 'Click here to edit your profile details.',
-    },
-    {
-      target: '.onboard-profile-actions',
-      content: 'Quick actions for orders, cart, and wallet are available here.',
-    },
-  ];
+  // const tourSteps = [];
 
   // Update editedUser when user data changes
   useEffect(() => {
@@ -83,7 +60,7 @@ const UserProfile = () => {
 
   const refreshToken = async () => {
     try {
-      const response = await fetch('http://localhost:5000/api/auth/refresh-token', {
+      const response = await fetch((import.meta.env.VITE_API_URL || '/api') + '/auth/refresh-token', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -193,15 +170,7 @@ const UserProfile = () => {
         Back
       </button>
     {/* ... Joyride and other code remains the same ... */}
-    <Joyride
-        steps={tourSteps}
-        run={runTour}
-        continuous
-        showSkipButton
-        showProgress
-        styles={{ options: { zIndex: 10000, primaryColor: '#ea580c' } }}
-        callback={handleTourCallback}
-    />
+
 
     {/* Personalized Greeting */}
     <div className="mb-6 animate-fade-in-down">

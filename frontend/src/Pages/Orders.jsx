@@ -1,13 +1,13 @@
 import React, { useEffect, useState } from 'react';
 import { FaCheckCircle, FaTimesCircle, FaClock, FaQrcode, FaUpload, FaArrowLeft } from 'react-icons/fa';
 import axios from 'axios';
-import Joyride from 'react-joyride';
+import { API_URL as API_BASE_URL } from '../api/config';
+// Joyride removed for production build
 import { useNavigate } from 'react-router-dom';
 import LazyImage from '../components/LazyImage';
 import OrderTimeEstimate from '../components/OrderTimeEstimate';
 
-const API_BASE_URL = 'http://localhost:5000/api';
-const SERVER_BASE_URL = 'http://localhost:5000';
+const SERVER_BASE_URL = (import.meta.env.VITE_API_URL || '').replace(/\/api$/, '') || '';
 
 const Orders = () => {
   const [orders, setOrders] = useState([]);
@@ -23,37 +23,14 @@ const Orders = () => {
   const [qrModalSrc, setQrModalSrc] = useState(null);
   const [paymentProofModalOpen, setPaymentProofModalOpen] = useState(false);
   const [paymentProofModalSrc, setPaymentProofModalSrc] = useState(null);
-  const [runTour, setRunTour] = useState(false);
+  // const [runTour, setRunTour] = useState(false);
   const navigate = useNavigate();
 
-  React.useEffect(() => {
-    if (!localStorage.getItem('onboardingOrdersTourCompleted')) {
-      setRunTour(true);
-    }
-  }, []);
+  // Tour logic removed
 
-  const handleTourCallback = (data) => {
-    if (data.status === 'finished' || data.status === 'skipped') {
-      setRunTour(false);
-      localStorage.setItem('onboardingOrdersTourCompleted', 'true');
-    }
-  };
+  // const handleTourCallback = () => {};
 
-  const tourSteps = [
-    {
-      target: '.onboard-orders-list',
-      content: 'This is your order history. See all your past and current orders here.',
-      disableBeacon: true,
-    },
-    {
-      target: '.onboard-orders-status',
-      content: 'Check the status of each order at a glance.',
-    },
-    {
-      target: '.onboard-orders-details',
-      content: 'Click on an order to view more details and track its progress.',
-    },
-  ];
+  // const tourSteps = [];
 
   useEffect(() => {
     const fetchOrders = async () => {
@@ -383,15 +360,7 @@ const Orders = () => {
           </div>
         </div>
       )}
-      <Joyride
-        steps={tourSteps}
-        run={runTour}
-        continuous
-        showSkipButton
-        showProgress
-        styles={{ options: { zIndex: 10000, primaryColor: '#ea580c' } }}
-        callback={handleTourCallback}
-      />
+
     </div>
   );
 };

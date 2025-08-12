@@ -12,7 +12,7 @@ import FoodCategories from '../components/FoodCategories';
 import AllFoods from '../components/AllFoods';
 import SearchSuggestions from '../components/SearchSuggestions';
 import apiClient from '../api/apiClient';
-import Joyride from 'react-joyride';
+// Joyride tour removed for production build
 
 const Home = () => {
   const categories = [
@@ -98,36 +98,13 @@ const Home = () => {
   const [loadingFoods, setLoadingFoods] = useState(true);
   const [loadingVendors, setLoadingVendors] = useState(true);
   const [showSuggestions, setShowSuggestions] = useState(false);
-  const [runTour, setRunTour] = useState(false);
+  // Onboarding tour disabled in production
 
-  React.useEffect(() => {
-    if (!localStorage.getItem('onboardingTourCompleted')) {
-      setRunTour(true);
-    }
-  }, []);
+  // Tour logic removed
 
-  const handleTourCallback = (data) => {
-    if (data.status === 'finished' || data.status === 'skipped') {
-      setRunTour(false);
-      localStorage.setItem('onboardingTourCompleted', 'true');
-    }
-  };
+  // const handleTourCallback = () => {};
 
-  const tourSteps = [
-    {
-      target: '.onboard-search',
-      content: 'Start your food journey here! Search for your favorite food, vendor, or cuisine.',
-      disableBeacon: true,
-    },
-    {
-      target: '.onboard-categories',
-      content: 'Browse by food categories for quick access to what you love.',
-    },
-    {
-      target: '.onboard-menu',
-      content: 'Scroll down to explore our full menu and top buys!',
-    },
-  ];
+  // const tourSteps = [];
 
   // Fetch all foods
   React.useEffect(() => {
@@ -194,15 +171,7 @@ const Home = () => {
 
   return (
     <main className="flex-grow">
-      <Joyride
-        steps={tourSteps}
-        run={runTour}
-        continuous
-        showSkipButton
-        showProgress
-        styles={{ options: { zIndex: 10000, primaryColor: '#ea580c' } }}
-        callback={handleTourCallback}
-      />
+
       <div className="flex flex-col items-center justify-center">
         <div className="w-full max-w-7xl px-4 mb-12 flex justify-center">
           <img

@@ -5,7 +5,7 @@ import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { getMenuItemImageUrl } from '../utils/imageUtils';
 import LazyImage from '../components/LazyImage';
-import Joyride from 'react-joyride';
+// Joyride removed for production build
 import { motion } from 'framer-motion';
 
 
@@ -14,36 +14,13 @@ const Cart = () => {
   const { user, handleAuthError } = useAuth();
   const [clearing, setClearing] = useState(false);
   const navigate = useNavigate();
-  const [runTour, setRunTour] = useState(false);
+  // const [runTour, setRunTour] = useState(false);
 
-  React.useEffect(() => {
-    if (!localStorage.getItem('onboardingCartTourCompleted')) {
-      setRunTour(true);
-    }
-  }, []);
+  // Tour logic removed
 
-  const handleTourCallback = (data) => {
-    if (data.status === 'finished' || data.status === 'skipped') {
-      setRunTour(false);
-      localStorage.setItem('onboardingCartTourCompleted', 'true');
-    }
-  };
+  // const handleTourCallback = () => {};
 
-  const tourSteps = [
-    {
-      target: '.onboard-cart-items',
-      content: 'Here are the items you’ve added to your cart. Review them before checkout!',
-      disableBeacon: true,
-    },
-    {
-      target: '.onboard-cart-qty',
-      content: 'Adjust the quantity of each item as needed.',
-    },
-    {
-      target: '.onboard-cart-checkout',
-      content: 'Ready to order? Click here to proceed to checkout!',
-    },
-  ];
+  // const tourSteps = [];
 
   const handleFetchCart = useCallback(() => {
     if (user) {
@@ -134,15 +111,7 @@ const Cart = () => {
         Back
       </button>
       <h1 className="text-2xl sm:text-3xl font-bold text-gray-800 mb-6 sm:mb-8">Your Cart</h1>
-      <Joyride
-        steps={tourSteps}
-        run={runTour}
-        continuous
-        showSkipButton
-        showProgress
-        styles={{ options: { zIndex: 10000, primaryColor: '#ea580c' } }}
-        callback={handleTourCallback}
-      />
+
       {cart.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-8 sm:py-12">
          <motion.svg

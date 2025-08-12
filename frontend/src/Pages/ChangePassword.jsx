@@ -49,7 +49,7 @@ const ChangePassword = () => {
     }
 
     try {
-      const response = await fetch('http://localhost:5000/api/auth/change-password', {
+      const response = await fetch((import.meta.env.VITE_API_URL || '/api') + '/auth/change-password', {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -66,7 +66,7 @@ const ChangePassword = () => {
       if (!response.ok) {
         if (response.status === 401) {
           // Try to refresh token
-          const refreshResponse = await fetch('http://localhost:5000/api/auth/refresh-token', {
+          const refreshResponse = await fetch((import.meta.env.VITE_API_URL || '/api') + '/auth/refresh-token', {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
@@ -81,7 +81,7 @@ const ChangePassword = () => {
             localStorage.setItem('accessToken', refreshData.accessToken);
             
             // Retry the password change
-            const retryResponse = await fetch('http://localhost:5000/api/auth/change-password', {
+            const retryResponse = await fetch((import.meta.env.VITE_API_URL || '/api') + '/auth/change-password', {
               method: 'PUT',
               headers: {
                 'Content-Type': 'application/json',

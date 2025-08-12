@@ -4,13 +4,13 @@ import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { FaArrowLeft, FaCheckCircle, FaUpload, FaQrcode } from 'react-icons/fa';
 import axios from 'axios';
+import { API_URL as API_BASE_URL } from '../api/config';
 import UploadProgress from '../components/UploadProgress';
 import useUploadProgress from '../hooks/useUploadProgress';
 import LazyImage from '../components/LazyImage';
 import { validateImageFile } from '../utils/validation';
 
-const API_BASE_URL = 'http://localhost:5000/api';
-const SERVER_BASE_URL = 'http://localhost:5000';
+const SERVER_BASE_URL = (import.meta.env.VITE_API_URL || '').replace(/\/api$/, '') || '';
 
 const Checkout = () => {
   const { cart, clearCart, fetchCart } = useCart();

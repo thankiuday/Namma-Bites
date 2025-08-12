@@ -28,7 +28,7 @@ import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
 
 // API URLs
-const BACKEND_API_URL = 'http://localhost:5000/api';
+const BACKEND_API_URL = import.meta.env.VITE_API_URL || '/api';
 
 // Import image utilities
 import { getVendorImageUrl, getPaymentProofImageUrl } from '../utils/imageUtils';
