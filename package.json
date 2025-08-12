@@ -9,6 +9,7 @@
     "client": "cd frontend && npm run dev",
     "dev": "concurrently \"npm run start\" \"cd frontend && npm start\"",
     "build": "cd frontend && npm install && npm run build",
+    "build:frontend": "npm --prefix backend run build",
     "install-client": "cd frontend && npm install",
     "install-server": "npm install",
     "install-all": "npm run install-server && npm run install-client"
