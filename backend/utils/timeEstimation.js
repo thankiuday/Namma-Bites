@@ -10,8 +10,12 @@ import MenuItem from '../models/MenuItem.js';
 export const calculateEstimatedTime = async (vendor, orderItems, orderId = null) => {
   try {
     const now = new Date();
-    const dayOfWeek = now.toLocaleLowerCase().split(',')[0]; // e.g., 'monday'
-    const currentTime = now.toLocaleTimeString('en-US', { hour12: false }); // 24-hour format
+    // Day of week in lowercase, e.g., 'monday'
+    const dayOfWeek = now.toLocaleDateString('en-US', { weekday: 'long' }).toLowerCase();
+    // Current time as HH:MM for consistent comparison against stored strings
+    const hh = String(now.getHours()).padStart(2, '0');
+    const mm = String(now.getMinutes()).padStart(2, '0');
+    const currentTime = `${hh}:${mm}`;
 
     // Get current active orders for the vendor
     const activeOrders = await Order.find({
@@ -33,9 +37,10 @@ export const calculateEstimatedTime = async (vendor, orderItems, orderId = null)
     // Get all menu items with their preparation times
     const menuItems = await Promise.all(orderItems.map(async (item) => {
       const menuItem = await MenuItem.findById(item.menuItem);
+      const prepTime = Number(menuItem?.preparationTime) || 10; // default 10 mins if missing
       return {
-        prepTime: menuItem.preparationTime,
-        quantity: item.quantity
+        prepTime,
+        quantity: Number(item.quantity) || 1
       };
     }));
 
@@ -59,25 +64,28 @@ export const calculateEstimatedTime = async (vendor, orderItems, orderId = null)
     });
 
     // Check if current time is in peak hours
-    const isPeakHour = vendor.peakHours.some(peak => {
-      return peak.day === dayOfWeek && 
-             currentTime >= peak.start && 
-             currentTime <= peak.end;
+    const peakHours = Array.isArray(vendor.peakHours) ? vendor.peakHours : [];
+    const isPeakHour = peakHours.some(peak => {
+      return peak.day === dayOfWeek &&
+             currentTime >= String(peak.start || '').slice(0,5) &&
+             currentTime <= String(peak.end || '').slice(0,5);
     });
 
     // Apply peak hour multiplier if applicable
     if (isPeakHour) {
-      const peakHour = vendor.peakHours.find(peak => 
-        peak.day === dayOfWeek && 
-        currentTime >= peak.start && 
-        currentTime <= peak.end
+      const peakHour = peakHours.find(peak => 
+        peak.day === dayOfWeek &&
+        currentTime >= String(peak.start || '').slice(0,5) &&
+        currentTime <= String(peak.end || '').slice(0,5)
       );
-      baseTime *= peakHour.multiplier;
+      const multiplier = Number(peakHour?.multiplier) || 1.5;
+      baseTime *= multiplier;
     }
 
     // Calculate current load factor
     const currentOrderCount = activeOrders.length;
-    const loadFactor = currentOrderCount / vendor.capacity.maxOrdersPerHour;
+    const maxOrdersPerHour = Number(vendor?.capacity?.maxOrdersPerHour) || 20;
+    const loadFactor = maxOrdersPerHour > 0 ? (currentOrderCount / maxOrdersPerHour) : 0;
     
     // Apply load factor and queue position to base time
     const queueMultiplier = Math.max(1, queuePosition * 0.5); // Each position in queue adds 50% more time
@@ -88,7 +96,8 @@ export const calculateEstimatedTime = async (vendor, orderItems, orderId = null)
     return Math.min(estimatedTime, maxEstimatedTime);
   } catch (error) {
     console.error('Error calculating estimated time:', error);
-    return vendor.capacity.averagePreparationTime; // Fallback to average time
+    const fallback = Number(vendor?.capacity?.averagePreparationTime) || 15;
+    return fallback; // Fallback to average time
   }
 };
 
