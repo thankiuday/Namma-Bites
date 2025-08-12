@@ -40,6 +40,16 @@ app.use('/uploads', (req, res, next) => {
   next();
 }, express.static(uploadsDir));
 
+// Helper to derive a stable client IP even behind multiple proxies
+const getClientIp = (req) => {
+  const xff = req.headers['x-forwarded-for'];
+  if (xff) {
+    const forwarded = Array.isArray(xff) ? xff[0] : xff.split(',')[0];
+    if (forwarded) return forwarded.trim();
+  }
+  return req.ip;
+};
+
 // Rate limiting with Redis
 const generalLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
@@ -50,9 +60,13 @@ const generalLimiter = rateLimit({
     sendCommand: (command, ...args) => redisClient.send_command(command, ...args),
   }),
   message: 'Too many requests from this IP, please try again after 15 minutes',
+  keyGenerator: (req /*, res*/) => getClientIp(req),
   skip: (req) => {
     // Skip rate limiting for development environment
-    return process.env.NODE_ENV === 'development';
+    if (process.env.NODE_ENV === 'development') return true;
+    // Do not count CORS preflight requests
+    if (req.method === 'OPTIONS') return true;
+    return false;
   }
 });
 
@@ -65,9 +79,20 @@ const loginLimiter = rateLimit({
     sendCommand: (command, ...args) => redisClient.send_command(command, ...args),
   }),
   message: 'Too many login attempts, please try again after 15 minutes',
+  // Successful logins shouldn't consume the attempt budget
+  skipSuccessfulRequests: true,
+  keyGenerator: (req /*, res*/) => {
+    const ip = getClientIp(req);
+    // Include email when present so multiple users behind one IP don't block each other
+    const email = (req.body && req.body.email) ? String(req.body.email).toLowerCase() : '';
+    return email ? `${ip}:${email}` : ip;
+  },
   skip: (req) => {
     // Skip rate limiting for development environment
-    return process.env.NODE_ENV === 'development';
+    if (process.env.NODE_ENV === 'development') return true;
+    // Do not count CORS preflight requests
+    if (req.method === 'OPTIONS') return true;
+    return false;
   }
 });
 
