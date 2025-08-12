@@ -1,7 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import adminApi from '../api/adminApi';
-import * as jwt_decode from "jwt-decode";
 
 const AdminAuthContext = createContext(null);
 
