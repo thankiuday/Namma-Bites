@@ -56,7 +56,16 @@ export function useCameraAccess() {
       return false;
     }
     try {
-      const stream = await navigator.mediaDevices.getUserMedia(constraints);
+      // Loosen overly strict constraints to avoid OverconstrainedError on some devices
+      const normalizedConstraints = (() => {
+        if (!constraints || !constraints.video) return { video: true };
+        const video = constraints.video;
+        if (video && video.facingMode && video.facingMode.exact) {
+          return { video: { facingMode: { ideal: video.facingMode.exact } } };
+        }
+        return { video };
+      })();
+      const stream = await navigator.mediaDevices.getUserMedia(normalizedConstraints);
       lastStreamRef.current = stream;
       setState('granted');
       stopStream();

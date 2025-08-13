@@ -201,6 +201,7 @@ const VendorQrScanner = () => {
         <div className="w-full flex justify-center mb-6">
           <div className="w-[90vw] max-w-xs aspect-square rounded-xl overflow-hidden border-4 border-orange-200 bg-orange-50 shadow-inner flex items-center justify-center">
             <ZxingQrScanner
+              key={facingMode}
               onResult={handleScan}
               onError={handleError}
               facingMode={facingMode === 'environment' ? 'environment' : 'user'}

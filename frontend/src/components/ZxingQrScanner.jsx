@@ -8,6 +8,24 @@ const ZxingQrScanner = ({ onResult, onError, facingMode = 'environment', width =
   const scanTimeoutRef = useRef(null);
   const [deviceId, setDeviceId] = useState(undefined);
 
+  // Ensure any active video tracks are stopped and the element is released
+  const stopVideo = useCallback(() => {
+    try {
+      const videoEl = videoRef.current;
+      if (videoEl) {
+        const mediaStream = videoEl.srcObject;
+        if (mediaStream && typeof mediaStream.getTracks === 'function') {
+          mediaStream.getTracks().forEach((track) => {
+            try { track.stop(); } catch (_) {}
+          });
+        }
+        videoEl.srcObject = null;
+        try { videoEl.pause && videoEl.pause(); } catch (_) {}
+        try { videoEl.load && videoEl.load(); } catch (_) {}
+      }
+    } catch (_) {}
+  }, []);
+
   // Debounced result handler to prevent multiple rapid scans
   const debouncedOnResult = useCallback((result) => {
     if (result === lastResultRef.current) {
@@ -31,6 +49,9 @@ const ZxingQrScanner = ({ onResult, onError, facingMode = 'environment', width =
     const codeReader = new BrowserMultiFormatReader();
     codeReaderRef.current = codeReader;
     let isMounted = true;
+
+    // Defensive: stop any prior stream that could still be attached
+    stopVideo();
 
     // Helper: pick deviceId matching desired facing mode
     const pickDeviceIdForFacing = async (desiredFacing) => {
@@ -69,24 +90,30 @@ const ZxingQrScanner = ({ onResult, onError, facingMode = 'environment', width =
         const selectedId = await pickDeviceIdForFacing(desiredFacing);
         setDeviceId(selectedId);
         if (selectedId) {
-          await codeReader.decodeFromVideoDevice(
-            selectedId,
-            videoRef.current,
-            (result, err) => {
-              if (!isMounted) return;
-              if (result) {
-                debouncedOnResult(result.getText());
-              } else if (err && onError) {
-                if (err.name !== 'NotFoundException' && !err.message?.includes('No MultiFormat Readers')) {
-                  onError(err);
+          try {
+            await codeReader.decodeFromVideoDevice(
+              selectedId,
+              videoRef.current,
+              (result, err) => {
+                if (!isMounted) return;
+                if (result) {
+                  debouncedOnResult(result.getText());
+                } else if (err && onError) {
+                  if (err.name !== 'NotFoundException' && !err.message?.includes('No MultiFormat Readers')) {
+                    onError(err);
+                  }
                 }
               }
-            }
-          );
-        } else {
+            );
+            return;
+          } catch (_) {
+            // fall through to constraints fallback
+          }
+        }
+        {
           // Fallback to facingMode constraints
           const constraints = {
-            video: desiredFacing === 'user' ? { facingMode: { exact: 'user' } } : { facingMode: 'environment' }
+            video: { facingMode: { ideal: desiredFacing } }
           };
           await navigator.mediaDevices.getUserMedia({ video: constraints.video });
           await codeReader.decodeFromVideoDevice(
@@ -120,8 +147,9 @@ const ZxingQrScanner = ({ onResult, onError, facingMode = 'environment', width =
         clearTimeout(scanTimeoutRef.current);
       }
       try { codeReader.reset && codeReader.reset(); } catch (_) {}
+      stopVideo();
     };
-  }, [facingMode, debouncedOnResult, onError]);
+  }, [facingMode, debouncedOnResult, onError, stopVideo]);
 
   return (
     <video 
