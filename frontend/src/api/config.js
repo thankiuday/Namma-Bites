@@ -6,10 +6,7 @@ export const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/ap
 // Create axios instance
 const api = axios.create({
   baseURL: API_URL,
-  withCredentials: true,
-  headers: {
-    'Content-Type': 'application/json'
-  }
+  withCredentials: true
 });
 
 // Global network activity tracker for UX overlays
@@ -49,6 +46,12 @@ const processQueue = (error, token = null) => {
 // Request interceptor
 api.interceptors.request.use(
   (config) => {
+    // Ensure multipart requests are not forced to JSON
+    if (config.data instanceof FormData) {
+      if (config.headers && config.headers['Content-Type']) {
+        delete config.headers['Content-Type'];
+      }
+    }
     // Track network activity for non-GET requests
     const method = (config.method || 'get').toLowerCase();
     if (method !== 'get') {

@@ -1,5 +1,5 @@
 import { useState, useCallback } from 'react';
-import axios from 'axios';
+import api from '../api/config';
 
 const useUploadProgress = () => {
   const [uploadProgress, setUploadProgress] = useState(0);
@@ -21,9 +21,9 @@ const useUploadProgress = () => {
     setUploadStatus('Preparing upload...');
 
     try {
-      const response = await axios.post(url, formData, {
+      const response = await api.post(url, formData, {
         headers: {
-          'Content-Type': 'multipart/form-data',
+          // Let the browser set the correct multipart boundary
           ...options.headers
         },
         onUploadProgress: (progressEvent) => {
