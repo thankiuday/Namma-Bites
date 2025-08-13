@@ -16,7 +16,7 @@ const VendorQrScanner = () => {
   const [orderScanMessage, setOrderScanMessage] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  const [facingMode, setFacingMode] = useState('user');
+  const [facingMode, setFacingMode] = useState('environment');
   const isSecure = typeof window !== 'undefined' ? window.isSecureContext : true;
   const { state: cameraState, error: cameraError, requesting, requestAccess, checkPermission } = useCameraAccess();
 

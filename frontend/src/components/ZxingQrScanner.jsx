@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useCallback, useState } from 'react';
 import { BrowserMultiFormatReader } from '@zxing/browser';
+import { DecodeHintType, BarcodeFormat } from '@zxing/library';
 
 const ZxingQrScanner = ({ onResult, onError, facingMode = 'environment', width = 300, height = 300 }) => {
   const videoRef = useRef(null);
@@ -46,12 +47,27 @@ const ZxingQrScanner = ({ onResult, onError, facingMode = 'environment', width =
   }, [onResult]);
 
   useEffect(() => {
-    const codeReader = new BrowserMultiFormatReader();
+    // Configure decoder hints for better reliability on mobile
+    const hints = new Map();
+    hints.set(DecodeHintType.POSSIBLE_FORMATS, [BarcodeFormat.QR_CODE]);
+    hints.set(DecodeHintType.TRY_HARDER, true);
+    const codeReader = new BrowserMultiFormatReader(hints);
     codeReaderRef.current = codeReader;
     let isMounted = true;
 
     // Defensive: stop any prior stream that could still be attached
     stopVideo();
+
+    // Ensure mobile Safari/iOS inline playback works
+    try {
+      const videoEl = videoRef.current;
+      if (videoEl) {
+        videoEl.setAttribute('playsinline', 'true');
+        videoEl.setAttribute('webkit-playsinline', 'true');
+        videoEl.setAttribute('muted', 'true');
+        videoEl.setAttribute('autoplay', 'true');
+      }
+    } catch (_) {}
 
     // Helper: pick deviceId matching desired facing mode
     const pickDeviceIdForFacing = async (desiredFacing) => {
@@ -83,13 +99,49 @@ const ZxingQrScanner = ({ onResult, onError, facingMode = 'environment', width =
       }
     };
 
+    const applyAdvancedConstraints = async () => {
+      try {
+        const videoEl = videoRef.current;
+        const stream = videoEl && videoEl.srcObject;
+        const track = stream && stream.getVideoTracks && stream.getVideoTracks()[0];
+        if (!track) return;
+        const capabilities = typeof track.getCapabilities === 'function' ? track.getCapabilities() : {};
+        const advanced = {};
+        if (capabilities.focusMode && capabilities.focusMode.includes('continuous')) {
+          advanced.focusMode = 'continuous';
+        }
+        if (capabilities.exposureMode && capabilities.exposureMode.includes('continuous')) {
+          advanced.exposureMode = 'continuous';
+        }
+        if (capabilities.whiteBalanceMode && capabilities.whiteBalanceMode.includes('continuous')) {
+          advanced.whiteBalanceMode = 'continuous';
+        }
+        if (capabilities.frameRate) {
+          advanced.frameRate = Math.min(30, capabilities.frameRate.max || 30);
+        }
+        if (Object.keys(advanced).length > 0 && typeof track.applyConstraints === 'function') {
+          await track.applyConstraints({ advanced: [advanced] });
+        }
+      } catch (_) {}
+    };
+
     const startScanning = async () => {
       try {
-        // Prefer deviceId selection when available
+        const ua = (navigator.userAgent || '').toLowerCase();
+        const isIOS = /iphone|ipad|ipod/.test(ua);
         const desiredFacing = facingMode === 'user' ? 'user' : 'environment';
-        const selectedId = await pickDeviceIdForFacing(desiredFacing);
+        const commonConstraints = {
+          video: {
+            facingMode: { ideal: desiredFacing },
+            width: { ideal: 1920 },
+            height: { ideal: 1080 },
+            aspectRatio: { ideal: 1.7777777778 }
+          }
+        };
+        // Prefer deviceId selection when available
+        const selectedId = isIOS ? undefined : await pickDeviceIdForFacing(desiredFacing);
         setDeviceId(selectedId);
-        if (selectedId) {
+        if (!isIOS && selectedId) {
           try {
             await codeReader.decodeFromVideoDevice(
               selectedId,
@@ -105,6 +157,8 @@ const ZxingQrScanner = ({ onResult, onError, facingMode = 'environment', width =
                 }
               }
             );
+            // Try to improve focus/exposure after stream starts
+            setTimeout(applyAdvancedConstraints, 250);
             return;
           } catch (_) {
             // fall through to constraints fallback
@@ -112,9 +166,7 @@ const ZxingQrScanner = ({ onResult, onError, facingMode = 'environment', width =
         }
         {
           // Fallback to facingMode constraints
-          const constraints = {
-            video: { facingMode: { ideal: desiredFacing } }
-          };
+          const constraints = commonConstraints;
           await navigator.mediaDevices.getUserMedia({ video: constraints.video });
           await codeReader.decodeFromVideoDevice(
             undefined,
@@ -131,6 +183,7 @@ const ZxingQrScanner = ({ onResult, onError, facingMode = 'environment', width =
             },
             constraints
           );
+          setTimeout(applyAdvancedConstraints, 250);
         }
       } catch (error) {
         if (isMounted && onError) {
@@ -164,6 +217,7 @@ const ZxingQrScanner = ({ onResult, onError, facingMode = 'environment', width =
       }} 
       playsInline
       muted
+      autoPlay
     />
   );
 };
