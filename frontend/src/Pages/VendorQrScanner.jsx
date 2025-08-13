@@ -129,8 +129,10 @@ const VendorQrScanner = () => {
   };
 
   const onScanError = (errorMessage) => {
-    // Optionally handle scan errors
-    // handleError({ message: errorMessage });
+    // Surface mobile errors visibly
+    if (errorMessage) {
+      setError(String(errorMessage));
+    }
   };
 
   return (
@@ -211,7 +213,7 @@ const VendorQrScanner = () => {
                   qrbox={250}
                   disableFlip={false}
                   qrCodeSuccessCallback={(decodedText) => onScanSuccess(decodedText)}
-                  qrCodeErrorCallback={() => {}}
+                  qrCodeErrorCallback={(err) => onScanError(err)}
                   facingMode={facingMode}
                 />
               </div>
