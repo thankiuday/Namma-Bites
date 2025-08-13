@@ -1,6 +1,7 @@
 import express from 'express';
 import jwt from 'jsonwebtoken';
 import { body, validationResult } from 'express-validator';
+import crypto from 'crypto';
 import User from '../models/User.js';
 import { auth } from '../middleware/auth.js';
 import { storeRefreshToken, deleteRefreshToken } from '../utils/redis.js';
@@ -163,6 +164,67 @@ router.post('/login', [
   } catch (error) {
     res.status(400).json({ error: error.message });
     res.status(500).json({ error: 'Server error' });
+  }
+});
+
+// Forgot password (request reset link)
+router.post('/forgot-password', [
+  body('email').isEmail().withMessage('Valid email is required')
+], async (req, res) => {
+  try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ errors: errors.array() });
+    }
+
+    const { email } = req.body;
+    const user = await User.findOne({ email });
+    // Return generic message to avoid account enumeration
+    if (!user) return res.json({ message: 'If an account exists for this email, a reset link has been sent.' });
+
+    const RESET_SECRET = process.env.JWT_RESET_SECRET || (process.env.JWT_SECRET + '_reset');
+    const token = jwt.sign({ userId: user._id }, RESET_SECRET, { expiresIn: '15m' });
+    const client = (process.env.CLIENT_ORIGIN || '').replace(/\/$/, '');
+    const resetLink = `${client}/reset-password?token=${token}`;
+
+    // TODO: Send email with provider (e.g., Resend, SendGrid). For now, log link.
+    console.log('Password reset link for', email, ':', resetLink);
+    return res.json({ message: 'If an account exists for this email, a reset link has been sent.' });
+  } catch (error) {
+    console.error('Forgot password error:', error);
+    return res.status(500).json({ error: 'Server error' });
+  }
+});
+
+// Reset password (perform reset)
+router.post('/reset-password', [
+  body('token').notEmpty().withMessage('Reset token is required'),
+  body('newPassword').isLength({ min: 6 }).withMessage('New password must be at least 6 characters long')
+], async (req, res) => {
+  try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ errors: errors.array() });
+    }
+
+    const { token, newPassword } = req.body;
+    const RESET_SECRET = process.env.JWT_RESET_SECRET || (process.env.JWT_SECRET + '_reset');
+    let payload;
+    try {
+      payload = jwt.verify(token, RESET_SECRET);
+    } catch (e) {
+      return res.status(400).json({ error: 'Invalid or expired reset token' });
+    }
+
+    const user = await User.findById(payload.userId);
+    if (!user) return res.status(400).json({ error: 'Invalid token' });
+
+    user.password = newPassword;
+    await user.save();
+    return res.json({ message: 'Password has been reset successfully' });
+  } catch (error) {
+    console.error('Reset password error:', error);
+    return res.status(500).json({ error: 'Server error' });
   }
 });
 

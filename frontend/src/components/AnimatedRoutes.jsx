@@ -22,6 +22,7 @@ import SubscriptionStart from '../Pages/SubscriptionStart';
 import PaymentStatus from '../Pages/PaymentStatus';
 import Checkout from '../Pages/Checkout';
 import OrderConfirmation from '../Pages/OrderConfirmation';
+import ForgotPassword from '../Pages/ForgotPassword';
 
 // Protected Route Components
 import ProtectedRoute from './user/ProtectedRoute';
@@ -36,6 +37,11 @@ const AnimatedRoutes = () => {
         <Route path="/" element={
           <PageTransition>
             <Home />
+          </PageTransition>
+        } />
+        <Route path="/forgot-password" element={
+          <PageTransition>
+            <ForgotPassword />
           </PageTransition>
         } />
         <Route path="/about" element={
