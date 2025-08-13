@@ -20,12 +20,25 @@ const Html5QrcodeScannerComponent = ({ fps = 10, qrbox = 250, disableFlip = fals
         showZoomSliderIfSupported: true,
         experimentalFeatures: { useBarCodeDetectorIfSupported: true },
         // Prefer facingMode when provided
-        videoConstraints: facingMode === 'user' ? { facingMode: 'user' } : { facingMode: { ideal: 'environment' } }
+        videoConstraints: facingMode === 'user'
+          ? { facingMode: 'user', width: { ideal: 1280 }, height: { ideal: 720 } }
+          : { facingMode: { ideal: 'environment' }, width: { ideal: 1920 }, height: { ideal: 1080 } }
       };
       const verbose = false;
       const scanner = new Html5QrcodeScanner(scannerRef.current.id, config, verbose);
 
-      scanner.render(qrCodeSuccessCallback, qrCodeErrorCallback);
+      scanner.render(qrCodeSuccessCallback, (err) => {
+        const msg = String(err || '');
+        if (
+          msg.includes('NotFound') ||
+          msg.includes('No MultiFormat Readers') ||
+          msg.includes('QR code parse error')
+        ) {
+          // ignore normal scan-miss noise
+          return;
+        }
+        qrCodeErrorCallback && qrCodeErrorCallback(msg);
+      });
 
       return () => {
         scanner.clear().catch(() => {});

@@ -19,6 +19,7 @@ const VendorQrScanner = () => {
   const [loading, setLoading] = useState(false);
   const [facingMode, setFacingMode] = useState('environment');
   const isAndroid = typeof navigator !== 'undefined' && /android/i.test(navigator.userAgent || '');
+  const [useLegacyScanner, setUseLegacyScanner] = useState(false);
   const isSecure = typeof window !== 'undefined' ? window.isSecureContext : true;
   const { state: cameraState, error: cameraError, requesting, requestAccess, checkPermission } = useCameraAccess();
 
@@ -180,6 +181,22 @@ const VendorQrScanner = () => {
             Switch Camera ({facingMode === 'environment' ? 'Back' : 'Front'})
           </button>
         )}
+        {isAndroid && (
+          <div className="w-full flex justify-between gap-2 mb-4">
+            <button
+              className="px-3 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors font-semibold shadow-md"
+              onClick={() => setUseLegacyScanner((v) => !v)}
+            >
+              {useLegacyScanner ? 'Use Standard Scanner' : 'Use Legacy Scanner'}
+            </button>
+            <button
+              className="px-3 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors font-semibold shadow-md"
+              onClick={() => setFacingMode(facingMode === 'environment' ? 'user' : 'environment')}
+            >
+              Switch ({facingMode === 'environment' ? 'Back' : 'Front'})
+            </button>
+          </div>
+        )}
         {/* Permission state messaging */}
         {cameraState !== 'granted' && (
           <div className="w-full mb-4 p-3 rounded-lg text-center text-sm font-medium border-2 bg-orange-50 text-orange-800 border-orange-200">
@@ -215,11 +232,14 @@ const VendorQrScanner = () => {
         )}
         <div className="w-full flex justify-center mb-6">
           <div className="w-[92vw] max-w-md aspect-square rounded-xl overflow-hidden border-4 border-orange-200 bg-orange-50 shadow-inner flex items-center justify-center">
-            {isAndroid ? (
+            {isAndroid && !useLegacyScanner ? (
               <div className="w-full h-full p-1">
                 <Html5QrcodeScannerComponent
-                  fps={15}
-                  qrbox={250}
+                  fps={25}
+                  qrbox={(viewfinderWidth, viewfinderHeight) => {
+                    const size = Math.floor(Math.min(viewfinderWidth, viewfinderHeight) * 0.8);
+                    return { width: size, height: size };
+                  }}
                   disableFlip={false}
                   qrCodeSuccessCallback={(decodedText) => onScanSuccess(decodedText)}
                   qrCodeErrorCallback={(err) => onScanError(err)}
@@ -232,8 +252,8 @@ const VendorQrScanner = () => {
                 onResult={handleScan}
                 onError={handleError}
                 facingMode={facingMode === 'environment' ? 'environment' : 'user'}
-                width={Math.min(480, typeof window !== 'undefined' ? Math.floor(window.innerWidth * 0.9) : 480)}
-                height={Math.min(480, typeof window !== 'undefined' ? Math.floor(window.innerWidth * 0.9) : 480)}
+                width={Math.min(640, typeof window !== 'undefined' ? Math.floor(window.innerWidth * 0.92) : 640)}
+                height={Math.min(640, typeof window !== 'undefined' ? Math.floor(window.innerWidth * 0.92) : 640)}
               />
             )}
           </div>
