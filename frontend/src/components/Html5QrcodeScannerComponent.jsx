@@ -19,7 +19,7 @@ const Html5QrcodeScannerComponent = ({ fps = 10, qrbox = 250, disableFlip = fals
     // eslint-disable-next-line
   }, []);
 
-  return <div id="html5qr-code-full-region" ref={scannerRef} />;
+  return <div id="html5qr-code-full-region" ref={scannerRef} style={{ width: '100%', height: '100%' }} />;
 };
 
 export default Html5QrcodeScannerComponent; 

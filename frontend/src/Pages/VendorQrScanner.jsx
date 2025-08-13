@@ -1,5 +1,6 @@
 import React, { useState, useRef, useCallback, useEffect } from 'react';
 import ZxingQrScanner from '../components/ZxingQrScanner';
+import Html5QrcodeScannerComponent from '../components/Html5QrcodeScannerComponent';
 import { getMenuItemImageUrl } from '../utils/imageUtils';
 import axios from 'axios';
 import { format } from 'date-fns';
@@ -17,6 +18,7 @@ const VendorQrScanner = () => {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [facingMode, setFacingMode] = useState('environment');
+  const isAndroid = typeof navigator !== 'undefined' && /android/i.test(navigator.userAgent || '');
   const isSecure = typeof window !== 'undefined' ? window.isSecureContext : true;
   const { state: cameraState, error: cameraError, requesting, requestAccess, checkPermission } = useCameraAccess();
 
@@ -159,12 +161,14 @@ const VendorQrScanner = () => {
           </ul>
         </div>
         
-        <button
-          className="mb-4 px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors font-semibold shadow-md"
-          onClick={() => setFacingMode(facingMode === 'environment' ? 'user' : 'environment')}
-        >
-          Switch Camera ({facingMode === 'environment' ? 'Back' : 'Front'})
-        </button>
+        {!isAndroid && (
+          <button
+            className="mb-4 px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors font-semibold shadow-md"
+            onClick={() => setFacingMode(facingMode === 'environment' ? 'user' : 'environment')}
+          >
+            Switch Camera ({facingMode === 'environment' ? 'Back' : 'Front'})
+          </button>
+        )}
         {/* Permission state messaging */}
         {cameraState !== 'granted' && (
           <div className="w-full mb-4 p-3 rounded-lg text-center text-sm font-medium border-2 bg-orange-50 text-orange-800 border-orange-200">
@@ -199,15 +203,28 @@ const VendorQrScanner = () => {
           </div>
         )}
         <div className="w-full flex justify-center mb-6">
-          <div className="w-[90vw] max-w-xs aspect-square rounded-xl overflow-hidden border-4 border-orange-200 bg-orange-50 shadow-inner flex items-center justify-center">
-            <ZxingQrScanner
-              key={facingMode}
-              onResult={handleScan}
-              onError={handleError}
-              facingMode={facingMode === 'environment' ? 'environment' : 'user'}
-              width={300}
-              height={300}
-            />
+          <div className="w-[92vw] max-w-md aspect-square rounded-xl overflow-hidden border-4 border-orange-200 bg-orange-50 shadow-inner flex items-center justify-center">
+            {isAndroid ? (
+              <div className="w-full h-full p-1">
+                <Html5QrcodeScannerComponent
+                  fps={15}
+                  qrbox={250}
+                  disableFlip={false}
+                  qrCodeSuccessCallback={(decodedText) => onScanSuccess(decodedText)}
+                  qrCodeErrorCallback={() => {}}
+                  facingMode={facingMode}
+                />
+              </div>
+            ) : (
+              <ZxingQrScanner
+                key={facingMode}
+                onResult={handleScan}
+                onError={handleError}
+                facingMode={facingMode === 'environment' ? 'environment' : 'user'}
+                width={Math.min(480, typeof window !== 'undefined' ? Math.floor(window.innerWidth * 0.9) : 480)}
+                height={Math.min(480, typeof window !== 'undefined' ? Math.floor(window.innerWidth * 0.9) : 480)}
+              />
+            )}
           </div>
         </div>
         <div className="text-xs text-gray-500 mb-4">
