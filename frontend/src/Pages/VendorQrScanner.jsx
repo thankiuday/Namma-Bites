@@ -129,10 +129,19 @@ const VendorQrScanner = () => {
   };
 
   const onScanError = (errorMessage) => {
-    // Surface mobile errors visibly
-    if (errorMessage) {
-      setError(String(errorMessage));
+    if (!errorMessage) return;
+    const msg = String(errorMessage);
+    // Ignore non-fatal/noise errors emitted continuously during scanning
+    if (
+      msg.includes('No MultiFormat Readers') ||
+      msg.includes('No multiformat readers') ||
+      msg.includes('NotFoundException') ||
+      msg.includes('QR code parse error') ||
+      msg.includes('Not Found')
+    ) {
+      return;
     }
+    setError(msg);
   };
 
   return (

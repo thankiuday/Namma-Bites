@@ -150,11 +150,18 @@ const ZxingQrScanner = ({ onResult, onError, facingMode = 'environment', width =
                 if (!isMounted) return;
                 if (result) {
                   debouncedOnResult(result.getText());
-                } else if (err && onError) {
-                  if (err.name !== 'NotFoundException' && !err.message?.includes('No MultiFormat Readers')) {
-                    onError(err);
-                  }
+              } else if (err && onError) {
+                const msg = String(err?.message || err);
+                if (
+                  err.name === 'NotFoundException' ||
+                  msg.includes('No MultiFormat Readers') ||
+                  msg.includes('No multiformat readers')
+                ) {
+                  // Ignore normal scan-miss noise
+                } else {
+                  onError(err);
                 }
+              }
               }
             );
             // Try to improve focus/exposure after stream starts
@@ -176,7 +183,14 @@ const ZxingQrScanner = ({ onResult, onError, facingMode = 'environment', width =
               if (result) {
                 debouncedOnResult(result.getText());
               } else if (err && onError) {
-                if (err.name !== 'NotFoundException' && !err.message?.includes('No MultiFormat Readers')) {
+                const msg = String(err?.message || err);
+                if (
+                  err.name === 'NotFoundException' ||
+                  msg.includes('No MultiFormat Readers') ||
+                  msg.includes('No multiformat readers')
+                ) {
+                  // Ignore normal scan-miss noise
+                } else {
                   onError(err);
                 }
               }
