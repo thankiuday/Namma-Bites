@@ -53,19 +53,22 @@ const getClientIp = (req) => {
 // Rate limiting with Redis
 const generalLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 100, // limit each IP to 100 requests per windowMs
+  max: 1000, // raise headroom for normal traffic
   standardHeaders: true,
   legacyHeaders: false,
+  skipSuccessfulRequests: true, // don't penalize successful flows
   store: new RedisStore({
     sendCommand: (command, ...args) => redisClient.send_command(command, ...args),
   }),
-  message: 'Too many requests from this IP, please try again after 15 minutes',
+  message: 'Too many requests. Please try again later.',
   keyGenerator: (req /*, res*/) => getClientIp(req),
   skip: (req) => {
     // Skip rate limiting for development environment
     if (process.env.NODE_ENV === 'development') return true;
     // Do not count CORS preflight requests
     if (req.method === 'OPTIONS') return true;
+    // Bypass for authenticated admin operations (identified by cookie presence)
+    if (req.cookies && req.cookies.adminToken) return true;
     return false;
   }
 });
