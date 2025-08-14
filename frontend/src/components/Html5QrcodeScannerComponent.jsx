@@ -13,7 +13,20 @@ const Html5QrcodeScannerComponent = ({ fps = 20, qrbox = 250, qrCodeSuccessCallb
       try {
         const html5qrcode = new Html5Qrcode(containerRef.current.id, { formatsToSupport: [Html5QrcodeSupportedFormats.QR_CODE] });
         instanceRef.current = html5qrcode;
-        const constraints = { facingMode: { ideal: 'environment' } };
+        // Try to select the back camera explicitly when possible
+        let constraints = { facingMode: { ideal: 'environment' } };
+        try {
+          const cameras = await Html5Qrcode.getCameras();
+          if (Array.isArray(cameras) && cameras.length > 0) {
+            const pickBack = (label) => /back|rear|environment/i.test(label || '');
+            const back = cameras.find((c) => pickBack(c.label)) || cameras[0];
+            if (back?.id) {
+              constraints = { deviceId: { exact: back.id } };
+            }
+          }
+        } catch (_) {
+          // Fallback to facingMode when camera enumeration not available
+        }
         const config = {
           fps,
           qrbox,

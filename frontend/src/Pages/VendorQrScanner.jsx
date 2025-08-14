@@ -114,7 +114,7 @@ const VendorQrScanner = () => {
       const st = await checkPermission();
       if (st !== 'granted') {
         // Always request back camera
-        const constraints = { video: { facingMode: { exact: 'environment' } } };
+        const constraints = { video: { facingMode: { ideal: 'environment' } } };
         await requestAccess(constraints);
       }
     })();
