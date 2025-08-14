@@ -6,6 +6,7 @@ import jwt from 'jsonwebtoken';
 import { uploadPaymentProofToCloudinary } from '../../config/cloudinary.js';
 import { calculateEstimatedTime, getQueuePosition } from '../../utils/timeEstimation.js';
 import { recordPrepTimeAnalytics } from '../../utils/prepTimeAnalytics.js';
+import { publishToUser, publishToVendor } from '../../utils/events.js';
 
 // Create a new order
 export const createOrder = async (req, res) => {
@@ -44,6 +45,9 @@ export const createOrder = async (req, res) => {
       state: 'pending',
       estimatedPreparationTime: estimatedTime
     });
+    // Notify vendor a new order has arrived; also notify user
+    publishToVendor(String(vendor), { type: 'order_created', orderId: String(order._id), state: 'pending' });
+    publishToUser(String(user), { type: 'order_updated', orderId: String(order._id), state: 'pending' });
     res.status(201).json({ success: true, data: order });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });

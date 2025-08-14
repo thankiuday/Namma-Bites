@@ -101,6 +101,38 @@ const Notifications = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user]);
 
+  // Live updates via SSE: update badge instantly when server pushes a notification
+  useEffect(() => {
+    if (!user) return;
+    const base = import.meta.env.VITE_API_URL || '';
+    if (!base) return;
+    const url = base.replace(/\/$/, '') + '/users/orders/events';
+    let es;
+    try {
+      es = new EventSource(url, { withCredentials: true });
+      es.onmessage = (ev) => {
+        try {
+          const msg = JSON.parse(ev.data);
+          if (msg && msg.type === 'notification') {
+            // increment unread count unless panel is open (then we mark read on open)
+            if (!showNotifications) {
+              setUnreadCount((c) => {
+                const next = c + 1;
+                try { localStorage.setItem(storageKey, String(next)); } catch {}
+                return next;
+              });
+            } else {
+              // If panel is open, refresh list to show incoming message
+              fetchNotifications(1);
+            }
+          }
+        } catch (_) {}
+      };
+    } catch (_) {}
+    return () => { try { es && es.close(); } catch (_) {} };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user, showNotifications]);
+
   // Also fetch once on initial mount to avoid waiting for user state edge cases
   useEffect(() => {
     fetchUnreadCountOnly();

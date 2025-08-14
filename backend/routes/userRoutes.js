@@ -23,6 +23,7 @@ import {
   cancelUserSubscription
 } from '../controllers/user/userController.js';
 import { createOrder, uploadOrderPaymentProof, getUserOrders, getOrderQr, getUserOrderById, getOrderEstimate } from '../controllers/user/orderController.js';
+import { userSseHandler } from '../utils/events.js';
 import { getUserNotifications, getNotificationById, markAllUserNotificationsRead, getUnreadNotificationsCount } from '../controllers/notificationController.js';
 import { authenticateAdmin, authenticateUser } from '../middleware/user/authMiddleware.js';
 import { uploadPaymentProof as uploadPaymentProofMulter } from '../config/cloudinary.js';
@@ -62,6 +63,8 @@ router.get('/orders', authenticateUser, getUserOrders);
 router.get('/orders/:orderId', authenticateUser, getUserOrderById);
 router.get('/orders/:orderId/qr', authenticateUser, getOrderQr);
 router.get('/orders/:orderId/estimate', authenticateUser, getOrderEstimate);
+// SSE stream for user order events
+router.get('/orders/events', authenticateUser, userSseHandler);
 
 // --- Notification routes ---
 router.get('/notifications/user', authenticateUser, getUserNotifications);

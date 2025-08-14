@@ -3,10 +3,12 @@ import cors from 'cors';
 import path from 'path';
 import mongoose from 'mongoose';
 import helmet from 'helmet';
+import pinoHttp from 'pino-http';
 import rateLimit from 'express-rate-limit';
 import { RedisStore } from 'rate-limit-redis';
 import cookieParser from 'cookie-parser';
 import dotenv from 'dotenv';
+import { initEventBus, shutdownEventBus } from './utils/events.js';
 import userRoutes from './routes/userRoutes.js';
 import adminRoutes from './routes/adminRoutes.js';
 import authRoutes from './routes/auth.js';
@@ -32,6 +34,11 @@ app.use(cors({
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
+// Structured request logging (disabled noisy logs in dev if desired)
+app.use(pinoHttp({
+  redact: ['req.headers.authorization', 'req.headers.cookie'],
+  transport: process.env.NODE_ENV === 'development' ? { target: 'pino-pretty', options: { translateTime: 'SYS:standard' } } : undefined
+}));
 
 // Serve uploads directory (must be before React catch-all)
 const uploadsDir = path.resolve(__dirname, '../uploads');
@@ -144,6 +151,18 @@ app.use('/api/users', userRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/vendor', vendorRoutes);
+// Basic health endpoints
+app.get('/health', (req, res) => res.json({ status: 'ok' }));
+app.get('/ready', async (req, res) => {
+  try {
+    // naive readiness: ensure Redis and Mongo are alive enough
+    await redisClient.ping?.();
+    await mongoose.connection.db.admin().ping();
+    res.json({ status: 'ready' });
+  } catch (e) {
+    res.status(503).json({ status: 'not-ready' });
+  }
+});
 app.get('/api/test', (req, res) => {
   res.json({ success: true, message: 'Server test route works' });
 });
@@ -186,7 +205,18 @@ app.use((err, req, res, next) => {
 });
 
 const PORT = process.env.PORT || 5000;
-console.log(`Server is running on port ${PORT}`);
-app.listen(PORT, () => {
+if (process.env.NODE_ENV === 'production' && !process.env.JWT_SECRET) {
+  console.error('FATAL: JWT_SECRET must be set in production');
+  process.exit(1);
+}
+
+const server = app.listen(PORT, async () => {
   console.log(`Server is running on port ${PORT}`);
-}); 
+  try { await initEventBus(); } catch (e) { console.error('Event bus init failed', e); }
+});
+
+// Graceful shutdown
+process.on('SIGTERM', async () => {
+  try { await shutdownEventBus(); } catch (_) {}
+  server.close(() => process.exit(0));
+});

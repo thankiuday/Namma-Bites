@@ -85,6 +85,29 @@ const Orders = () => {
     };
   }, []);
 
+  // Subscribe to SSE to react instantly to order events
+  useEffect(() => {
+    const base = API_BASE_URL || '';
+    if (!base) return;
+    const url = base.replace(/\/$/, '') + '/users/orders/events';
+    let es;
+    try {
+      es = new EventSource(url, { withCredentials: true });
+      es.onmessage = (ev) => {
+        try {
+          const msg = JSON.parse(ev.data);
+          if (msg && (msg.type === 'order_updated' || msg.type === 'order_created')) {
+            // Fetch latest orders on event
+            axios.get(`${API_BASE_URL}/users/orders`, { withCredentials: true, params: { _: Date.now() } })
+              .then((res) => setOrders(res.data.data || []))
+              .catch(() => {});
+          }
+        } catch (_) {}
+      };
+    } catch (_) {}
+    return () => { try { es && es.close(); } catch (_) {} };
+  }, []);
+
   // Extract unique states and vendors for filter dropdowns
   const uniqueStates = Array.from(new Set(orders.map(o => o.state)));
   const uniqueVendors = Array.from(new Set(orders.map(o => o.vendor?.name).filter(Boolean)));

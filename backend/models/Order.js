@@ -55,6 +55,11 @@ orderSchema.pre('save', async function(next) {
   next();
 });
 
+// Helpful indexes for performance at scale (ensure defined before model compile)
+orderSchema.index({ vendor: 1, createdAt: -1 });
+orderSchema.index({ user: 1, createdAt: -1 });
+orderSchema.index({ state: 1, createdAt: -1 });
+
 const Order = mongoose.model('Order', orderSchema);
 
-export default Order; 
+export default Order;

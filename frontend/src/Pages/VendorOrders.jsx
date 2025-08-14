@@ -124,6 +124,27 @@ const VendorOrders = () => {
     };
   }, []);
 
+  // Subscribe to SSE for instant updates (production-friendly, low overhead)
+  useEffect(() => {
+    const base = import.meta.env.VITE_API_URL || '';
+    if (!base) return;
+    const url = base.replace(/\/$/, '') + '/vendor/orders/events';
+    let es;
+    try {
+      es = new EventSource(url, { withCredentials: true });
+      es.onmessage = (ev) => {
+        try {
+          const msg = JSON.parse(ev.data);
+          if (msg && (msg.type === 'order_updated' || msg.type === 'order_created')) {
+            // Fetch latest list on any relevant event
+            fetchOrders();
+          }
+        } catch (_) {}
+      };
+    } catch (_) {}
+    return () => { try { es && es.close(); } catch (_) {} };
+  }, []);
+
   const handleAccept = async (orderId) => {
     setActionLoading(orderId + '-accept');
     try {
