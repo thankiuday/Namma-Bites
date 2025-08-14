@@ -4,7 +4,6 @@ import UserSubscription from '../../models/UserSubscription.js';
 import jwt from 'jsonwebtoken';
 import { uploadPaymentProofToCloudinary } from '../../config/cloudinary.js';
 import { publishToVendor } from '../../utils/events.js';
-import { publishToVendor } from '../../utils/events.js';
 
 // Get all users
 export const getAllUsers = async (req, res) => {
