@@ -52,8 +52,8 @@ const Signup = () => {
         return;
       }
 
-      // Redirect to home page or dashboard
-      navigate('/');
+      // Redirect to login page after successful registration
+      navigate('/login');
     } catch (err) {
       setError('Failed to connect to the server');
     } finally {

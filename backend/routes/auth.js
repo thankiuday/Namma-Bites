@@ -92,10 +92,16 @@ router.post('/signup', validateSignup, async (req, res) => {
   }
 });
 
-// Login route
+// Login route (supports email or username for backward compatibility)
 router.post('/login', [
-  body('username').notEmpty().withMessage('Username is required'),
-  body('password').notEmpty().withMessage('Password is required')
+  body('password').notEmpty().withMessage('Password is required'),
+  body('email').optional().isEmail().withMessage('Please enter a valid email'),
+  body().custom((body) => {
+    if (!body.email && !body.username) {
+      throw new Error('Email or username is required');
+    }
+    return true;
+  })
 ], async (req, res) => {
   try {
     // Check for validation errors
@@ -104,10 +110,25 @@ router.post('/login', [
       return res.status(400).json({ errors: errors.array() });
     }
 
-    const { username, password, rememberMe } = req.body;
+    const { email, username, password, rememberMe } = req.body;
 
-    // Find user
-    const user = await User.findOne({ username });
+    const identifier = String(email || username || '').trim();
+    const isEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(identifier);
+
+    let user = null;
+    if (isEmail) {
+      // Try exact email match first
+      user = await User.findOne({ email: identifier });
+      // Fallback to case-insensitive exact match (for legacy mixed-case emails)
+      if (!user) {
+        const escaped = identifier.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        user = await User.findOne({ email: new RegExp(`^${escaped}$`, 'i') });
+      }
+    }
+    // If no user by email (or identifier isn't an email), try username
+    if (!user) {
+      user = await User.findOne({ username: identifier });
+    }
     if (!user) {
       return res.status(400).json({ error: 'Invalid credentials' });
     }
@@ -162,8 +183,8 @@ router.post('/login', [
       user: user.getPublicProfile()
     });
   } catch (error) {
-    res.status(400).json({ error: error.message });
-    res.status(500).json({ error: 'Server error' });
+    console.error('Login error:', error);
+    return res.status(500).json({ error: 'Server error' });
   }
 });
 

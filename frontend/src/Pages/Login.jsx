@@ -9,7 +9,7 @@ const Login = () => {
   const navigate = useNavigate();
   const { login } = useAuth();
   const [formData, setFormData] = useState({
-    username: '',
+    email: '',
     password: '',
     rememberMe: false
   });
@@ -33,16 +33,16 @@ const Login = () => {
     setError('');
 
     // Client-side validation
-    const usernameTrim = String(formData.username || '').trim();
+    const emailTrim = String(formData.email || '').trim();
     const passwordTrim = String(formData.password || '').trim();
-    if (!isNonEmpty(usernameTrim)) {
+    if (!isNonEmpty(emailTrim)) {
       setLoading(false);
-      setError('Username is required');
+      setError('Email is required');
       return;
     }
-    if (usernameTrim.length < 3) {
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailTrim)) {
       setLoading(false);
-      setError('Username must be at least 3 characters');
+      setError('Enter a valid email address');
       return;
     }
     if (!isNonEmpty(passwordTrim)) {
@@ -57,7 +57,7 @@ const Login = () => {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ ...formData, username: usernameTrim, password: passwordTrim }),
+        body: JSON.stringify({ username: emailTrim, password: passwordTrim, rememberMe: formData.rememberMe }),
         credentials: 'include'
       });
 
@@ -113,22 +113,22 @@ const Login = () => {
 
         <form className="mt-6 sm:mt-8 space-y-4 sm:space-y-6 " onSubmit={handleSubmit}>
           <div className="space-y-3 sm:space-y-4">
-            {/* Username */}
+            {/* Email */}
             <div>
-              <label htmlFor="username" className="block text-sm font-medium text-black">
-                Username
+              <label htmlFor="email" className="block text-sm font-medium text-black">
+                Email
               </label>
               <input
-                id="username"
-                name="username"
-                type="text"
+                id="email"
+                name="email"
+                type="email"
                 required
-                value={formData.username}
+                value={formData.email}
                 onChange={handleChange}
-                placeholder="Enter your username"
+                placeholder="Enter your email"
                 className="mt-1 block w-full px-3 py-2 sm:py-3 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-orange-500 focus:border-orange-500 text-gray-900 text-base"
               />
-              <p className="mt-1 text-xs text-gray-500">At least 3 characters. Avoid leading/trailing spaces.</p>
+              <p className="mt-1 text-xs text-gray-500">Use the email you registered with.</p>
             </div>
 
             {/* Password */}
