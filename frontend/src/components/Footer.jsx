@@ -10,7 +10,7 @@ const Footer = () => {
           <div className="space-y-4">
             <h3 className="text-lg font-semibold text-black">Namma Bites</h3>
             <p className="text-gray-600 text-sm">
-              Delivering delicious food right to your doorstep. Your favorite local flavors, now just a click away.
+              Delivering delicious foods.Your favorite local flavors, now just a click away.
             </p>
           </div>
 

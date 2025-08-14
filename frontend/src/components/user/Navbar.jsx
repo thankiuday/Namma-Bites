@@ -167,7 +167,7 @@ const Navbar = ({ links = defaultStudentLinks, isAdmin = false }) => {
 
                 {/* Notifications */}
                 <div className="relative">
-                  <Notifications />
+                  <Notifications onNavigate={() => setIsMenuOpen(false)} />
                 </div>
 
                 <button

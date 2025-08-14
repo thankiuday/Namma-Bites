@@ -5,7 +5,7 @@ import { FaBell, FaTimes, FaExclamationCircle, FaGift } from 'react-icons/fa';
 import { useAuth } from '../context/AuthContext';
 import { toast } from 'react-toastify';
 
-const Notifications = () => {
+const Notifications = ({ onNavigate }) => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const [notifications, setNotifications] = useState([]);
@@ -110,6 +110,7 @@ const Notifications = () => {
     const url = base.replace(/\/$/, '') + '/users/orders/events';
     let es;
     try {
+      // Use absolute URL for production backends when VITE_API_URL is absolute; EventSource ignores withCredentials for some proxies unless same-origin
       es = new EventSource(url, { withCredentials: true });
       es.onmessage = (ev) => {
         try {
@@ -126,7 +127,7 @@ const Notifications = () => {
               const title = msg.data?.title || 'New notification';
               const message = msg.data?.message || '';
               toast.info(`${title}${message ? `: ${message}` : ''}`, {
-                onClick: () => navigate('/notifications'),
+                onClick: () => { try { onNavigate && onNavigate(); } catch (_) {} navigate('/notifications'); },
               });
             } else {
               // If panel is open, refresh list to show incoming message
@@ -139,7 +140,9 @@ const Notifications = () => {
             if (state === 'preparing') text = 'Your order is being prepared';
             else if (state === 'ready') text = 'Your order is ready for pickup';
             else if (state === 'completed') text = 'Your order has been completed';
-            toast.info(text, { onClick: () => navigate('/orders') });
+            // Avoid duplicate toasts within a short window
+            toast.dismiss('order_state');
+            toast.info(text, { toastId: 'order_state', onClick: () => { try { onNavigate && onNavigate(); } catch (_) {} navigate('/orders'); } });
             // Optionally, trigger a lightweight refresh of notifications/count shortly after
             setTimeout(() => { try { fetchUnreadCountOnly(); } catch (_) {} }, 500);
           }
@@ -200,6 +203,7 @@ const Notifications = () => {
             }
             // Always navigate to dedicated notifications page
             setShowNotifications(false);
+            try { onNavigate && onNavigate(); } catch (_) {}
             navigate('/notifications');
           }}
           className="relative p-2 text-orange-600 hover:text-orange-700 transition-colors"

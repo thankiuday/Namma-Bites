@@ -107,6 +107,11 @@ const VendorDashboard = () => {
           if (msg && msg.type === 'subscription_created') {
             fetchPendingSubs();
           }
+          if (msg && msg.type === 'prebook_updated') {
+            // Refresh summary + list for currently selected day/meal
+            fetchPrebookedUsers(selectedDay, selectedMeal);
+            fetchMealPrebookSummary(calendarDate);
+          }
         } catch (_) {}
       };
     } catch (_) {}
