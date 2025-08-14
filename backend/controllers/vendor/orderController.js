@@ -3,7 +3,6 @@ import { recordPrepTimeAnalytics } from '../../utils/prepTimeAnalytics.js';
 import Notification from '../../models/Notification.js';
 import jwt from 'jsonwebtoken';
 import { publishToUser, publishToVendor } from '../../utils/events.js';
-import Notification from '../../models/Notification.js';
 
 // Get all orders for the logged-in vendor
 export const getVendorOrders = async (req, res) => {
