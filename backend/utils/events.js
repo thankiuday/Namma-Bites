@@ -103,6 +103,10 @@ export const vendorSseHandler = async (req, res) => {
   res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
   res.setHeader('Connection', 'keep-alive');
   res.setHeader('X-Accel-Buffering', 'no');
+  if (process.env.CLIENT_ORIGIN) {
+    res.setHeader('Access-Control-Allow-Origin', process.env.CLIENT_ORIGIN);
+    res.setHeader('Access-Control-Allow-Credentials', 'true');
+  }
   res.flushHeaders?.();
 
   addClient(vendorClients, vendorId, res);
@@ -122,6 +126,10 @@ export const userSseHandler = async (req, res) => {
   res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
   res.setHeader('Connection', 'keep-alive');
   res.setHeader('X-Accel-Buffering', 'no');
+  if (process.env.CLIENT_ORIGIN) {
+    res.setHeader('Access-Control-Allow-Origin', process.env.CLIENT_ORIGIN);
+    res.setHeader('Access-Control-Allow-Credentials', 'true');
+  }
   res.flushHeaders?.();
 
   addClient(userClients, userId, res);
