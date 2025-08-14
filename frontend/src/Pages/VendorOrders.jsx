@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import vendorApi, { acceptOrder, rejectOrder, markOrderReady, completeOrder } from '../api/vendorApi';
 import { toast } from 'react-toastify';
 import { FaArrowLeft, FaCheckCircle, FaTimesCircle, FaClock, FaQrcode, FaUpload } from 'react-icons/fa';
@@ -86,10 +86,12 @@ const VendorOrders = () => {
 
   // Lightweight polling to keep vendor orders in sync
   useEffect(() => {
+    const sseActiveRef = sseFlagRef;
     let isStopped = false;
     let inFlight = false;
 
     const tick = async () => {
+      if (sseActiveRef.current) return; // SSE active, skip polling
       if (document.hidden) return; // pause when tab hidden
       if (inFlight) return; // avoid overlapping requests
       inFlight = true;
@@ -126,24 +128,49 @@ const VendorOrders = () => {
 
   // Subscribe to SSE for instant updates (production-friendly, low overhead)
   useEffect(() => {
+    // flags reused by polling to avoid duplicate work
+    sseFlagRef.current = false;
+    const scheduledFetchRef = { current: false };
     const base = import.meta.env.VITE_API_URL || '';
     if (!base) return;
     const url = base.replace(/\/$/, '') + '/vendor/orders/events';
     let es;
     try {
       es = new EventSource(url, { withCredentials: true });
+      es.onopen = () => { sseFlagRef.current = true; };
       es.onmessage = (ev) => {
         try {
           const msg = JSON.parse(ev.data);
-          if (msg && (msg.type === 'order_updated' || msg.type === 'order_created')) {
-            // Fetch latest list on any relevant event
-            fetchOrders();
+          if (!msg) return;
+          if (msg.type === 'order_updated') {
+            setOrders((prev) => {
+              const idx = prev.findIndex(o => String(o._id) === String(msg.orderId));
+              if (idx === -1) {
+                if (!scheduledFetchRef.current) {
+                  scheduledFetchRef.current = true;
+                  fetchOrders().finally(() => { scheduledFetchRef.current = false; });
+                }
+                return prev;
+              }
+              const updated = [...prev];
+              updated[idx] = { ...updated[idx], state: msg.state };
+              return updated;
+            });
+          } else if (msg.type === 'order_created') {
+            // New order for this vendor, refresh once
+            if (!scheduledFetchRef.current) {
+              scheduledFetchRef.current = true;
+              fetchOrders().finally(() => { scheduledFetchRef.current = false; });
+            }
           }
         } catch (_) {}
       };
     } catch (_) {}
-    return () => { try { es && es.close(); } catch (_) {} };
+    return () => { try { es && es.close(); } catch (_) {} sseFlagRef.current = false; };
   }, []);
+
+  // shared SSE-active flag
+  const sseFlagRef = useRef(false);
 
   const handleAccept = async (orderId) => {
     setActionLoading(orderId + '-accept');

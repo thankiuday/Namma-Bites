@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { FaCheckCircle, FaTimesCircle, FaClock, FaQrcode, FaUpload, FaArrowLeft } from 'react-icons/fa';
 import axios from 'axios';
 import { API_URL as API_BASE_URL } from '../api/config';
@@ -50,10 +50,12 @@ const Orders = () => {
 
   // Lightweight polling to keep user orders in sync without manual refresh
   useEffect(() => {
+    const sseActiveRef = sseFlagRef;
     let isStopped = false;
     let inFlight = false;
 
     const tick = async () => {
+      if (sseActiveRef.current) return;
       if (document.hidden) return;
       if (inFlight) return;
       inFlight = true;
@@ -93,11 +95,20 @@ const Orders = () => {
     let es;
     try {
       es = new EventSource(url, { withCredentials: true });
+      es.onopen = () => { sseFlagRef.current = true; };
       es.onmessage = (ev) => {
         try {
           const msg = JSON.parse(ev.data);
-          if (msg && (msg.type === 'order_updated' || msg.type === 'order_created')) {
-            // Fetch latest orders on event
+          if (!msg) return;
+          if (msg.type === 'order_updated') {
+            setOrders((prev) => {
+              const idx = prev.findIndex(o => String(o._id) === String(msg.orderId));
+              if (idx === -1) return prev;
+              const updated = [...prev];
+              updated[idx] = { ...updated[idx], state: msg.state };
+              return updated;
+            });
+          } else if (msg.type === 'order_created') {
             axios.get(`${API_BASE_URL}/users/orders`, { withCredentials: true, params: { _: Date.now() } })
               .then((res) => setOrders(res.data.data || []))
               .catch(() => {});
@@ -105,8 +116,10 @@ const Orders = () => {
         } catch (_) {}
       };
     } catch (_) {}
-    return () => { try { es && es.close(); } catch (_) {} };
+    return () => { try { es && es.close(); } catch (_) {} sseFlagRef.current = false; };
   }, []);
+
+  const sseFlagRef = useRef(false);
 
   // Extract unique states and vendors for filter dropdowns
   const uniqueStates = Array.from(new Set(orders.map(o => o.state)));
