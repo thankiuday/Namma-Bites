@@ -132,6 +132,16 @@ const Notifications = () => {
               // If panel is open, refresh list to show incoming message
               fetchNotifications(1);
             }
+          } else if (msg && msg.type === 'order_updated') {
+            // Show a toast for order state changes as a fallback when no notification doc is created
+            const state = String(msg.state || '').toLowerCase();
+            let text = 'Order updated';
+            if (state === 'preparing') text = 'Your order is being prepared';
+            else if (state === 'ready') text = 'Your order is ready for pickup';
+            else if (state === 'completed') text = 'Your order has been completed';
+            toast.info(text, { onClick: () => navigate('/orders') });
+            // Optionally, trigger a lightweight refresh of notifications/count shortly after
+            setTimeout(() => { try { fetchUnreadCountOnly(); } catch (_) {} }, 500);
           }
         } catch (_) {}
       };

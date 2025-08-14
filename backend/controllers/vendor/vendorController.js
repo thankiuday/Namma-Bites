@@ -938,6 +938,9 @@ export const getPendingUserSubscriptions = async (req, res) => {
 };
 
 // Approve or reject a user subscription payment
+import Notification from '../../models/Notification.js';
+import { publishToUser } from '../../utils/events.js';
+
 export const approveUserSubscription = async (req, res) => {
   try {
     const vendorId = req.vendor._id;
@@ -958,6 +961,26 @@ export const approveUserSubscription = async (req, res) => {
       sub.validated = false;
     }
     await sub.save();
+    try {
+      // Send live notification to the user when approved or rejected
+      const title = action === 'approved' ? 'Subscription Approved' : 'Subscription Rejected';
+      const message = action === 'approved'
+        ? 'Your subscription has been approved and is now active.'
+        : 'Your subscription payment was rejected.';
+      await Notification.create({
+        title,
+        message,
+        type: 'subscription_alert',
+        recipients: 'user',
+        recipientUser: sub.user,
+        sender: req.vendor._id,
+        senderModel: 'Vendor',
+        vendorId: req.vendor._id,
+        linkPath: `/subscription`,
+        validUntil: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
+      });
+      await publishToUser(String(sub.user), { type: 'notification', data: { title, message } });
+    } catch (_) {}
     res.json({ success: true, data: sub });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });

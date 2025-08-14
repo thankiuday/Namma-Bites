@@ -3,6 +3,7 @@ import SubscriptionPlan from '../../models/SubscriptionPlan.js';
 import UserSubscription from '../../models/UserSubscription.js';
 import jwt from 'jsonwebtoken';
 import { uploadPaymentProofToCloudinary } from '../../config/cloudinary.js';
+import { publishToVendor } from '../../utils/events.js';
 
 // Get all users
 export const getAllUsers = async (req, res) => {
@@ -364,6 +365,9 @@ export const createUserSubscription = async (req, res) => {
       duration,
       paymentStatus: 'pending',
     });
+    try {
+      await publishToVendor(String(vendor), { type: 'subscription_created', subscriptionId: String(newSub._id) });
+    } catch (_) {}
     res.status(201).json({ success: true, data: newSub });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });

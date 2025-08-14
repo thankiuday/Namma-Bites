@@ -380,12 +380,12 @@ const UserSubscription = () => {
                     </span>
                     <span className="font-bold text-orange-800">{plan.duration} days</span>
                   </div>
-                  <div className="flex justify-between items-center">
+                  <div className="flex items-center justify-between gap-2 flex-wrap">
                     <span className="text-sm text-orange-700 font-semibold flex items-center">
                       <FaLeaf className="mr-2" />
                       Subscription Type:
                     </span>
-                    <span className={`px-3 py-1 rounded-full text-xs font-bold flex items-center ${
+                    <span className={`px-2 sm:px-3 py-0.5 sm:py-1 rounded-full text-[10px] sm:text-xs font-bold flex items-center shrink-0 ${
                       plan.planType === 'veg' 
                         ? 'bg-green-100 text-green-800 border border-green-200' 
                         : 'bg-red-100 text-red-800 border border-red-200'
@@ -482,11 +482,11 @@ const UserSubscription = () => {
                         </div>
                       </div>
                     </div>
-                    <div className="flex justify-between items-center mb-2">
+                    <div className="flex items-center justify-between gap-2 flex-wrap mb-2">
                       <span className="font-semibold text-orange-700 flex items-center">
                         <FaClock className="mr-1" /> {plan?.duration} days
                       </span>
-                      <span className={`px-3 py-1 rounded-full text-xs font-bold flex items-center ${
+                      <span className={`px-2 sm:px-3 py-0.5 sm:py-1 rounded-full text-[10px] sm:text-xs font-bold flex items-center shrink-0 ${
                         plan?.planType === 'veg'
                           ? 'bg-green-100 text-green-800 border border-green-200'
                           : 'bg-red-100 text-red-800 border border-red-200'
@@ -622,12 +622,12 @@ const UserSubscription = () => {
                       </span>
                       <span className="font-bold text-orange-800">{selectedPlan.duration} days</span>
                     </div>
-                    <div className="flex justify-between items-center text-xs sm:text-sm">
+                   <div className="flex items-center justify-between gap-2 flex-wrap text-xs sm:text-sm">
                       <span className="text-orange-700 font-semibold flex items-center">
                         <FaLeaf className="mr-1 sm:mr-2" />
                         Subscription Type:
                       </span>
-                      <span className={`px-2 sm:px-3 py-1 rounded-full text-xs font-bold flex items-center ${
+                     <span className={`px-2 sm:px-3 py-0.5 sm:py-1 rounded-full text-[10px] sm:text-xs font-bold flex items-center shrink-0 ${
                         selectedPlan.planType === 'veg' 
                           ? 'bg-green-100 text-green-800 border border-green-200' 
                           : 'bg-red-100 text-red-800 border border-red-200'

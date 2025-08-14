@@ -93,6 +93,27 @@ const VendorDashboard = () => {
     fetchApprovedSubs();
   }, []);
 
+  // Live updates for new subscriptions via SSE
+  useEffect(() => {
+    const base = import.meta.env.VITE_API_URL || '';
+    if (!base) return;
+    const url = base.replace(/\/$/, '') + '/vendor/orders/events';
+    let es;
+    try {
+      es = new EventSource(url, { withCredentials: true });
+      es.onmessage = (ev) => {
+        try {
+          const msg = JSON.parse(ev.data);
+          if (msg && msg.type === 'subscription_created') {
+            fetchPendingSubs();
+          }
+        } catch (_) {}
+      };
+    } catch (_) {}
+    return () => { try { es && es.close(); } catch (_) {} };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   // Fetch rejected subscriptions from backend
   const fetchRejectedSubs = async () => {
     try {
