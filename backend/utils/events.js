@@ -7,6 +7,7 @@ const userClients = new Map(); // userId -> Set(res)
 // Dedicated subscriber for Pub/Sub to support multi-instance
 let subscriber;
 let heartbeatInterval;
+let useRedis = Boolean(process.env.REDIS_URL); // use Redis only when configured
 
 const writeSse = (res, dataObj) => {
   try {
@@ -39,22 +40,27 @@ const broadcastToMap = (map, id, payload) => {
 
 export const initEventBus = async () => {
   if (subscriber) return; // already initialized
-  subscriber = redisClient.duplicate();
-  // ioredis auto-connects; pattern subscribe and route messages via pmessage
-  await subscriber.psubscribe('vendor:*');
-  await subscriber.psubscribe('user:*');
-  subscriber.on('pmessage', (_pattern, channel, message) => {
+  if (useRedis) {
     try {
-      const payload = JSON.parse(message);
-      if (channel.startsWith('vendor:')) {
-        const vendorId = channel.split(':')[1];
-        broadcastToMap(vendorClients, vendorId, payload);
-      } else if (channel.startsWith('user:')) {
-        const userId = channel.split(':')[1];
-        broadcastToMap(userClients, userId, payload);
-      }
-    } catch (_) {}
-  });
+      subscriber = redisClient.duplicate();
+      await subscriber.psubscribe('vendor:*');
+      await subscriber.psubscribe('user:*');
+      subscriber.on('pmessage', (_pattern, channel, message) => {
+        try {
+          const payload = JSON.parse(message);
+          if (channel.startsWith('vendor:')) {
+            const vendorId = channel.split(':')[1];
+            broadcastToMap(vendorClients, vendorId, payload);
+          } else if (channel.startsWith('user:')) {
+            const userId = channel.split(':')[1];
+            broadcastToMap(userClients, userId, payload);
+          }
+        } catch (_) {}
+      });
+    } catch (e) {
+      useRedis = false;
+    }
+  }
 
   // Heartbeat to keep proxies from closing idle connections
   heartbeatInterval = setInterval(() => {
@@ -74,15 +80,19 @@ export const shutdownEventBus = async () => {
 };
 
 export const publishToVendor = async (vendorId, payload) => {
-  try {
-    await redisClient.publish(`vendor:${vendorId}`, JSON.stringify(payload));
-  } catch (_) {}
+  if (useRedis) {
+    try { await redisClient.publish(`vendor:${vendorId}`, JSON.stringify(payload)); } catch (_) { /* noop */ }
+  } else {
+    broadcastToMap(vendorClients, vendorId, payload);
+  }
 };
 
 export const publishToUser = async (userId, payload) => {
-  try {
-    await redisClient.publish(`user:${userId}`, JSON.stringify(payload));
-  } catch (_) {}
+  if (useRedis) {
+    try { await redisClient.publish(`user:${userId}`, JSON.stringify(payload)); } catch (_) { /* noop */ }
+  } else {
+    broadcastToMap(userClients, userId, payload);
+  }
 };
 
 export const vendorSseHandler = async (req, res) => {

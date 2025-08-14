@@ -13,6 +13,7 @@ const LazyImage = ({
   fallbackSrc = '/logo.png',
   loader = null,
   imgClassName = '',
+  ...imgProps
 }) => {
   const containerRef = useRef(null);
   const [isInView, setIsInView] = useState(false);
@@ -49,6 +50,7 @@ const LazyImage = ({
           onLoad={() => setLoaded(true)}
           onError={() => setHasError(true)}
           loading="lazy"
+          {...imgProps}
         />)
       }
     </div>

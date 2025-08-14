@@ -5,7 +5,7 @@ import mongoose from 'mongoose';
 import helmet from 'helmet';
 import pinoHttp from 'pino-http';
 import rateLimit from 'express-rate-limit';
-import { RedisStore } from 'rate-limit-redis';
+// Import RedisStore only when needed (dynamic import below)
 import cookieParser from 'cookie-parser';
 import dotenv from 'dotenv';
 import { initEventBus, shutdownEventBus } from './utils/events.js';
@@ -57,63 +57,55 @@ const getClientIp = (req) => {
   return req.ip;
 };
 
-// Rate limiting with Redis
-const generalLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 1000, // raise headroom for normal traffic
-  standardHeaders: true,
-  legacyHeaders: false,
-  skipSuccessfulRequests: true, // don't penalize successful flows
-  store: new RedisStore({
-    sendCommand: (command, ...args) => redisClient.send_command(command, ...args),
-  }),
-  message: 'Too many requests. Please try again later.',
-  keyGenerator: (req /*, res*/) => getClientIp(req),
-  skip: (req) => {
-    // Skip rate limiting for development environment
-    if (process.env.NODE_ENV === 'development') return true;
-    // Do not count CORS preflight requests
-    if (req.method === 'OPTIONS') return true;
-    // Bypass for authenticated admin operations (identified by cookie presence)
-    if (req.cookies && req.cookies.adminToken) return true;
-    return false;
+// Apply rate limiting only when explicitly usable
+const useRedisRateLimit = Boolean(process.env.REDIS_URL) && process.env.DISABLE_RATE_LIMIT !== '1';
+if (useRedisRateLimit && process.env.NODE_ENV === 'production') {
+  // Dynamically import RedisStore only when used; tolerate absence
+  let RedisStoreMod;
+  try {
+    RedisStoreMod = await import('rate-limit-redis');
+  } catch (e) {
+    console.warn('rate-limit-redis module not found; skipping Redis-backed rate limiting.');
   }
-});
+  const RedisStore = RedisStoreMod?.RedisStore;
+  if (RedisStore) {
+    const generalLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000,
+    max: 1000,
+    standardHeaders: true,
+    legacyHeaders: false,
+    skipSuccessfulRequests: true,
+    store: new RedisStore({
+      sendCommand: (...args) => redisClient.call?.(...args)
+    }),
+    message: 'Too many requests. Please try again later.',
+    keyGenerator: (req) => getClientIp(req),
+    });
 
-const loginLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 10, // limit each IP to 10 login attempts per windowMs
-  standardHeaders: true,
-  legacyHeaders: false,
-  store: new RedisStore({
-    sendCommand: (command, ...args) => redisClient.send_command(command, ...args),
-  }),
-  message: 'Too many login attempts, please try again after 15 minutes',
-  // Successful logins shouldn't consume the attempt budget
-  skipSuccessfulRequests: true,
-  keyGenerator: (req /*, res*/) => {
-    const ip = getClientIp(req);
-    // Include email when present so multiple users behind one IP don't block each other
-    const email = (req.body && req.body.email) ? String(req.body.email).toLowerCase() : '';
-    return email ? `${ip}:${email}` : ip;
-  },
-  skip: (req) => {
-    // Skip rate limiting for development environment
-    if (process.env.NODE_ENV === 'development') return true;
-    // Do not count CORS preflight requests
-    if (req.method === 'OPTIONS') return true;
-    return false;
+    const loginLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000,
+    max: 10,
+    standardHeaders: true,
+    legacyHeaders: false,
+    store: new RedisStore({
+      sendCommand: (...args) => redisClient.call?.(...args)
+    }),
+    message: 'Too many login attempts, please try again after 15 minutes',
+    skipSuccessfulRequests: true,
+    keyGenerator: (req) => {
+      const ip = getClientIp(req);
+      const email = (req.body && req.body.email) ? String(req.body.email).toLowerCase() : '';
+      return email ? `${ip}:${email}` : ip;
+    },
+    });
+
+    app.use('/api/admin/login', loginLimiter);
+    app.use('/api/', generalLimiter);
   }
-});
-
-// Apply rate limiters only in production
-if (process.env.NODE_ENV === 'production') {
-  app.use('/api/admin/login', loginLimiter);
-  app.use('/api/', generalLimiter);
 }
 
-// Add a route to reset rate limits (for development only)
-if (process.env.NODE_ENV === 'development') {
+// Add a route to reset rate limits (for development only, requires Redis)
+if (process.env.NODE_ENV === 'development' && process.env.REDIS_URL) {
   app.post('/api/reset-rate-limit', async (req, res) => {
     try {
       const keys = await redisClient.keys('rl:*');

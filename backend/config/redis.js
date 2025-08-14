@@ -1,15 +1,35 @@
 import Redis from 'ioredis';
 
-// Use REDIS_URL from environment (Render/Upstash), fallback to localhost if needed
-const redisUrl = process.env.REDIS_URL || 'redis://127.0.0.1:6379';
-const redisClient = new Redis(redisUrl);
-
-redisClient.on('error', (err) => {
-  console.error('Redis Client Error:', err);
+const createStub = () => ({
+  publish: async () => {},
+  duplicate: () => ({ psubscribe: async () => {}, on: () => {}, quit: async () => {} }),
+  ping: async () => {}
 });
 
-redisClient.on('connect', () => {
-  console.log('Successfully connected to Redis');
-});
+let client;
+if (!process.env.REDIS_URL) {
+  console.warn('REDIS_URL not set; using in-memory SSE broadcast (no Redis).');
+  client = createStub();
+} else {
+  try {
+    client = new Redis(process.env.REDIS_URL, {
+      lazyConnect: true,
+      maxRetriesPerRequest: null,
+      retryStrategy: (times) => Math.min(times * 200, 2000),
+    });
+    client.on('error', (err) => {
+      console.error('Redis Client Error:', err);
+    });
+    client.on('connect', () => {
+      console.log('Successfully connected to Redis');
+    });
+    client.connect?.().catch(() => {
+      console.warn('Redis connect failed; will retry in background.');
+    });
+  } catch (e) {
+    console.warn('Redis initialization failed; using stub client.');
+    client = createStub();
+  }
+}
 
-export default redisClient; 
+export default client;
