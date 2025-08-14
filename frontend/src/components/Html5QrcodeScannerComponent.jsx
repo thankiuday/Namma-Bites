@@ -30,6 +30,7 @@ const Html5QrcodeScannerComponent = ({ fps = 20, qrbox = 250, qrCodeSuccessCallb
         const config = {
           fps,
           qrbox,
+          aspectRatio: 1,
           // Use experimental barcode detector if present
           experimentalFeatures: { useBarCodeDetectorIfSupported: true },
         };
@@ -41,6 +42,27 @@ const Html5QrcodeScannerComponent = ({ fps = 20, qrbox = 250, qrCodeSuccessCallb
           if (msg.includes('NotFound') || msg.includes('No MultiFormat Readers') || msg.includes('parse')) return;
           try { qrCodeErrorCallback && qrCodeErrorCallback(msg); } catch (_) {}
         });
+        // Force-fill video to container
+        try {
+          const root = containerRef.current;
+          if (root) {
+            root.style.width = '100%';
+            root.style.height = '100%';
+            root.style.position = 'relative';
+            const video = root.querySelector('video');
+            if (video) {
+              video.style.width = '100%';
+              video.style.height = '100%';
+              video.style.objectFit = 'cover';
+            }
+            const canvas = root.querySelector('canvas');
+            if (canvas) {
+              canvas.style.width = '100%';
+              canvas.style.height = '100%';
+              canvas.style.objectFit = 'cover';
+            }
+          }
+        } catch (_) {}
       } catch (err) {
         try { qrCodeErrorCallback && qrCodeErrorCallback(err?.message || String(err)); } catch (_) {}
       }

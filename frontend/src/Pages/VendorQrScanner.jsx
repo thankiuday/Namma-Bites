@@ -204,13 +204,13 @@ const VendorQrScanner = () => {
           </div>
         )}
         <div className="w-full flex justify-center mb-6">
-          <div className="w-[92vw] max-w-md aspect-square rounded-xl overflow-hidden border-4 border-orange-200 bg-orange-50 shadow-inner flex items-center justify-center">
+          <div className="w-[92vw] max-w-md aspect-square rounded-xl overflow-hidden border-4 border-orange-200 bg-black shadow-inner flex items-center justify-center">
             {isMobile ? (
-              <div className="w-full h-full p-1">
+              <div className="w-full h-full p-0">
                 <Html5QrcodeScannerComponent
                   fps={20}
-                  qrbox={(viewfinderWidth, viewfinderHeight) => {
-                    const size = Math.floor(Math.min(viewfinderWidth, viewfinderHeight) * 0.8);
+                  qrbox={({ width, height }) => {
+                    const size = Math.floor(Math.min(width || 0, height || 0));
                     return { width: size, height: size };
                   }}
                   qrCodeSuccessCallback={(decodedText) => onScanSuccess(decodedText)}
