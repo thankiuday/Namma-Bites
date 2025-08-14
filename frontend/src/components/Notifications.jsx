@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import userApi from '../api/userApi';
 import { FaBell, FaTimes, FaExclamationCircle, FaGift } from 'react-icons/fa';
 import { useAuth } from '../context/AuthContext';
+import { toast } from 'react-toastify';
 
 const Notifications = () => {
   const navigate = useNavigate();
@@ -120,6 +121,12 @@ const Notifications = () => {
                 const next = c + 1;
                 try { localStorage.setItem(storageKey, String(next)); } catch {}
                 return next;
+              });
+              // Show a live toast for user order notifications
+              const title = msg.data?.title || 'New notification';
+              const message = msg.data?.message || '';
+              toast.info(`${title}${message ? `: ${message}` : ''}`, {
+                onClick: () => navigate('/notifications'),
               });
             } else {
               // If panel is open, refresh list to show incoming message
