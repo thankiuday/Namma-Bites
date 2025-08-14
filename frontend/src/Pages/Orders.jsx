@@ -37,7 +37,7 @@ const Orders = () => {
       setLoading(true);
       setError('');
       try {
-        const res = await axios.get(`${API_BASE_URL}/users/orders`, { withCredentials: true });
+        const res = await axios.get(`${API_BASE_URL}/users/orders`, { withCredentials: true, params: { _: Date.now() } });
         setOrders(res.data.data || []);
       } catch (err) {
         setError(err.response?.data?.message || 'Failed to fetch orders.');
@@ -46,6 +46,43 @@ const Orders = () => {
       }
     };
     fetchOrders();
+  }, []);
+
+  // Lightweight polling to keep user orders in sync without manual refresh
+  useEffect(() => {
+    let isStopped = false;
+    let inFlight = false;
+
+    const tick = async () => {
+      if (document.hidden) return;
+      if (inFlight) return;
+      inFlight = true;
+      try {
+        const res = await axios.get(`${API_BASE_URL}/users/orders`, { withCredentials: true, params: { _: Date.now() } });
+        if (!isStopped) {
+          setOrders(res.data.data || []);
+        }
+      } catch (_) {
+        // ignore transient polling errors
+      } finally {
+        inFlight = false;
+      }
+    };
+
+    const intervalId = setInterval(tick, 5000);
+    // immediate tick improves perceived responsiveness
+    tick();
+
+    const onVisibility = () => {
+      if (!document.hidden) tick();
+    };
+    document.addEventListener('visibilitychange', onVisibility);
+
+    return () => {
+      isStopped = true;
+      clearInterval(intervalId);
+      document.removeEventListener('visibilitychange', onVisibility);
+    };
   }, []);
 
   // Extract unique states and vendors for filter dropdowns

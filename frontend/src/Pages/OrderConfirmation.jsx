@@ -32,7 +32,7 @@ const OrderConfirmation = () => {
       setLoading(true);
       setError('');
       try {
-        const res = await axios.get(`${API_BASE_URL}/users/orders/${orderId}`, { withCredentials: true });
+        const res = await axios.get(`${API_BASE_URL}/users/orders/${orderId}`, { withCredentials: true, params: { _: Date.now() } });
         setOrder(res.data.data);
       } catch (err) {
         setError('Failed to load order details.');
@@ -69,6 +69,41 @@ const OrderConfirmation = () => {
     timer = setInterval(fetchEstimate, 60000);
     return () => clearInterval(timer);
   }, [order, orderId]);
+
+  // Poll order state every 5s while on this page for near real-time status
+  useEffect(() => {
+    let isStopped = false;
+    let inFlight = false;
+    if (!orderId) return;
+
+    const tick = async () => {
+      if (document.hidden) return;
+      if (inFlight) return;
+      inFlight = true;
+      try {
+        const res = await axios.get(`${API_BASE_URL}/users/orders/${orderId}`, { withCredentials: true, params: { _: Date.now() } });
+        if (!isStopped) {
+          setOrder(res.data.data);
+        }
+      } catch (_) {
+        // ignore transient errors
+      } finally {
+        inFlight = false;
+      }
+    };
+
+    const intervalId = setInterval(tick, 5000);
+    tick();
+
+    const onVisibility = () => { if (!document.hidden) tick(); };
+    document.addEventListener('visibilitychange', onVisibility);
+
+    return () => {
+      isStopped = true;
+      clearInterval(intervalId);
+      document.removeEventListener('visibilitychange', onVisibility);
+    };
+  }, [orderId]);
 
   if (loading) {
     return (

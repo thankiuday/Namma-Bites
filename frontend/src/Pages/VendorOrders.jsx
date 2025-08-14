@@ -71,7 +71,7 @@ const VendorOrders = () => {
     setLoading(true);
     setError('');
     try {
-      const res = await vendorApi.get('/orders');
+      const res = await vendorApi.get('/orders', { params: { _: Date.now() } });
       setOrders(res.data.data || []);
     } catch (err) {
       setError(err.response?.data?.message || 'Failed to fetch orders.');
@@ -82,6 +82,46 @@ const VendorOrders = () => {
 
   useEffect(() => {
     fetchOrders();
+  }, []);
+
+  // Lightweight polling to keep vendor orders in sync
+  useEffect(() => {
+    let isStopped = false;
+    let inFlight = false;
+
+    const tick = async () => {
+      if (document.hidden) return; // pause when tab hidden
+      if (inFlight) return; // avoid overlapping requests
+      inFlight = true;
+      try {
+        const res = await vendorApi.get('/orders', { params: { _: Date.now() } });
+        if (!isStopped) {
+          setOrders(res.data.data || []);
+        }
+      } catch (_) {
+        // ignore transient polling errors
+      } finally {
+        inFlight = false;
+      }
+    };
+
+    const intervalId = setInterval(tick, 5000); // 5s cadence
+    // Run one immediate tick after mount for faster reflect
+    tick();
+
+    const onVisibility = () => {
+      if (!document.hidden) {
+        // force refresh when tab becomes visible
+        tick();
+      }
+    };
+    document.addEventListener('visibilitychange', onVisibility);
+
+    return () => {
+      isStopped = true;
+      clearInterval(intervalId);
+      document.removeEventListener('visibilitychange', onVisibility);
+    };
   }, []);
 
   const handleAccept = async (orderId) => {
