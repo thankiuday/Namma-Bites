@@ -11,6 +11,7 @@ import TopBuys from '../components/TopBuys';
 import FoodCategories from '../components/FoodCategories';
 import AllFoods from '../components/AllFoods';
 import SearchSuggestions from '../components/SearchSuggestions';
+import VegToggle from '../components/VegToggle';
 import apiClient from '../api/apiClient';
 // Joyride tour removed for production build
 
@@ -93,6 +94,7 @@ const Home = () => {
   const topBuysRef = useRef(null);
   const [scrollToType, setScrollToType] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
+  const [isVegOnly, setIsVegOnly] = useState(false);
   const [foods, setFoods] = useState([]);
   const [vendors, setVendors] = useState([]);
   const [loadingFoods, setLoadingFoods] = useState(true);
@@ -169,6 +171,10 @@ const Home = () => {
     }, 100); // allow TopBuys to react to prop change
   };
 
+  const handleVegToggle = (vegOnly) => {
+    setIsVegOnly(vegOnly);
+  };
+
   return (
     <main className="flex-grow">
 
@@ -210,10 +216,14 @@ const Home = () => {
                 visible={showSuggestions && searchTerm.length > 0}
               />
             </div>
-            {/* FIX: Removed h-full and changed py-2 to py-3 to match input height */}
-            <button className="flex-shrink-0 px-4 py-3 bg-orange-600 text-white rounded-lg hover:bg-orange-500 transition-colors duration-300">
-              Search
-            </button>
+            {/* Replace search button with veg toggle - make it more compact on mobile */}
+            <div className="flex-shrink-0">
+              <VegToggle 
+                isVegOnly={isVegOnly} 
+                onToggle={handleVegToggle}
+                className="scale-90 sm:scale-100"
+              />
+            </div>
           </div>
         </div>
         {/* Search Section - Desktop */}
@@ -239,15 +249,17 @@ const Home = () => {
                 visible={showSuggestions && searchTerm.length > 0}
               />
             </div>
-            <button className="px-8 py-4 bg-orange-600 text-white rounded-lg hover:bg-orange-500 transition-colors duration-300 text-lg font-medium">
-              Search
-            </button>
+            {/* Replace search button with veg toggle */}
+            <VegToggle 
+              isVegOnly={isVegOnly} 
+              onToggle={handleVegToggle}
+            />
           </div>
         </div>
 
         {/* All Foods Section */}
         <div className="onboard-menu w-full max-w-6xl px-1 sm:px-8 lg:px-8">
-          <AllFoods searchTerm={searchTerm} />
+          <AllFoods searchTerm={searchTerm} vegFilter={isVegOnly} />
         </div>
 
         {/* Categories Section */}

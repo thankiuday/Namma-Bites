@@ -98,6 +98,35 @@ body::before {
   opacity: 1; /* Firefox adds a lower opacity by default */
 }
 
+/* Hide scrollbars for horizontal scrolling */
+.scrollbar-hide {
+  -ms-overflow-style: none;  /* Internet Explorer 10+ */
+  scrollbar-width: none;  /* Firefox */
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;  /* Safari and Chrome */
+}
+
+/* Prevent horizontal page scroll on mobile for specific containers */
+@media (max-width: 768px) {
+  /* Prevent horizontal scroll on touch devices */
+  .horizontal-scroll-container {
+    touch-action: pan-y pinch-zoom;
+    overscroll-behavior: contain;
+    -webkit-overflow-scrolling: touch;
+    /* Prevent horizontal page scroll when scrolling this container */
+    position: relative;
+    z-index: 1;
+  }
+  
+  /* Parent container to prevent overflow */
+  .horizontal-scroll-parent {
+    overflow-x: hidden;
+    position: relative;
+  }
+}
+
 /* We are disabling this css part for now. Later will use if needed. 
 a {
   font-weight: 500;

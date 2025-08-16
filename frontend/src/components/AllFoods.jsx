@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import FoodCard from './FoodCard';
 import apiClient from '../api/apiClient';
 
-const AllFoods = ({ searchTerm = '' }) => {
+const AllFoods = ({ searchTerm = '', vegFilter = null }) => {
   const [foods, setFoods] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -27,10 +27,20 @@ const AllFoods = ({ searchTerm = '' }) => {
     fetchFoods();
   }, []);
 
-  // Filter foods by search term (name, vendor name, or category)
+  // Filter foods by search term and veg filter
   const filteredFoods = foods.filter((food) => {
+    // Apply veg filter first
+    if (vegFilter !== null) {
+      const foodCategory = food.category?.toLowerCase() || '';
+      const isVeg = ['veg', 'vegetarian'].includes(foodCategory.replace(/[-\s]/g, ''));
+      if (vegFilter && !isVeg) return false; // Show only veg if vegFilter is true
+      if (!vegFilter && isVeg) return false; // Show only non-veg if vegFilter is false
+    }
+
+    // Then apply search term filter
     let term = searchTerm.trim().toLowerCase();
     if (!term) return true;
+    
     // Convert 'veg' to 'vegetarian' for matching
     if (["veg", "veg.", "vegetarian"].includes(term.replace(/[-\s.]/g, ''))) {
       term = 'vegetarian';
