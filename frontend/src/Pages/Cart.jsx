@@ -1,5 +1,5 @@
 import React, { useEffect, useCallback, useState } from 'react';
-import { FaTrash, FaMinus, FaPlus, FaArrowLeft } from 'react-icons/fa';
+import { FaTrash, FaMinus, FaPlus, FaArrowLeft, FaStore } from 'react-icons/fa';
 import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
@@ -144,6 +144,20 @@ const Cart = () => {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-8">
           {/* Cart Items */}
           <div className="lg:col-span-2 bg-white rounded-lg shadow-lg p-4 sm:p-6">
+            {/* Vendor Information */}
+            {cart.length > 0 && cart[0].vendor && (
+              <div className="mb-4 p-3 bg-orange-50 border border-orange-200 rounded-lg">
+                <div className="flex items-center gap-2">
+                  <FaStore className="text-orange-600" />
+                  <span className="text-sm font-medium text-orange-800">
+                    Ordering from: <span className="font-semibold">{cart[0].vendor.name}</span>
+                  </span>
+                </div>
+                <p className="text-xs text-orange-600 mt-1">
+                  You can only order from one vendor at a time
+                </p>
+              </div>
+            )}
             {cart.map((item) => (
               <div key={item._id} className="flex flex-row items-center gap-3 sm:gap-4 py-4 border-b last:border-b-0 flex-wrap">
                 <LazyImage

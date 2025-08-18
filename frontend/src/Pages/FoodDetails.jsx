@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import {
   FaLeaf, FaDrumstickBite, FaMinus, FaPlus, FaShoppingCart, FaStar, FaClock, FaFire,
-  FaCheckCircle, FaTimesCircle, FaArrowLeft, FaBookOpen, FaPepperHot, FaUtensils
+  FaCheckCircle, FaTimesCircle, FaArrowLeft, FaBookOpen, FaPepperHot, FaUtensils, FaExclamationTriangle
 } from 'react-icons/fa';
 import apiClient from '../api/apiClient';
 import { useAuth } from '../context/AuthContext';
@@ -52,9 +52,14 @@ const FoodDetails = () => {
   const [userRating, setUserRating] = useState(0);
   const [submittingRating, setSubmittingRating] = useState(false);
   const { user } = useAuth();
-  const { addToCart } = useCart();
+  const { addToCart, cart } = useCart();
   const [cartMsg, setCartMsg] = useState('');
   const [openSection, setOpenSection] = useState('description');
+
+  // Check if this item is from a different vendor than what's in the cart
+  const isDifferentVendor = cart.length > 0 && 
+    cart[0].vendor?._id !== food?.vendor?._id && 
+    cart[0].vendor !== food?.vendor;
 
   useEffect(() => {
     // Original data fetching logic remains the same
@@ -70,11 +75,21 @@ const FoodDetails = () => {
     if (newQuantity >= 1) setQuantity(newQuantity);
   };
   
-  const handleAddToCart = () => {
+  const handleAddToCart = async () => {
     if (!user) { navigate('/login'); return; }
-    addToCart(food, quantity);
-    setCartMsg('Added to cart!');
-    setTimeout(() => setCartMsg(''), 2000);
+    
+    try {
+      const success = await addToCart(food, quantity);
+      if (success) {
+        setCartMsg('Added to cart!');
+        setTimeout(() => setCartMsg(''), 2000);
+      }
+      // If success is false, the toast warning is already shown by CartContext
+    } catch (error) {
+      console.error('Error adding to cart:', error);
+      setCartMsg('Error adding to cart');
+      setTimeout(() => setCartMsg(''), 2000);
+    }
   };
   
   const handleRate = async (value) => {
@@ -109,6 +124,40 @@ const FoodDetails = () => {
         <FaArrowLeft />
         Back to Menu
       </button>
+
+      {/* Vendor Mismatch Warning */}
+      {isDifferentVendor && (
+        <div className="mb-6 bg-orange-50 border border-orange-200 rounded-lg p-4">
+          <div className="flex items-start gap-3">
+            <div className="flex-shrink-0">
+              <FaExclamationTriangle className="w-5 h-5 text-orange-600" />
+            </div>
+            <div className="flex-1">
+              <h3 className="text-sm font-semibold text-orange-800 mb-1">
+                Different Vendor Detected
+              </h3>
+              <p className="text-sm text-orange-700 mb-3">
+                Your cart contains items from <span className="font-medium">{cart[0].vendor?.name || 'another vendor'}</span>. 
+                This item is from <span className="font-medium">{food.vendor?.name || 'a different vendor'}</span>.
+                You can only order from one vendor at a time.
+              </p>
+              <div className="flex gap-2">
+                <button 
+                  onClick={() => navigate('/cart')}
+                  className="text-sm text-orange-600 hover:text-orange-700 font-medium underline"
+                >
+                  View cart
+                </button>
+                <span className="text-sm text-orange-600">•</span>
+                <span className="text-sm text-orange-600">
+                  {cart.length} item{cart.length !== 1 ? 's' : ''} in cart
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="grid grid-cols-1 gap-8 lg:grid-cols-2 lg:gap-12">
         {/* --- Image Column --- */}
         <div className="relative h-80 overflow-hidden rounded-xl md:h-[450px]">
@@ -151,9 +200,25 @@ const FoodDetails = () => {
                 <button onClick={() => handleQuantityChange(1)} className="flex h-8 w-8 items-center justify-center rounded-full bg-white text-orange-600 shadow transition hover:bg-orange-100"><FaPlus /></button>
               </div>
             </div>
-            <motion.button onClick={handleAddToCart} disabled={!food.isAvailable || !!cartMsg} whileTap={{ scale: 0.95 }}
-              className={`w-full rounded-lg py-3 text-base font-bold text-white shadow-lg transition-colors ${!food.isAvailable ? 'bg-gray-400 cursor-not-allowed' : 'bg-orange-600 hover:bg-orange-700'}`}>
-              {cartMsg || (food.isAvailable ? `Add to Cart - ₹${(food.price * quantity).toFixed(2)}` : 'Unavailable')}
+            <motion.button 
+              onClick={handleAddToCart} 
+              disabled={!food.isAvailable || !!cartMsg} 
+              whileTap={{ scale: 0.95 }}
+              className={`w-full rounded-lg py-3 text-base font-bold text-white shadow-lg transition-colors ${
+                !food.isAvailable 
+                  ? 'bg-gray-400 cursor-not-allowed' 
+                  : isDifferentVendor 
+                    ? 'bg-orange-500 hover:bg-orange-600 border-2 border-orange-300' 
+                    : 'bg-orange-600 hover:bg-orange-700'
+              }`}
+            >
+              {cartMsg || (
+                food.isAvailable 
+                  ? (isDifferentVendor 
+                      ? `Add to Cart (Will Clear Current Cart) - ₹${(food.price * quantity).toFixed(2)}`
+                      : `Add to Cart - ₹${(food.price * quantity).toFixed(2)}`)
+                  : 'Unavailable'
+              )}
             </motion.button>
           </div>
           

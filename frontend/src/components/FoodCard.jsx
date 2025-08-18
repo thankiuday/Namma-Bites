@@ -1,16 +1,23 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { FaCheckCircle, FaTimesCircle, FaStore, FaLeaf, FaDrumstickBite } from 'react-icons/fa';
+import { FaCheckCircle, FaTimesCircle, FaStore, FaLeaf, FaDrumstickBite, FaExclamationTriangle } from 'react-icons/fa';
 import AnimatedCard from './AnimatedCard';
 import { motion } from 'framer-motion';
 import { getMenuItemImageUrl } from '../utils/imageUtils';
+import { useCart } from '../context/CartContext';
 
 const FoodCard = ({ food }) => {
   const navigate = useNavigate();
+  const { cart } = useCart();
 
   const handleClick = () => {
     navigate(`/food/${food._id}`);
   };
+
+  // Check if this item is from a different vendor than what's in the cart
+  const isDifferentVendor = cart.length > 0 && 
+    cart[0].vendor?._id !== food.vendor?._id && 
+    cart[0].vendor !== food.vendor;
 
   // --- Logic for Badge Styling ---
   const isVeg = food.category?.toLowerCase() === 'veg';
@@ -59,6 +66,17 @@ const FoodCard = ({ food }) => {
           <CategoryIcon />
           <span className="hidden sm:inline">{categoryBadge.label}</span>
         </div>
+
+        {/* Different Vendor Warning Overlay */}
+        {isDifferentVendor && (
+          <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center rounded-t-xl">
+            <div className="bg-orange-500 text-white px-3 py-2 rounded-lg flex items-center gap-2 text-sm font-semibold">
+              <FaExclamationTriangle className="w-4 h-4" />
+              <span className="hidden sm:inline">Different Vendor</span>
+              <span className="sm:hidden">Diff Vendor</span>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Food Details */}
@@ -68,8 +86,11 @@ const FoodCard = ({ food }) => {
             <h3 className="text-sm sm:text-lg font-bold text-gray-800 line-clamp-2 leading-tight break-words">{food.name}</h3>
             {/* Vendor Info */}
             <p className="mt-1 flex items-center gap-1.5 text-xs font-medium text-gray-500">
-              <FaStore className="text-orange-500" />
-              <span className="truncate">{food.vendor?.name || 'Unknown Vendor'}</span>
+              <FaStore className={`${isDifferentVendor ? 'text-red-500' : 'text-orange-500'}`} />
+              <span className={`truncate ${isDifferentVendor ? 'text-red-600 font-semibold' : ''}`}>
+                {food.vendor?.name || 'Unknown Vendor'}
+                {isDifferentVendor && <span className="ml-1 text-red-500">⚠️</span>}
+              </span>
             </p>
           </div>
           <span className="ml-2 flex-shrink-0 text-sm sm:text-lg font-extrabold text-orange-600">₹{food.price}</span>

@@ -33,10 +33,39 @@ export const CartProvider = ({ children }) => {
       const currentVendor = cart[0].vendor?._id || cart[0].vendor;
       const newVendor = item.vendor?._id || item.vendor;
       if (currentVendor && newVendor && currentVendor !== newVendor) {
-        toast.warn('You can only order food from one vendor at a time. Please clear your cart to add items from another vendor.', {
-          position: 'top-center',
-          autoClose: 4000,
-        });
+        const currentVendorName = cart[0].vendor?.name || 'Current Vendor';
+        const newVendorName = item.vendor?.name || 'New Vendor';
+        
+        toast.warn(
+          <div className="flex flex-col gap-2">
+            <div className="font-semibold">Different Vendor Detected!</div>
+            <div className="text-sm">
+              Your cart contains items from <span className="font-medium">{currentVendorName}</span>.
+              <br />
+              This item is from <span className="font-medium">{newVendorName}</span>.
+            </div>
+            <div className="text-sm text-gray-600">
+              You can only order from one vendor at a time.
+            </div>
+            <button 
+              onClick={() => {
+                clearCart();
+                toast.dismiss();
+              }}
+              className="mt-2 px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors text-sm font-medium"
+            >
+              Clear Cart & Add This Item
+            </button>
+          </div>,
+          {
+            position: 'top-center',
+            autoClose: false,
+            closeOnClick: false,
+            draggable: false,
+            closeButton: true,
+            toastId: 'vendor-mismatch',
+          }
+        );
         return false;
       }
     }
