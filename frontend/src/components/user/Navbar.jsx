@@ -282,7 +282,7 @@ const Navbar = ({ links = defaultStudentLinks, isAdmin = false }) => {
 
               {/* Notifications for mobile */}
               <div className="px-3 py-3 border-t border-gray-200">
-                <Notifications />
+                <Notifications onNavigate={() => setIsMenuOpen(false)} />
               </div>
 
               <button

@@ -19,7 +19,8 @@ import {
   FaQrcode,
   FaFileImage,
   FaTimesCircle,
-  FaExclamationTriangle
+  FaExclamationTriangle,
+  FaSpinner
 } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
 import { format } from 'date-fns';
@@ -963,7 +964,7 @@ const UserSubscription = () => {
                             <button
                               key={meal}
                               disabled={isExpired || prebookLoading}
-                              className={`px-4 py-3 rounded-xl font-bold text-base transition-all duration-200 shadow text-center ${prebooked ? 'bg-green-500 text-white' : 'bg-gray-200 text-gray-700'} ${isExpired ? 'opacity-50 cursor-not-allowed' : 'hover:bg-orange-500 hover:text-white'}`}
+                              className={`px-4 py-3 rounded-xl font-bold text-base transition-all duration-200 shadow text-center flex items-center justify-center gap-2 ${prebooked ? 'bg-green-500 text-white' : 'bg-gray-200 text-gray-700'} ${isExpired ? 'opacity-50 cursor-not-allowed' : 'hover:bg-orange-500 hover:text-white'} ${prebookLoading ? 'opacity-75 cursor-not-allowed' : ''}`}
                               onClick={async () => {
                                 if (isExpired) return;
                                 setPrebookLoading(true);
@@ -985,9 +986,10 @@ const UserSubscription = () => {
                                   setPrebookLoading(false);
                                 }
                               }}
-                            >
-                              {meal.charAt(0).toUpperCase() + meal.slice(1)}<br/>{prebooked ? 'Booked' : 'Not Booked'}
-                            </button>
+                                                          >
+                                {prebookLoading && <FaSpinner className="w-4 h-4 animate-spin" />}
+                                {meal.charAt(0).toUpperCase() + meal.slice(1)}<br/>{prebooked ? 'Booked' : 'Not Booked'}
+                              </button>
                           );
                         })}
                       </div>

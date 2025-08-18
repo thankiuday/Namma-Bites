@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
-import { FaArrowLeft, FaCheckCircle, FaUpload, FaQrcode } from 'react-icons/fa';
+import { FaArrowLeft, FaCheckCircle, FaUpload, FaQrcode, FaSpinner } from 'react-icons/fa';
 import axios from 'axios';
 import { API_URL as API_BASE_URL } from '../api/config';
 import UploadProgress from '../components/UploadProgress';
@@ -198,8 +198,9 @@ const Checkout = () => {
             <button
               type="submit"
               disabled={submitting || !paymentProof || isUploading}
-              className="w-full bg-gradient-to-r from-orange-500 to-orange-600 text-white py-3 px-4 rounded-lg hover:from-orange-600 hover:to-orange-700 transition-all duration-200 font-bold flex items-center justify-center mt-2 disabled:opacity-60 disabled:cursor-not-allowed"
+              className="w-full bg-gradient-to-r from-orange-500 to-orange-600 text-white py-3 px-4 rounded-lg hover:from-orange-600 hover:to-orange-700 transition-all duration-200 font-bold flex items-center justify-center gap-2 mt-2 disabled:opacity-60 disabled:cursor-not-allowed"
             >
+              {(submitting || isUploading) && <FaSpinner className="w-4 h-4 animate-spin" />}
               <FaUpload className="mr-2" />
               {submitting || isUploading ? 'Placing Order...' : 'Place Order'}
             </button>

@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import {
   FaLeaf, FaDrumstickBite, FaMinus, FaPlus, FaShoppingCart, FaStar, FaClock, FaFire,
-  FaCheckCircle, FaTimesCircle, FaArrowLeft, FaBookOpen, FaPepperHot, FaUtensils, FaExclamationTriangle
+  FaCheckCircle, FaTimesCircle, FaArrowLeft, FaBookOpen, FaPepperHot, FaUtensils, FaExclamationTriangle, FaSpinner
 } from 'react-icons/fa';
 import apiClient from '../api/apiClient';
 import { useAuth } from '../context/AuthContext';
@@ -55,6 +55,7 @@ const FoodDetails = () => {
   const { addToCart, cart } = useCart();
   const [cartMsg, setCartMsg] = useState('');
   const [openSection, setOpenSection] = useState('description');
+  const [addingToCart, setAddingToCart] = useState(false);
 
   // Check if this item is from a different vendor than what's in the cart
   const isDifferentVendor = cart.length > 0 && 
@@ -78,6 +79,7 @@ const FoodDetails = () => {
   const handleAddToCart = async () => {
     if (!user) { navigate('/login'); return; }
     
+    setAddingToCart(true);
     try {
       const success = await addToCart(food, quantity);
       if (success) {
@@ -89,6 +91,8 @@ const FoodDetails = () => {
       console.error('Error adding to cart:', error);
       setCartMsg('Error adding to cart');
       setTimeout(() => setCartMsg(''), 2000);
+    } finally {
+      setAddingToCart(false);
     }
   };
   
@@ -202,16 +206,17 @@ const FoodDetails = () => {
             </div>
             <motion.button 
               onClick={handleAddToCart} 
-              disabled={!food.isAvailable || !!cartMsg} 
+              disabled={!food.isAvailable || !!cartMsg || addingToCart} 
               whileTap={{ scale: 0.95 }}
-              className={`w-full rounded-lg py-3 text-base font-bold text-white shadow-lg transition-colors ${
+              className={`w-full rounded-lg py-3 text-base font-bold text-white shadow-lg transition-colors flex items-center justify-center gap-2 ${
                 !food.isAvailable 
                   ? 'bg-gray-400 cursor-not-allowed' 
                   : isDifferentVendor 
                     ? 'bg-orange-500 hover:bg-orange-600 border-2 border-orange-300' 
                     : 'bg-orange-600 hover:bg-orange-700'
-              }`}
+              } ${addingToCart ? 'opacity-75 cursor-not-allowed' : ''}`}
             >
+              {addingToCart && <FaSpinner className="w-4 h-4 animate-spin" />}
               {cartMsg || (
                 food.isAvailable 
                   ? (isDifferentVendor 

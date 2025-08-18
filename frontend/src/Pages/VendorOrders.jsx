@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import vendorApi, { acceptOrder, rejectOrder, markOrderReady, completeOrder } from '../api/vendorApi';
 import { toast } from 'react-toastify';
-import { FaArrowLeft, FaCheckCircle, FaTimesCircle, FaClock, FaQrcode, FaUpload } from 'react-icons/fa';
+import { FaArrowLeft, FaCheckCircle, FaTimesCircle, FaClock, FaQrcode, FaUpload, FaSpinner } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
 import LazyImage from '../components/LazyImage';
 
@@ -395,17 +395,19 @@ const VendorOrders = () => {
                 {order.state === 'pending' && (
                   <div className="flex gap-4 mt-4">
                     <button
-                      className="bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded font-bold disabled:opacity-60"
+                      className="bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded font-bold disabled:opacity-60 flex items-center gap-2"
                       disabled={actionLoading === order._id + '-accept'}
                       onClick={() => handleAccept(order._id)}
                     >
+                      {actionLoading === order._id + '-accept' && <FaSpinner className="w-4 h-4 animate-spin" />}
                       {actionLoading === order._id + '-accept' ? 'Accepting...' : 'Accept'}
                     </button>
                     <button
-                      className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded font-bold disabled:opacity-60"
+                      className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded font-bold disabled:opacity-60 flex items-center gap-2"
                       disabled={actionLoading === order._id + '-reject'}
                       onClick={() => handleReject(order._id)}
                     >
+                      {actionLoading === order._id + '-reject' && <FaSpinner className="w-4 h-4 animate-spin" />}
                       {actionLoading === order._id + '-reject' ? 'Rejecting...' : 'Reject'}
                     </button>
                   </div>
@@ -413,10 +415,11 @@ const VendorOrders = () => {
                 {order.state === 'preparing' && (
                   <div className="flex gap-4 mt-4">
                     <button
-                      className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded font-bold disabled:opacity-60"
+                      className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded font-bold disabled:opacity-60 flex items-center gap-2"
                       disabled={actionLoading === order._id + '-ready'}
                       onClick={() => handleMarkReady(order._id)}
                     >
+                      {actionLoading === order._id + '-ready' && <FaSpinner className="w-4 h-4 animate-spin" />}
                       {actionLoading === order._id + '-ready' ? 'Marking...' : 'Mark Ready'}
                     </button>
                   </div>
@@ -424,10 +427,11 @@ const VendorOrders = () => {
                 {order.state === 'ready' && (
                   <div className="flex gap-4 mt-4">
                     <button
-                      className="bg-green-700 hover:bg-green-800 text-white px-4 py-2 rounded font-bold disabled:opacity-60"
+                      className="bg-green-700 hover:bg-green-800 text-white px-4 py-2 rounded font-bold disabled:opacity-60 flex items-center gap-2"
                       disabled={actionLoading === order._id + '-complete'}
                       onClick={() => handleComplete(order._id)}
                     >
+                      {actionLoading === order._id + '-complete' && <FaSpinner className="w-4 h-4 animate-spin" />}
                       {actionLoading === order._id + '-complete' ? 'Completing...' : 'Complete Order'}
                     </button>
                   </div>

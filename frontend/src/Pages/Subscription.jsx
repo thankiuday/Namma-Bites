@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { createSubscriptionPlan, getSubscriptionPlans, updateSubscriptionPlan, deleteSubscriptionPlan } from '../api/vendorApi';
 import apiClient from '../api/apiClient';
-import { FaEdit, FaArrowLeft } from 'react-icons/fa';
+import { FaEdit, FaArrowLeft, FaSpinner } from 'react-icons/fa';
 
 const days = ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'];
 const mealTypes = ['breakfast', 'lunch', 'dinner', 'snacks'];
@@ -358,6 +358,7 @@ const Subscription = () => {
                           className="text-red-600 hover:text-red-800 flex items-center gap-1 px-3 py-1 rounded-lg border border-red-200 bg-red-50 hover:bg-red-100 transition-all duration-150"
                           disabled={deleteLoading === plan._id}
                         >
+                          {deleteLoading === plan._id && <FaSpinner className="w-3 h-3 animate-spin" />}
                           {deleteLoading === plan._id ? 'Deleting...' : 'Delete'}
                         </button>
                       </td>
@@ -457,7 +458,8 @@ const Subscription = () => {
               </div>
             )}
             <div className="flex gap-4 mt-6 justify-center">
-              <button type="submit" className="px-8 py-3 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-xl hover:from-orange-600 hover:to-orange-700 font-bold shadow-lg transition-all duration-200" disabled={editLoading}>
+              <button type="submit" className="px-8 py-3 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-xl hover:from-orange-600 hover:to-orange-700 font-bold shadow-lg transition-all duration-200 flex items-center gap-2" disabled={editLoading}>
+                {editLoading && <FaSpinner className="w-4 h-4 animate-spin" />}
                 {editLoading ? 'Saving...' : 'Update Plan'}
               </button>
               <button type="button" onClick={cancelEdit} className="px-8 py-3 bg-gray-200 text-gray-800 rounded-xl hover:bg-gray-300 font-bold shadow-lg transition-all duration-200">Cancel</button>

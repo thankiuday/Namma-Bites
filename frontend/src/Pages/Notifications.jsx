@@ -10,6 +10,7 @@ const Notifications = () => {
   const [error, setError] = useState(null);
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
+  const [clickedNotificationId, setClickedNotificationId] = useState(null);
   const navigate = useNavigate();
 
   const fetchNotifications = async (pageNum = 1) => {
@@ -107,8 +108,15 @@ const Notifications = () => {
           {notifications.map((notification) => (
             <div
               key={notification._id}
-              className="bg-white rounded-xl shadow-sm border border-gray-100 hover:border-orange-200 transition-all duration-200 cursor-pointer overflow-hidden group"
+              className={`bg-white rounded-xl shadow-sm border border-gray-100 hover:border-orange-200 transition-all duration-200 cursor-pointer overflow-hidden group ${
+                clickedNotificationId === notification._id ? 'opacity-75 cursor-not-allowed' : ''
+              }`}
                              onClick={async () => {
+                 // Prevent multiple clicks
+                 if (clickedNotificationId === notification._id) return;
+                 
+                 setClickedNotificationId(notification._id);
+                 
                  // Mark notification as read if it's unread
                  if (!notification.isRead) {
                    try {

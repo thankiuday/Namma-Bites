@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { FaArrowLeft, FaUpload, FaCheckCircle, FaHourglassHalf, FaTimesCircle } from 'react-icons/fa';
+import { FaArrowLeft, FaUpload, FaCheckCircle, FaHourglassHalf, FaTimesCircle, FaSpinner } from 'react-icons/fa';
 import { uploadPaymentProof, getUserSubscriptions } from '../api/userApi';
 import { getVendorImageUrl } from '../utils/imageUtils';
 import UploadProgress from '../components/UploadProgress';
@@ -133,8 +133,9 @@ const PaymentStatus = () => {
               <button
                 type="submit"
                 disabled={uploading || isUploading}
-                className="w-full bg-gradient-to-r from-orange-500 to-orange-600 text-white py-3 px-4 rounded-lg hover:from-orange-600 hover:to-orange-700 transition-all duration-200 font-bold flex items-center justify-center mt-2 disabled:opacity-60 disabled:cursor-not-allowed"
+                className="w-full bg-gradient-to-r from-orange-500 to-orange-600 text-white py-3 px-4 rounded-lg hover:from-orange-600 hover:to-orange-700 transition-all duration-200 font-bold flex items-center justify-center gap-2 mt-2 disabled:opacity-60 disabled:cursor-not-allowed"
               >
+                {(uploading || isUploading) && <FaSpinner className="w-4 h-4 animate-spin" />}
                 <FaUpload className="mr-2" />
                 {uploading || isUploading ? 'Uploading...' : 'Submit Payment Proof'}
               </button>

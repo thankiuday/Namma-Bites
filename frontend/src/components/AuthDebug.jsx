@@ -5,6 +5,7 @@ const AuthDebug = () => {
   const { user, refreshToken } = useAuth();
   const [lastRefresh, setLastRefresh] = useState(null);
   const [refreshCount, setRefreshCount] = useState(0);
+  const [refreshing, setRefreshing] = useState(false);
 
   useEffect(() => {
     // Listen for token refresh events
@@ -38,14 +39,20 @@ const AuthDebug = () => {
         <button
           onClick={async () => {
             console.log('Manual token refresh...');
-            const success = await refreshToken();
-            if (success) {
-              window.dispatchEvent(new Event('tokenRefreshed'));
+            setRefreshing(true);
+            try {
+              const success = await refreshToken();
+              if (success) {
+                window.dispatchEvent(new Event('tokenRefreshed'));
+              }
+            } finally {
+              setRefreshing(false);
             }
           }}
-          className="mt-2 px-2 py-1 bg-blue-600 text-white rounded text-xs hover:bg-blue-700"
+          className="mt-2 px-2 py-1 bg-blue-600 text-white rounded text-xs hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+          disabled={refreshing}
         >
-          Manual Refresh
+          {refreshing ? 'Refreshing...' : 'Manual Refresh'}
         </button>
       </div>
     </div>
