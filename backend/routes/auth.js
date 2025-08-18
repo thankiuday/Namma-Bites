@@ -265,6 +265,12 @@ router.post('/refresh-token', async (req, res) => {
       return res.status(401).json({ error: 'Invalid refresh token' });
     }
 
+    // Check if this was a "remember me" session by checking the token expiration
+    const tokenExp = decoded.exp;
+    const now = Math.floor(Date.now() / 1000);
+    const tokenAge = tokenExp - now;
+    const isRememberMe = tokenAge > 7 * 24 * 60 * 60; // If token expires in more than 7 days, it was "remember me"
+
     // Generate new tokens
     const newAccessToken = jwt.sign(
       { userId: user._id },
@@ -275,11 +281,15 @@ router.post('/refresh-token', async (req, res) => {
     const newRefreshToken = jwt.sign(
       { userId: user._id },
       process.env.JWT_REFRESH_SECRET,
-      { expiresIn: '7d' }
+      { expiresIn: isRememberMe ? '30d' : '7d' }
     );
 
     // Store new refresh token in Redis
-    await storeRefreshToken(user._id.toString(), newRefreshToken, 7 * 24 * 60 * 60);
+    await storeRefreshToken(
+      user._id.toString(), 
+      newRefreshToken, 
+      isRememberMe ? 30 * 24 * 60 * 60 : 7 * 24 * 60 * 60
+    );
 
     // Set new tokens as cookies (secure)
     res.cookie('accessToken', newAccessToken, {
@@ -292,7 +302,7 @@ router.post('/refresh-token', async (req, res) => {
       httpOnly: true,
       secure: true,
       sameSite: 'none',
-      maxAge: 7 * 24 * 60 * 60 * 1000
+      maxAge: (isRememberMe ? 30 : 7) * 24 * 60 * 60 * 1000
     });
 
     res.json({ 

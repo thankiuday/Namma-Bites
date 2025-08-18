@@ -29,34 +29,39 @@ const AllFoods = ({ searchTerm = '', vegFilter = null }) => {
 
   // Filter foods by search term and veg filter
   const filteredFoods = foods.filter((food) => {
-    // Apply veg filter first
+    let term = searchTerm.trim().toLowerCase();
+    
+    // If there's a search term, search through ALL items regardless of veg filter
+    if (term) {
+      // Convert 'veg' to 'vegetarian' for matching
+      if (["veg", "veg.", "vegetarian"].includes(term.replace(/[-\s.]/g, ''))) {
+        term = 'vegetarian';
+      }
+      const normalizedTerm = term.replace(/[-\s]/g, '');
+      const nameMatch = food.name?.toLowerCase().includes(term);
+      const vendorMatch = food.vendor?.name?.toLowerCase().includes(term);
+      
+      // Robust category matching
+      const foodCategory = food.category?.toLowerCase();
+      const normalizedCategory = foodCategory?.replace(/[-\s]/g, '');
+      const isVeg = ['veg', 'vegetarian'].includes(normalizedTerm);
+      const isNonVeg = ['nonveg', 'nonvegetarian'].includes(normalizedTerm);
+      const categoryMatch = (foodCategory && foodCategory.includes(term)) ||
+        (isVeg && normalizedCategory === 'veg') ||
+        (isNonVeg && normalizedCategory === 'nonveg');
+      
+      return nameMatch || vendorMatch || categoryMatch;
+    }
+    
+    // If no search term, apply veg filter
     if (vegFilter !== null) {
       const foodCategory = food.category?.toLowerCase() || '';
       const isVeg = ['veg', 'vegetarian'].includes(foodCategory.replace(/[-\s]/g, ''));
       if (vegFilter && !isVeg) return false; // Show only veg if vegFilter is true
       if (!vegFilter && isVeg) return false; // Show only non-veg if vegFilter is false
     }
-
-    // Then apply search term filter
-    let term = searchTerm.trim().toLowerCase();
-    if (!term) return true;
     
-    // Convert 'veg' to 'vegetarian' for matching
-    if (["veg", "veg.", "vegetarian"].includes(term.replace(/[-\s.]/g, ''))) {
-      term = 'vegetarian';
-    }
-    const normalizedTerm = term.replace(/[-\s]/g, '');
-    const nameMatch = food.name?.toLowerCase().includes(term);
-    const vendorMatch = food.vendor?.name?.toLowerCase().includes(term);
-    // Robust category matching
-    const foodCategory = food.category?.toLowerCase();
-    const normalizedCategory = foodCategory?.replace(/[-\s]/g, '');
-    const isVeg = ['veg', 'vegetarian'].includes(normalizedTerm);
-    const isNonVeg = ['nonveg', 'nonvegetarian'].includes(normalizedTerm);
-    const categoryMatch = (foodCategory && foodCategory.includes(term)) ||
-      (isVeg && normalizedCategory === 'veg') ||
-      (isNonVeg && normalizedCategory === 'nonveg');
-    return nameMatch || vendorMatch || categoryMatch;
+    return true;
   });
 
   return (
@@ -83,9 +88,20 @@ const AllFoods = ({ searchTerm = '', vegFilter = null }) => {
               No foods found matching your search.
             </div>
           ) : (
-            filteredFoods.map((food) => (
-              <FoodCard key={food._id} food={food} />
-            ))
+            <>
+              {/* Show info message when searching with veg filter on */}
+              {searchTerm.trim() && vegFilter !== null && (
+                <div className="col-span-full mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                  <p className="text-sm text-blue-700 text-center">
+                    <span className="font-medium">Search Tip:</span> When searching, we show all matching items regardless of your veg preference. 
+                    Use the veg toggle to filter results when not searching.
+                  </p>
+                </div>
+              )}
+              {filteredFoods.map((food) => (
+                <FoodCard key={food._id} food={food} />
+              ))}
+            </>
           )}
         </div>
       )}

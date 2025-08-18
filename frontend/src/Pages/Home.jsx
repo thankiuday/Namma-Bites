@@ -1,4 +1,5 @@
 import React, { useRef, useState } from "react";
+import { FaTimes } from "react-icons/fa";
 import gujarati from '../../public/gujarati.jpg';
 import tindi from '../../public/tindi.jpg';
 import south from '../../public/south.jpg';
@@ -175,6 +176,17 @@ const Home = () => {
     setIsVegOnly(vegOnly);
   };
 
+  const handleClearSearch = () => {
+    setSearchTerm('');
+    setShowSuggestions(false);
+  };
+
+  const handleSearchKeyDown = (e) => {
+    if (e.key === 'Escape' && searchTerm) {
+      handleClearSearch();
+    }
+  };
+
   return (
     <main className="flex-grow">
 
@@ -205,8 +217,21 @@ const Home = () => {
                 onChange={e => { setSearchTerm(e.target.value); setShowSuggestions(true); }}
                 onFocus={() => setShowSuggestions(true)}
                 onBlur={() => setTimeout(() => setShowSuggestions(false), 120)}
+                onKeyDown={handleSearchKeyDown}
                 autoComplete="off"
               />
+              {/* Clear search button - mobile */}
+              {searchTerm && (
+                <button
+                  onClick={handleClearSearch}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-gray-400 hover:text-gray-600 transition-colors duration-200 rounded-full hover:bg-gray-100"
+                  type="button"
+                  aria-label="Clear search"
+                  title="Clear search"
+                >
+                  <FaTimes className="w-4 h-4" />
+                </button>
+              )}
               <SearchSuggestions
                 searchTerm={searchTerm}
                 foods={foods}
@@ -238,8 +263,21 @@ const Home = () => {
                 onChange={e => { setSearchTerm(e.target.value); setShowSuggestions(true); }}
                 onFocus={() => setShowSuggestions(true)}
                 onBlur={() => setTimeout(() => setShowSuggestions(false), 120)}
+                onKeyDown={handleSearchKeyDown}
                 autoComplete="off"
               />
+              {/* Clear search button - desktop */}
+              {searchTerm && (
+                <button
+                  onClick={handleClearSearch}
+                  className="absolute right-4 top-1/2 -translate-y-1/2 p-2 text-gray-400 hover:text-gray-600 transition-colors duration-200 rounded-full hover:bg-gray-100"
+                  type="button"
+                  aria-label="Clear search"
+                  title="Clear search"
+                >
+                  <FaTimes className="w-5 h-5" />
+                </button>
+              )}
               <SearchSuggestions
                 searchTerm={searchTerm}
                 foods={foods}

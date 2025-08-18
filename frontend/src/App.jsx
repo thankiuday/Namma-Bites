@@ -10,6 +10,7 @@ import 'react-toastify/dist/ReactToastify.css';
 import { VendorAuthProvider } from './context/VendorAuthContext';
 import { AdminAuthProvider } from './context/AdminAuthContext';
 import VendorDetails from './Pages/VendorDetails';
+import AuthDebug from './components/AuthDebug';
 
 // Animated Route Components
 import AnimatedRoutes from './components/AnimatedRoutes';
@@ -54,6 +55,7 @@ const AppContent = () => {
         </Routes>
       </main>
       {!isAdminRoute && !isVendorRoute && <Footer />}
+      <AuthDebug />
       <ToastContainer
         position="top-right"
         autoClose={3000}

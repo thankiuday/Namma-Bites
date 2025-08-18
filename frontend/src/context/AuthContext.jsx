@@ -14,6 +14,46 @@ export const AuthProvider = ({ children }) => {
     checkAuth();
   }, []);
 
+  // Set up automatic token refresh
+  useEffect(() => {
+    if (user) {
+      // Set up interval to refresh token every 14 minutes (before 15-minute expiry)
+      const refreshInterval = setInterval(async () => {
+        console.log('Auto-refreshing token...');
+        const success = await refreshToken();
+        if (!success) {
+          console.log('Auto-refresh failed, logging out user');
+          setUser(null);
+          localStorage.removeItem('user');
+          navigate('/login');
+        }
+      }, 14 * 60 * 1000); // 14 minutes
+
+      // Set up visibility change listener to refresh token when user returns to tab
+      const handleVisibilityChange = async () => {
+        if (!document.hidden && user) {
+          console.log('User returned to tab, checking token...');
+          // Check if we need to refresh the token
+          const success = await refreshToken();
+          if (!success) {
+            console.log('Token refresh failed on visibility change, logging out user');
+            setUser(null);
+            localStorage.removeItem('user');
+            navigate('/login');
+          }
+        }
+      };
+
+      document.addEventListener('visibilitychange', handleVisibilityChange);
+
+      // Cleanup interval and event listener on unmount or when user changes
+      return () => {
+        clearInterval(refreshInterval);
+        document.removeEventListener('visibilitychange', handleVisibilityChange);
+      };
+    }
+  }, [user, navigate]);
+
   const refreshToken = async () => {
     try {
       // Try to get refresh token from localStorage first
@@ -21,10 +61,14 @@ export const AuthProvider = ({ children }) => {
 
       // If not in localStorage, try to get from cookies
       if (!refreshToken) {
-        refreshToken = document.cookie
-          .split('; ')
-          .find(row => row.startsWith('refreshToken='))
-          ?.split('=')[1];
+        const cookies = document.cookie.split('; ');
+        const refreshTokenCookie = cookies.find(row => row.startsWith('refreshToken='));
+        if (refreshTokenCookie) {
+          refreshToken = refreshTokenCookie.split('=')[1];
+          console.log('Found refresh token in cookies');
+        }
+      } else {
+        console.log('Found refresh token in localStorage');
       }
 
       if (!refreshToken) {
@@ -41,8 +85,16 @@ export const AuthProvider = ({ children }) => {
         // Store the new refresh token in localStorage for future use
         if (response.data.refreshToken) {
           localStorage.setItem('refreshToken', response.data.refreshToken);
+          // Preserve the rememberMe flag if it exists
+          const rememberMe = localStorage.getItem('rememberMe');
+          if (rememberMe) {
+            localStorage.setItem('rememberMe', rememberMe);
+          }
         }
         console.log('Token refreshed successfully');
+        
+        // Dispatch custom event for debugging
+        window.dispatchEvent(new Event('tokenRefreshed'));
         
         // Add a small delay to ensure cookies are processed
         await new Promise(resolve => setTimeout(resolve, 100));
@@ -52,8 +104,16 @@ export const AuthProvider = ({ children }) => {
       return false;
     } catch (error) {
       console.error('Token refresh failed:', error);
-      // Clear invalid refresh token
-      localStorage.removeItem('refreshToken');
+      
+      // If refresh token is expired or invalid, clear all auth data
+      if (error.response?.status === 401) {
+        console.log('Refresh token expired, clearing auth data');
+        localStorage.removeItem('refreshToken');
+        localStorage.removeItem('rememberMe');
+        localStorage.removeItem('user');
+        setUser(null);
+      }
+      
       return false;
     }
   };
@@ -62,9 +122,13 @@ export const AuthProvider = ({ children }) => {
     try {
       const response = await userApi.get('/me');
       if (response.data.success) {
-        setUser(response.data.data);
+        const userData = response.data.data;
+        setUser(userData);
+        // Update localStorage with fresh user data
+        localStorage.setItem('user', JSON.stringify(userData));
       } else {
         setUser(null);
+        localStorage.removeItem('user');
       }
     } catch (error) {
       if (error.response?.status === 401) {
@@ -75,21 +139,27 @@ export const AuthProvider = ({ children }) => {
           try {
             const retryResponse = await userApi.get('/me');
             if (retryResponse.data.success) {
-              setUser(retryResponse.data.data);
+              const userData = retryResponse.data.data;
+              setUser(userData);
+              localStorage.setItem('user', JSON.stringify(userData));
             } else {
               setUser(null);
+              localStorage.removeItem('user');
               navigate('/login');
             }
           } catch (retryError) {
             setUser(null);
+            localStorage.removeItem('user');
             navigate('/login');
           }
         } else {
           setUser(null);
+          localStorage.removeItem('user');
           navigate('/login');
         }
       } else {
         setUser(null);
+        localStorage.removeItem('user');
       }
     } finally {
       setLoading(false);
@@ -111,12 +181,29 @@ export const AuthProvider = ({ children }) => {
   };
 
   const login = (userData, rememberMe) => {
+    console.log('AuthContext login called with rememberMe:', rememberMe);
     setUser(userData);
-    // Store refresh token in localStorage for token refresh only if rememberMe is true
-    if (userData.refreshToken && rememberMe) {
-      localStorage.setItem('refreshToken', userData.refreshToken);
+    
+    // Store user data in localStorage for API client access
+    localStorage.setItem('user', JSON.stringify(userData));
+    
+    // Store refresh token in localStorage for token refresh
+    // If rememberMe is true, store it for 30 days, otherwise store it for 7 days
+    if (userData.refreshToken) {
+      if (rememberMe) {
+        localStorage.setItem('refreshToken', userData.refreshToken);
+        // Also store a flag to indicate this is a "remember me" session
+        localStorage.setItem('rememberMe', 'true');
+        console.log('Stored refresh token with rememberMe flag');
+      } else {
+        localStorage.setItem('refreshToken', userData.refreshToken);
+        localStorage.removeItem('rememberMe');
+        console.log('Stored refresh token without rememberMe flag');
+      }
     } else {
       localStorage.removeItem('refreshToken');
+      localStorage.removeItem('rememberMe');
+      console.log('No refresh token provided, cleared localStorage');
     }
   };
 
@@ -128,8 +215,10 @@ export const AuthProvider = ({ children }) => {
       // handle error
     } finally {
       setUser(null);
-      // Clear refresh token from localStorage
+      // Clear all auth data from localStorage
       localStorage.removeItem('refreshToken');
+      localStorage.removeItem('rememberMe');
+      localStorage.removeItem('user');
     }
   };
 
@@ -139,7 +228,8 @@ export const AuthProvider = ({ children }) => {
     login,
     logout,
     checkAuth,
-    handleAuthError
+    handleAuthError,
+    refreshToken
   };
 
   return (

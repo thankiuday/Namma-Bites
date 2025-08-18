@@ -52,6 +52,7 @@ const Login = () => {
     }
 
     try {
+      console.log('Logging in with rememberMe:', formData.rememberMe);
       const response = await fetch((import.meta.env.VITE_API_URL || '/api') + '/auth/login', {
         method: 'POST',
         headers: {
@@ -72,6 +73,10 @@ const Login = () => {
         }
         return;
       }
+
+      console.log('Login successful, rememberMe:', formData.rememberMe);
+      console.log('User data:', data.user);
+      console.log('Refresh token present:', !!data.user.refreshToken);
 
       // Use the auth context to handle login
       login(data.user, formData.rememberMe);
@@ -163,6 +168,16 @@ const Login = () => {
                 Remember me
               </label>
             </div>
+            
+            {/* Debug info - only show in development */}
+            {import.meta.env.DEV && (
+              <div className="mt-2 p-2 bg-gray-100 rounded text-xs">
+                <div>Remember Me: {formData.rememberMe ? 'Yes' : 'No'}</div>
+                <div>LocalStorage refreshToken: {localStorage.getItem('refreshToken') ? 'Present' : 'Not present'}</div>
+                <div>LocalStorage rememberMe: {localStorage.getItem('rememberMe') || 'Not set'}</div>
+                <div>LocalStorage user: {localStorage.getItem('user') ? 'Present' : 'Not present'}</div>
+              </div>
+            )}
           </div>
 
           <div>
