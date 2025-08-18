@@ -40,7 +40,7 @@ const FoodCard = ({ food }) => {
       onClick={handleClick}
     >
       {/* Food Image */}
-      <div className="relative h-44 w-full overflow-hidden">
+      <div className="relative h-40 sm:h-44 w-full overflow-hidden">
         <motion.img
           src={getMenuItemImageUrl(food.image)}
           alt={food.name}
@@ -62,17 +62,17 @@ const FoodCard = ({ food }) => {
       </div>
 
       {/* Food Details */}
-      <div className="flex flex-1 flex-col justify-between p-4">
+      <div className="flex flex-1 flex-col justify-between p-3 sm:p-4">
         <div className="flex items-start justify-between">
-          <div>
-            <h3 className="text-lg font-bold text-gray-800">{food.name}</h3>
+          <div className="flex-1 min-w-0">
+            <h3 className="text-sm sm:text-lg font-bold text-gray-800 line-clamp-2 leading-tight break-words">{food.name}</h3>
             {/* Vendor Info */}
             <p className="mt-1 flex items-center gap-1.5 text-xs font-medium text-gray-500">
               <FaStore className="text-orange-500" />
-              {food.vendor?.name || 'Unknown Vendor'}
+              <span className="truncate">{food.vendor?.name || 'Unknown Vendor'}</span>
             </p>
           </div>
-          <span className="ml-2 flex-shrink-0 text-lg font-extrabold text-orange-600">₹{food.price}</span>
+          <span className="ml-2 flex-shrink-0 text-sm sm:text-lg font-extrabold text-orange-600">₹{food.price}</span>
         </div>
       </div>
     </AnimatedCard>

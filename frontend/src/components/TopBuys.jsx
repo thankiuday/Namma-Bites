@@ -111,7 +111,7 @@
               <div className="text-center w-full py-4 sm:py-8 text-sm sm:text-lg font-semibold text-gray-500">No vegetarian items found.</div>
             ) : (
               vegItems.map((food, idx) => (
-                <div key={food._id} className={`flex-none w-44 sm:w-64 md:w-72 h-56 sm:h-64 md:h-72`}>
+                <div key={food._id} className={`flex-none w-44 sm:w-64 md:w-72 h-60 sm:h-64 md:h-72`}>
                   <FoodCard food={food} />
                 </div>
               ))
@@ -160,7 +160,7 @@
               <div className="text-center w-full py-4 sm:py-8 text-sm sm:text-lg font-semibold text-gray-500">No non-veg items found.</div>
             ) : (
               nonVegItems.map((food, idx) => (
-                <div key={food._id} className={`flex-none w-44 sm:w-64 md:w-72 h-56 sm:h-64 md:h-72`}>
+                <div key={food._id} className={`flex-none w-44 sm:w-64 md:w-72 h-60 sm:h-64 md:h-72`}>
                   <FoodCard food={food} />
                 </div>
               ))
