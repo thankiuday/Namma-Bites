@@ -61,8 +61,7 @@ apiClient.interceptors.response.use(
         localStorage.removeItem('rememberMe');
         localStorage.removeItem('user');
         
-        // Redirect to login
-        window.location.href = '/login';
+        // Don't redirect here, let the AuthContext handle it
         return Promise.reject(refreshError);
       }
     }

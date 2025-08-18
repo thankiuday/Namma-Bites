@@ -58,6 +58,7 @@ const FoodDetails = () => {
   const [addingToCart, setAddingToCart] = useState(false);
 
   // Check if this item is from a different vendor than what's in the cart
+  // This is now handled server-side, but we keep this for UI indication
   const isDifferentVendor = cart.length > 0 && 
     cart[0].vendor?._id !== food?.vendor?._id && 
     cart[0].vendor !== food?.vendor;

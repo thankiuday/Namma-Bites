@@ -39,29 +39,51 @@ export const CartProvider = ({ children }) => {
   }, []);
 
   const addToCart = async (item, quantity = 1) => {
-    // Enforce single-vendor cart
-    if (cart.length > 0) {
-      const currentVendor = cart[0].vendor?._id || cart[0].vendor;
-      const newVendor = item.vendor?._id || item.vendor;
-      if (currentVendor && newVendor && currentVendor !== newVendor) {
-        const currentVendorName = cart[0].vendor?.name || 'Current Vendor';
-        const newVendorName = item.vendor?.name || 'New Vendor';
+    try {
+      // First, fetch the latest cart to ensure we have fresh data
+      await fetchCart();
+      
+      const res = await apiAddOrUpdateCartItem(item._id, quantity);
+      setCart(flattenCart(res.data.cart));
+      toast.success('Added to cart!', {
+        position: 'top-right',
+        autoClose: 1500,
+      });
+      return true;
+    } catch (err) {
+      console.error('Error adding to cart:', err);
+      
+      // Handle server-side vendor mismatch error
+      if (err.response?.data?.error === 'DIFFERENT_VENDOR') {
+        const { currentVendor, newVendor, details } = err.response.data;
         
         toast.warn(
           <div className="flex flex-col gap-2">
             <div className="font-semibold">Different Vendor Detected!</div>
             <div className="text-sm">
-              Your cart contains items from <span className="font-medium">{currentVendorName}</span>.
+              Your cart contains items from <span className="font-medium">{currentVendor}</span>.
               <br />
-              This item is from <span className="font-medium">{newVendorName}</span>.
+              This item is from <span className="font-medium">{newVendor}</span>.
             </div>
             <div className="text-sm text-gray-600">
               You can only order from one vendor at a time.
             </div>
             <button 
-              onClick={() => {
-                clearCart();
-                toast.dismiss();
+              onClick={async () => {
+                try {
+                  await clearCart();
+                  // After clearing cart, try adding the item again
+                  const retryRes = await apiAddOrUpdateCartItem(item._id, quantity);
+                  setCart(flattenCart(retryRes.data.cart));
+                  toast.success('Added to cart!', {
+                    position: 'top-right',
+                    autoClose: 1500,
+                  });
+                  toast.dismiss();
+                } catch (retryErr) {
+                  console.error('Error retrying add to cart:', retryErr);
+                  toast.error('Failed to add item to cart');
+                }
               }}
               className="mt-2 px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors text-sm font-medium"
             >
@@ -79,18 +101,8 @@ export const CartProvider = ({ children }) => {
         );
         return false;
       }
-    }
-    try {
-      const res = await apiAddOrUpdateCartItem(item._id, quantity);
-      setCart(flattenCart(res.data.cart));
-      toast.success('Added to cart!', {
-        position: 'top-right',
-        autoClose: 1500,
-      });
-      return true;
-    } catch (err) {
-      console.error('Error adding to cart:', err);
-      throw err; // Let the component handle the error
+      
+      throw err; // Let the component handle other errors
     }
   };
 

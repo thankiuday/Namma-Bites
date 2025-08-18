@@ -255,70 +255,210 @@ const UserProfile = () => {
     </section>
      {/* User Subscriptions Section */}
       <section className="bg-white rounded-xl shadow-lg p-4 sm:p-6 mb-6 sm:mb-8">
-        <h2 className="text-xl sm:text-2xl font-bold text-gray-900 mb-4 sm:mb-6">My Subscriptions</h2>
+        <div className="flex items-center justify-between mb-6">
+          <h2 className="text-xl sm:text-2xl font-bold text-gray-900 flex items-center gap-2">
+            <FaClipboardList className="text-orange-600 w-5 h-5 sm:w-6 sm:h-6" />
+            My Subscriptions
+          </h2>
+          <div className="text-sm text-gray-500">
+            {subscriptions.length} subscription{subscriptions.length !== 1 ? 's' : ''}
+          </div>
+        </div>
+        
         {subsLoading ? (
-          <div className="text-center text-gray-500">Loading subscriptions...</div>
+          <div className="flex justify-center items-center py-12">
+            <div className="animate-spin rounded-full h-12 w-12 border-4 border-orange-200 border-t-orange-600"></div>
+          </div>
         ) : subsError ? (
-          <div className="text-red-600 mb-2">{subsError}</div>
+          <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-4">
+            {subsError}
+          </div>
         ) : subscriptions.length === 0 ? (
-          <div className="text-center text-gray-500">No subscriptions found.</div>
+          <div className="text-center py-12">
+            <div className="w-24 h-24 mx-auto mb-4 bg-orange-100 rounded-full flex items-center justify-center">
+              <FaClipboardList className="w-12 h-12 text-orange-400" />
+            </div>
+            <h3 className="text-lg font-semibold text-gray-700 mb-2">No subscriptions yet</h3>
+            <p className="text-gray-500 mb-4">You haven't subscribed to any meal plans yet.</p>
+            <button
+              onClick={() => navigate('/subscription')}
+              className="inline-flex items-center gap-2 px-6 py-3 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors duration-200 font-semibold"
+            >
+              Browse Plans
+            </button>
+          </div>
         ) : (
-          <div className="space-y-4 overflow-y-auto max-h-[400px] md:max-h-[600px] pr-2">
-            {subscriptions.map(sub => (
-              <div key={sub._id} className="border rounded-lg p-4 flex flex-col gap-4 items-center bg-orange-50 justify-center w-full">
-                <div className="flex flex-col items-center text-center gap-1 w-full">
-                  <div className="font-semibold text-gray-800 mb-1">Plan: {sub.subscriptionPlan?.planType} ({sub.subscriptionPlan?.duration} days, ₹{sub.subscriptionPlan?.price})</div>
-                  <div className="text-gray-700 mb-1">Vendor: {sub.vendor?.name}</div>
-                  <div className="text-gray-700 mb-1">Start Date: {new Date(sub.startDate).toLocaleDateString()}</div>
-                  <div className="text-gray-700 mb-1">Duration: {sub.duration} days</div>
-                </div>
-                <div className="flex flex-col items-center justify-center gap-2 w-full text-center">
-                  <span className={`px-3 py-1 rounded-full text-xs font-bold ${
-                    sub.paymentStatus === 'approved' ? 'bg-green-100 text-green-800 border border-green-200' :
-                    sub.paymentStatus === 'pending' ? 'bg-orange-100 text-orange-800 border border-orange-200' :
-                    sub.paymentStatus === 'rejected' ? 'bg-red-100 text-red-800 border border-red-200' :
-                    sub.paymentStatus === 'expired' ? 'bg-gray-300 text-gray-700 border border-gray-400' :
-                    sub.paymentStatus === 'cancelled' ? 'bg-red-200 text-red-800 border border-red-300' :
-                    'bg-gray-100 text-gray-800 border border-gray-200'
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
+            {subscriptions.map(sub => {
+              const isActive = sub.paymentStatus === 'approved';
+              const isExpired = sub.paymentStatus === 'expired';
+              const isCancelled = sub.paymentStatus === 'cancelled';
+              const isPending = sub.paymentStatus === 'pending';
+              const isRejected = sub.paymentStatus === 'rejected';
+              
+              const statusConfig = {
+                approved: { color: 'green', bg: 'bg-green-50', border: 'border-green-200', text: 'text-green-800', icon: '✓' },
+                pending: { color: 'orange', bg: 'bg-orange-50', border: 'border-orange-200', text: 'text-orange-800', icon: '⏳' },
+                rejected: { color: 'red', bg: 'bg-red-50', border: 'border-red-200', text: 'text-red-800', icon: '✗' },
+                expired: { color: 'gray', bg: 'bg-gray-50', border: 'border-gray-200', text: 'text-gray-600', icon: '⏰' },
+                cancelled: { color: 'red', bg: 'bg-red-50', border: 'border-red-200', text: 'text-red-800', icon: '🚫' }
+              };
+              
+              const config = statusConfig[sub.paymentStatus] || statusConfig.pending;
+              
+              return (
+                <div 
+                  key={sub._id} 
+                  className={`relative overflow-hidden rounded-xl border-2 transition-all duration-300 hover:shadow-lg ${
+                    isActive ? 'border-green-200 bg-green-50/50' :
+                    isExpired ? 'border-gray-200 bg-gray-50/50 opacity-75' :
+                    isCancelled ? 'border-red-200 bg-red-50/50' :
+                    isPending ? 'border-orange-200 bg-orange-50/50' :
+                    isRejected ? 'border-red-200 bg-red-50/50' :
+                    'border-gray-200 bg-gray-50/50'
+                  }`}
+                >
+                  {/* Status Badge */}
+                  <div className={`absolute top-3 right-3 px-3 py-1 rounded-full text-xs font-bold flex items-center gap-1 ${
+                    isActive ? 'bg-green-100 text-green-800' :
+                    isExpired ? 'bg-gray-200 text-gray-700' :
+                    isCancelled ? 'bg-red-100 text-red-800' :
+                    isPending ? 'bg-orange-100 text-orange-800' :
+                    isRejected ? 'bg-red-100 text-red-800' :
+                    'bg-gray-100 text-gray-800'
                   }`}>
+                    <span>{config.icon}</span>
                     {sub.paymentStatus.charAt(0).toUpperCase() + sub.paymentStatus.slice(1)}
-                  </span>
-                  {sub.paymentProof && (
-                    <button 
-                      onClick={() => {
-                        setPaymentProofModalSrc(`http://localhost:5000${sub.paymentProof}`);
-                        setPaymentProofModalOpen(true);
-                      }}
-                      className="text-xs text-orange-600 underline inline-block w-full text-center hover:text-orange-700 transition-colors cursor-pointer bg-transparent border-none p-0"
-                    >
-                      View Payment Proof
-                    </button>
-                  )}
-                  {/* Validated QR Button */}
-                  {sub.paymentStatus !== 'expired' && sub.paymentStatus !== 'cancelled' ? (
-                    <button
-                      className="text-xs text-blue-600 underline mt-1 inline-block w-full text-center"
-                      onClick={() => {
-                        setQrSubId(sub._id);
-                        setShowQrModal(true);
-                      }}
-                    >
-                      Validated QR
-                    </button>
-                  ) : (
-                    <span className="text-xs text-gray-500 mt-1">QR disabled (expired)</span>
-                  )}
-                  {sub.paymentStatus === 'expired' && (
-                    <button
-                      onClick={() => handleDeleteSubscription(sub._id)}
-                      className="mt-2 px-3 py-1 rounded bg-red-500 hover:bg-red-600 text-white text-xs font-bold"
-                    >Delete</button>
-                  )}
+                  </div>
+                  
+                  <div className="p-6">
+                    {/* Plan Type Badge */}
+                    <div className="mb-4">
+                      <span className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-bold ${
+                        sub.subscriptionPlan?.planType === 'veg' 
+                          ? 'bg-green-100 text-green-800 border border-green-200' 
+                          : 'bg-red-100 text-red-800 border border-red-200'
+                      }`}>
+                        {sub.subscriptionPlan?.planType === 'veg' ? '🥬' : '🍗'}
+                        {sub.subscriptionPlan?.planType === 'veg' ? 'Vegetarian' : 'Non-Vegetarian'}
+                      </span>
+                    </div>
+                    
+                    {/* Plan Details */}
+                    <div className="space-y-3 mb-6">
+                      <div className="flex justify-between items-center">
+                        <span className="text-sm font-medium text-gray-600">Duration:</span>
+                        <span className="font-semibold text-gray-800">{sub.subscriptionPlan?.duration || sub.duration} days</span>
+                      </div>
+                      
+                      <div className="flex justify-between items-center">
+                        <span className="text-sm font-medium text-gray-600">Total Price:</span>
+                        <span className="font-bold text-lg text-orange-600">₹{sub.subscriptionPlan?.price || 'N/A'}</span>
+                      </div>
+                      
+                      <div className="flex justify-between items-center">
+                        <span className="text-sm font-medium text-gray-600">Price per day:</span>
+                        <span className="font-semibold text-gray-800">
+                          ₹{sub.subscriptionPlan?.price && sub.subscriptionPlan?.duration 
+                            ? (sub.subscriptionPlan.price / sub.subscriptionPlan.duration).toFixed(2) 
+                            : 'N/A'}
+                        </span>
+                      </div>
+                    </div>
+                    
+                    {/* Vendor Info */}
+                    <div className="bg-white rounded-lg p-4 mb-6 border border-gray-100">
+                      <h4 className="font-semibold text-gray-800 mb-2 flex items-center gap-2">
+                        <FaUser className="text-orange-500 w-4 h-4" />
+                        Vendor Details
+                      </h4>
+                      <div className="space-y-1">
+                        <p className="text-sm text-gray-700">
+                          <span className="font-medium">Name:</span> {sub.vendor?.name || 'N/A'}
+                        </p>
+                        {sub.vendor?.location && (
+                          <p className="text-sm text-gray-700">
+                            <span className="font-medium">Location:</span> {sub.vendor.location}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                    
+                    {/* Date Information */}
+                    <div className="bg-white rounded-lg p-4 mb-6 border border-gray-100">
+                      <h4 className="font-semibold text-gray-800 mb-2 flex items-center gap-2">
+                        <FaClipboardList className="text-orange-500 w-4 h-4" />
+                        Subscription Period
+                      </h4>
+                      <div className="space-y-2">
+                        <div className="flex justify-between items-center">
+                          <span className="text-sm text-gray-600">Start Date:</span>
+                          <span className="text-sm font-medium text-gray-800">
+                            {sub.startDate ? new Date(sub.startDate).toLocaleDateString('en-US', {
+                              year: 'numeric',
+                              month: 'short',
+                              day: 'numeric'
+                            }) : 'N/A'}
+                          </span>
+                        </div>
+                        <div className="flex justify-between items-center">
+                          <span className="text-sm text-gray-600">End Date:</span>
+                          <span className="text-sm font-medium text-gray-800">
+                            {sub.startDate && sub.duration ? new Date(new Date(sub.startDate).setDate(new Date(sub.startDate).getDate() + sub.duration - 1)).toLocaleDateString('en-US', {
+                              year: 'numeric',
+                              month: 'short',
+                              day: 'numeric'
+                            }) : 'N/A'}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    {/* Action Buttons */}
+                    <div className="flex flex-col sm:flex-row gap-2">
+                      {sub.paymentProof && (
+                        <button 
+                          onClick={() => {
+                            setPaymentProofModalSrc(`http://localhost:5000${sub.paymentProof}`);
+                            setPaymentProofModalOpen(true);
+                          }}
+                          className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-blue-50 text-blue-700 rounded-lg hover:bg-blue-100 transition-colors duration-200 text-sm font-medium border border-blue-200"
+                        >
+                          <FaClipboardList className="w-4 h-4" />
+                          View Proof
+                        </button>
+                      )}
+                      
+                      {isActive && (
+                        <button
+                          className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-green-50 text-green-700 rounded-lg hover:bg-green-100 transition-colors duration-200 text-sm font-medium border border-green-200"
+                          onClick={() => {
+                            setQrSubId(sub._id);
+                            setShowQrModal(true);
+                          }}
+                        >
+                          <FaClipboardList className="w-4 h-4" />
+                          Show QR
+                        </button>
+                      )}
+                      
+                      {isExpired && (
+                        <button
+                          onClick={() => handleDeleteSubscription(sub._id)}
+                          className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-red-50 text-red-700 rounded-lg hover:bg-red-100 transition-colors duration-200 text-sm font-medium border border-red-200"
+                        >
+                          <FaClipboardList className="w-4 h-4" />
+                          Delete
+                        </button>
+                      )}
+                    </div>
+                  </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         )}
+        
         {/* QR Modal */}
         {showQrModal && qrSubId && (
           <ValidatedQrModal
@@ -395,70 +535,212 @@ const UserProfile = () => {
       </section>
 
       {/* Subscription Details Section */}
-      <section className="bg-white rounded-xl shadow-lg p-6 mb-8">
-        <h2 className="text-2xl font-bold text-gray-900 mb-6">Subscription Details</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-center text-center sm:items-start sm:text-left">
-          <div className="p-4 border border-gray-200 rounded-lg flex flex-col items-center text-center sm:items-start sm:text-left">
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">Current Plan</h3>
+      <section className="bg-white rounded-xl shadow-lg p-4 sm:p-6 mb-6 sm:mb-8">
+        <div className="flex items-center justify-between mb-6">
+          <h2 className="text-xl sm:text-2xl font-bold text-gray-900 flex items-center gap-2">
+            <FaClipboardList className="text-orange-600 w-5 h-5 sm:w-6 sm:h-6" />
+            Subscription Details
+          </h2>
+          <div className="text-sm text-gray-500">
             {(() => {
               const activeSubscription = subscriptions.find(sub => sub.paymentStatus === 'approved');
-              if (activeSubscription) {
-                return (
-                  <div className="space-y-2">
-                    <p className="text-gray-800 font-medium">
-                      {activeSubscription.subscriptionPlan?.planType === 'veg' ? 'Vegetarian' : 'Non-Vegetarian'} Plan
-                    </p>
-                    <p className="text-gray-600 text-sm">
-                      Duration: {activeSubscription.duration} days
-                    </p>
-                    <p className="text-gray-600 text-sm">
-                      Start Date: {new Date(activeSubscription.startDate).toLocaleDateString()}
-                    </p>
-                    <p className="text-gray-600 text-sm">
-                      Price: ₹{activeSubscription.subscriptionPlan?.price}
-                    </p>
-                    <span className="inline-block px-2 py-1 bg-green-100 text-green-800 text-xs font-bold rounded-full">
-                      Active
-                    </span>
-                  </div>
-                );
-              } else {
-                return (
-                  <>
-                    <p className="text-gray-600">No active subscription</p>
-                    <button
-                      onClick={() => navigate('/subscription')}
-                      className="mt-4 px-4 py-2 bg-orange-600 text-white rounded-md hover:bg-orange-700 transition-colors duration-200"
-                    >
-                      Browse Plans
-                    </button>
-                  </>
-                );
-              }
-            })()}
-          </div>
-          <div className="p-4 border border-gray-200 rounded-lg flex flex-col items-center text-center sm:items-start sm:text-left">
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">Assigned Vendor</h3>
-            {(() => {
-              const activeSubscription = subscriptions.find(sub => sub.paymentStatus === 'approved');
-              if (activeSubscription && activeSubscription.vendor) {
-                return (
-                  <div className="space-y-2">
-                    <p className="text-gray-800 font-medium">{activeSubscription.vendor.name}</p>
-                    {activeSubscription.vendor.email && (
-                      <p className="text-gray-600 text-sm">Email: {activeSubscription.vendor.email}</p>
-                    )}
-                    <span className="inline-block px-2 py-1 bg-blue-100 text-blue-800 text-xs font-bold rounded-full">
-                      Assigned
-                    </span>
-                  </div>
-                );
-              } else {
-                return <p className="text-gray-600">No vendor assigned</p>;
-              }
+              return activeSubscription ? 'Active Plan' : 'No Active Plan';
             })()}
           </div>
         </div>
+        
+        {(() => {
+          const activeSubscription = subscriptions.find(sub => sub.paymentStatus === 'approved');
+          
+          if (!activeSubscription) {
+            return (
+              <div className="text-center py-12">
+                <div className="w-24 h-24 mx-auto mb-4 bg-orange-100 rounded-full flex items-center justify-center">
+                  <FaClipboardList className="w-12 h-12 text-orange-400" />
+                </div>
+                <h3 className="text-lg font-semibold text-gray-700 mb-2">No active subscription</h3>
+                <p className="text-gray-500 mb-6">You don't have any active meal subscription plans at the moment.</p>
+                <button
+                  onClick={() => navigate('/subscription')}
+                  className="inline-flex items-center gap-2 px-6 py-3 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors duration-200 font-semibold shadow-lg hover:shadow-xl"
+                >
+                  <FaClipboardList className="w-4 h-4" />
+                  Browse Plans
+                </button>
+              </div>
+            );
+          }
+          
+          return (
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {/* Current Plan Card */}
+              <div className="bg-gradient-to-br from-green-50 to-green-100 rounded-xl border-2 border-green-200 p-6 relative overflow-hidden">
+                {/* Status Badge */}
+                <div className="absolute top-4 right-4 px-3 py-1 bg-green-100 text-green-800 rounded-full text-xs font-bold flex items-center gap-1">
+                  <span>✓</span>
+                  Active
+                </div>
+                
+                <div className="mb-6">
+                  <h3 className="text-lg font-bold text-gray-800 mb-2 flex items-center gap-2">
+                    <FaClipboardList className="text-green-600 w-5 h-5" />
+                    Current Plan
+                  </h3>
+                  
+                  {/* Plan Type Badge */}
+                  <div className="mb-4">
+                    <span className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-bold ${
+                      activeSubscription.subscriptionPlan?.planType === 'veg' 
+                        ? 'bg-green-100 text-green-800 border border-green-200' 
+                        : 'bg-red-100 text-red-800 border border-red-200'
+                    }`}>
+                      {activeSubscription.subscriptionPlan?.planType === 'veg' ? '🥬' : '🍗'}
+                      {activeSubscription.subscriptionPlan?.planType === 'veg' ? 'Vegetarian' : 'Non-Vegetarian'} Plan
+                    </span>
+                  </div>
+                  
+                  {/* Plan Details */}
+                  <div className="space-y-3">
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm font-medium text-gray-600">Duration:</span>
+                      <span className="font-semibold text-gray-800">{activeSubscription.duration} days</span>
+                    </div>
+                    
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm font-medium text-gray-600">Total Price:</span>
+                      <span className="font-bold text-lg text-green-600">₹{activeSubscription.subscriptionPlan?.price || 'N/A'}</span>
+                    </div>
+                    
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm font-medium text-gray-600">Price per day:</span>
+                      <span className="font-semibold text-gray-800">
+                        ₹{activeSubscription.subscriptionPlan?.price && activeSubscription.duration 
+                          ? (activeSubscription.subscriptionPlan.price / activeSubscription.duration).toFixed(2) 
+                          : 'N/A'}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+                
+                {/* Subscription Period */}
+                <div className="bg-white rounded-lg p-4 border border-green-200">
+                  <h4 className="font-semibold text-gray-800 mb-3 flex items-center gap-2">
+                    <FaClipboardList className="text-green-600 w-4 h-4" />
+                    Subscription Period
+                  </h4>
+                  <div className="space-y-2">
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm text-gray-600">Start Date:</span>
+                      <span className="text-sm font-medium text-gray-800">
+                        {activeSubscription.startDate ? new Date(activeSubscription.startDate).toLocaleDateString('en-US', {
+                          year: 'numeric',
+                          month: 'short',
+                          day: 'numeric'
+                        }) : 'N/A'}
+                      </span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm text-gray-600">End Date:</span>
+                      <span className="text-sm font-medium text-gray-800">
+                        {activeSubscription.startDate && activeSubscription.duration ? new Date(new Date(activeSubscription.startDate).setDate(new Date(activeSubscription.startDate).getDate() + activeSubscription.duration - 1)).toLocaleDateString('en-US', {
+                          year: 'numeric',
+                          month: 'short',
+                          day: 'numeric'
+                        }) : 'N/A'}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              
+              {/* Assigned Vendor Card */}
+              <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl border-2 border-blue-200 p-6 relative overflow-hidden">
+                {/* Status Badge */}
+                <div className="absolute top-4 right-4 px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-xs font-bold flex items-center gap-1">
+                  <span>👨‍🍳</span>
+                  Assigned
+                </div>
+                
+                <div className="mb-6">
+                  <h3 className="text-lg font-bold text-gray-800 mb-2 flex items-center gap-2">
+                    <FaUser className="text-blue-600 w-5 h-5" />
+                    Assigned Vendor
+                  </h3>
+                  
+                  {activeSubscription.vendor ? (
+                    <>
+                      {/* Vendor Info */}
+                      <div className="bg-white rounded-lg p-4 border border-blue-200 mb-4">
+                        <div className="space-y-3">
+                          <div>
+                            <span className="text-sm font-medium text-gray-600">Name:</span>
+                            <p className="text-lg font-semibold text-gray-800">{activeSubscription.vendor.name}</p>
+                          </div>
+                          
+                          {activeSubscription.vendor.location && (
+                            <div>
+                              <span className="text-sm font-medium text-gray-600">Location:</span>
+                              <p className="text-sm text-gray-700">{activeSubscription.vendor.location}</p>
+                            </div>
+                          )}
+                          
+                          {activeSubscription.vendor.email && (
+                            <div>
+                              <span className="text-sm font-medium text-gray-600">Email:</span>
+                              <p className="text-sm text-gray-700">{activeSubscription.vendor.email}</p>
+                            </div>
+                          )}
+                          
+                          {activeSubscription.vendor.phone && (
+                            <div>
+                              <span className="text-sm font-medium text-gray-600">Phone:</span>
+                              <p className="text-sm text-gray-700">{activeSubscription.vendor.phone}</p>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                      
+                      {/* Quick Actions */}
+                      <div className="space-y-2">
+                        <button
+                          onClick={() => {
+                            setQrSubId(activeSubscription._id);
+                            setShowQrModal(true);
+                          }}
+                          className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors duration-200 font-semibold"
+                        >
+                          <FaClipboardList className="w-4 h-4" />
+                          Show Subscription QR
+                        </button>
+                        
+                        {activeSubscription.paymentProof && (
+                          <button 
+                            onClick={() => {
+                              setPaymentProofModalSrc(`http://localhost:5000${activeSubscription.paymentProof}`);
+                              setPaymentProofModalOpen(true);
+                            }}
+                            className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-blue-50 text-blue-700 rounded-lg hover:bg-blue-100 transition-colors duration-200 font-medium border border-blue-200"
+                          >
+                            <FaClipboardList className="w-4 h-4" />
+                            View Payment Proof
+                          </button>
+                        )}
+                      </div>
+                    </>
+                  ) : (
+                    <div className="text-center py-8">
+                      <div className="w-16 h-16 mx-auto mb-4 bg-blue-100 rounded-full flex items-center justify-center">
+                        <FaUser className="w-8 h-8 text-blue-400" />
+                      </div>
+                      <p className="text-gray-600 font-medium">No vendor assigned yet</p>
+                      <p className="text-sm text-gray-500 mt-1">Your vendor will be assigned shortly</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          );
+        })()}
       </section>
 
       {/* Install App Section */}

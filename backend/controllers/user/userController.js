@@ -244,14 +244,56 @@ export const addOrUpdateCartItem = async (req, res) => {
     if (!itemId || !quantity || quantity < 1) {
       return res.status(400).json({ success: false, message: 'Invalid item or quantity' });
     }
-    const user = await User.findById(req.user._id);
+
+    // Get the new item with vendor information
+    const MenuItem = (await import('../../models/MenuItem.js')).default;
+    const newItem = await MenuItem.findById(itemId).populate('vendor', 'name _id');
+    if (!newItem) {
+      return res.status(404).json({ success: false, message: 'Item not found' });
+    }
+
+    const user = await User.findById(req.user._id)
+      .populate({
+        path: 'cart.item',
+        populate: {
+          path: 'vendor',
+          select: 'name _id',
+        }
+      });
+    
     if (!user) return res.status(404).json({ success: false, message: 'User not found' });
-    const existing = user.cart.find(i => i.item.toString() === itemId);
+
+    // Check for existing item in cart
+    const existing = user.cart.find(i => i.item._id.toString() === itemId);
+    
     if (existing) {
+      // Update quantity of existing item
       existing.quantity += quantity;
     } else {
+      // Check single vendor restriction before adding new item
+      if (user.cart.length > 0) {
+        const currentVendor = user.cart[0].item.vendor._id.toString();
+        const newVendor = newItem.vendor._id.toString();
+        
+        if (currentVendor !== newVendor) {
+          const currentVendorName = user.cart[0].item.vendor.name;
+          const newVendorName = newItem.vendor.name;
+          
+          return res.status(400).json({
+            success: false,
+            message: 'Vendor mismatch',
+            error: 'DIFFERENT_VENDOR',
+            currentVendor: currentVendorName,
+            newVendor: newVendorName,
+            details: `Your cart contains items from ${currentVendorName}. This item is from ${newVendorName}. You can only order from one vendor at a time.`
+          });
+        }
+      }
+      
+      // Add new item to cart
       user.cart.push({ item: itemId, quantity });
     }
+
     await user.save();
     
     // Populate cart items with vendor data before sending response

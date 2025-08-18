@@ -11,10 +11,25 @@ export const AuthProvider = ({ children }) => {
   const navigate = useNavigate();
 
   useEffect(() => {
+    // First, try to restore user from localStorage immediately for better UX
+    const storedUser = localStorage.getItem('user');
+    const refreshToken = localStorage.getItem('refreshToken');
+    
+    if (storedUser && refreshToken) {
+      try {
+        const userData = JSON.parse(storedUser);
+        setUser(userData); // Set user immediately
+      } catch (error) {
+        console.error('Error parsing stored user data:', error);
+        localStorage.removeItem('user');
+      }
+    }
+    
+    // Then check authentication with the server
     checkAuth();
   }, []);
 
-  // Set up automatic token refresh
+  // Set up automatic token refresh and visibility change handling
   useEffect(() => {
     if (user) {
       // Set up interval to refresh token every 14 minutes (before 15-minute expiry)
@@ -25,21 +40,47 @@ export const AuthProvider = ({ children }) => {
           console.log('Auto-refresh failed, logging out user');
           setUser(null);
           localStorage.removeItem('user');
+          localStorage.removeItem('refreshToken');
+          localStorage.removeItem('rememberMe');
           navigate('/login');
         }
       }, 14 * 60 * 1000); // 14 minutes
 
-      // Set up visibility change listener to refresh token when user returns to tab
+      // Set up visibility change listener to handle tab switches
       const handleVisibilityChange = async () => {
         if (!document.hidden && user) {
-          console.log('User returned to tab, checking token...');
-          // Check if we need to refresh the token
-          const success = await refreshToken();
-          if (!success) {
-            console.log('Token refresh failed on visibility change, logging out user');
-            setUser(null);
-            localStorage.removeItem('user');
-            navigate('/login');
+          console.log('User returned to tab, checking authentication...');
+          // Don't immediately refresh token, just verify the session is still valid
+          try {
+            const response = await userApi.get('/me');
+            if (!response.data.success) {
+              // Session is invalid, try to refresh token
+              const refreshSuccess = await refreshToken();
+              if (!refreshSuccess) {
+                console.log('Session invalid and refresh failed, logging out user');
+                setUser(null);
+                localStorage.removeItem('user');
+                localStorage.removeItem('refreshToken');
+                localStorage.removeItem('rememberMe');
+                navigate('/login');
+              }
+            }
+          } catch (error) {
+            if (error.response?.status === 401) {
+              // Token expired, try to refresh
+              const refreshSuccess = await refreshToken();
+              if (!refreshSuccess) {
+                console.log('Token expired and refresh failed, logging out user');
+                setUser(null);
+                localStorage.removeItem('user');
+                localStorage.removeItem('refreshToken');
+                localStorage.removeItem('rememberMe');
+                navigate('/login');
+              }
+            } else {
+              // Network error, keep the current session
+              console.log('Network error during visibility check, keeping current session');
+            }
           }
         }
       };
@@ -120,46 +161,101 @@ export const AuthProvider = ({ children }) => {
 
   const checkAuth = async () => {
     try {
-      const response = await userApi.get('/me');
-      if (response.data.success) {
-        const userData = response.data.data;
-        setUser(userData);
-        // Update localStorage with fresh user data
-        localStorage.setItem('user', JSON.stringify(userData));
-      } else {
-        setUser(null);
-        localStorage.removeItem('user');
-      }
-    } catch (error) {
-      if (error.response?.status === 401) {
-        // Try to refresh the token
-        const refreshSuccess = await refreshToken();
-        if (refreshSuccess) {
-          // Retry the original request
-          try {
-            const retryResponse = await userApi.get('/me');
-            if (retryResponse.data.success) {
-              const userData = retryResponse.data.data;
-              setUser(userData);
-              localStorage.setItem('user', JSON.stringify(userData));
+      console.log('🔍 Starting authentication check...');
+      // First, check if we have user data in localStorage
+      const storedUser = localStorage.getItem('user');
+      const refreshToken = localStorage.getItem('refreshToken');
+      
+      console.log('📦 Stored user:', !!storedUser, 'Refresh token:', !!refreshToken);
+      
+      // If we have stored user data and refresh token, try to restore the session
+      if (storedUser && refreshToken) {
+        try {
+          const userData = JSON.parse(storedUser);
+          setUser(userData); // Set user immediately for better UX
+          
+          // Then verify with the server
+          const response = await userApi.get('/me');
+          if (response.data.success) {
+            const freshUserData = response.data.data;
+            setUser(freshUserData);
+            localStorage.setItem('user', JSON.stringify(freshUserData));
+          } else {
+            // Server says user is not valid, try token refresh
+            const refreshSuccess = await refreshToken();
+            if (!refreshSuccess) {
+              setUser(null);
+              localStorage.removeItem('user');
+              localStorage.removeItem('refreshToken');
+              localStorage.removeItem('rememberMe');
+              navigate('/login');
+            }
+          }
+        } catch (error) {
+          if (error.response?.status === 401) {
+            // Token might be expired, try to refresh
+            const refreshSuccess = await refreshToken();
+            if (refreshSuccess) {
+              // Retry the original request
+              try {
+                const retryResponse = await userApi.get('/me');
+                if (retryResponse.data.success) {
+                  const userData = retryResponse.data.data;
+                  setUser(userData);
+                  localStorage.setItem('user', JSON.stringify(userData));
+                } else {
+                  setUser(null);
+                  localStorage.removeItem('user');
+                  localStorage.removeItem('refreshToken');
+                  localStorage.removeItem('rememberMe');
+                  navigate('/login');
+                }
+              } catch (retryError) {
+                setUser(null);
+                localStorage.removeItem('user');
+                localStorage.removeItem('refreshToken');
+                localStorage.removeItem('rememberMe');
+                navigate('/login');
+              }
             } else {
               setUser(null);
               localStorage.removeItem('user');
+              localStorage.removeItem('refreshToken');
+              localStorage.removeItem('rememberMe');
               navigate('/login');
             }
-          } catch (retryError) {
-            setUser(null);
-            localStorage.removeItem('user');
-            navigate('/login');
+          } else {
+            // Network error or other issue, keep the stored user data
+            console.log('Network error during auth check, keeping stored user data');
           }
+        }
+      } else {
+        // No stored data, try direct API call
+        const response = await userApi.get('/me');
+        if (response.data.success) {
+          const userData = response.data.data;
+          setUser(userData);
+          localStorage.setItem('user', JSON.stringify(userData));
         } else {
           setUser(null);
           localStorage.removeItem('user');
-          navigate('/login');
         }
-      } else {
+      }
+    } catch (error) {
+      console.error('Auth check error:', error);
+      // Only clear user data if we're sure the session is invalid
+      if (error.response?.status === 401) {
         setUser(null);
         localStorage.removeItem('user');
+        localStorage.removeItem('refreshToken');
+        localStorage.removeItem('rememberMe');
+        navigate('/login');
+      } else {
+        // For network errors, keep the stored user data
+        const storedUser = localStorage.getItem('user');
+        if (storedUser) {
+          setUser(JSON.parse(storedUser));
+        }
       }
     } finally {
       setLoading(false);
@@ -234,7 +330,7 @@ export const AuthProvider = ({ children }) => {
 
   return (
     <AuthContext.Provider value={value}>
-      {!loading && children}
+      {children}
     </AuthContext.Provider>
   );
 };

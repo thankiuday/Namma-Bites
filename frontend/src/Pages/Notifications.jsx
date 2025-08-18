@@ -94,7 +94,19 @@ const Notifications = () => {
             <FaArrowLeft className="w-5 h-5" />
             <span className="font-medium">Back</span>
           </button>
-          <h1 className="text-2xl font-bold text-gray-900">Notifications</h1>
+          <div className="flex items-center gap-3">
+            <h1 className="text-2xl font-bold text-gray-900">Notifications</h1>
+            {(() => {
+              const unreadCount = notifications.filter(n => !n.isRead).length;
+              return unreadCount > 0 ? (
+                <div className="flex items-center gap-2">
+                  <span className="px-3 py-1 bg-orange-100 text-orange-800 text-sm font-bold rounded-full border border-orange-200">
+                    {unreadCount} new
+                  </span>
+                </div>
+              ) : null;
+            })()}
+          </div>
         </div>
 
         {error && (
@@ -108,50 +120,83 @@ const Notifications = () => {
           {notifications.map((notification) => (
             <div
               key={notification._id}
-              className={`bg-white rounded-xl shadow-sm border border-gray-100 hover:border-orange-200 transition-all duration-200 cursor-pointer overflow-hidden group ${
+              className={`relative bg-white rounded-xl shadow-sm border transition-all duration-200 cursor-pointer overflow-hidden group ${
                 clickedNotificationId === notification._id ? 'opacity-75 cursor-not-allowed' : ''
+              } ${
+                !notification.isRead 
+                  ? 'border-orange-300 bg-orange-50/30 shadow-md' 
+                  : 'border-gray-100 hover:border-orange-200'
               }`}
-                             onClick={async () => {
-                 // Prevent multiple clicks
-                 if (clickedNotificationId === notification._id) return;
-                 
-                 setClickedNotificationId(notification._id);
-                 
-                 // Mark notification as read if it's unread
-                 if (!notification.isRead) {
-                   try {
-                     await notificationApi.markAsRead(notification._id);
-                     // Update the notification in the list to show as read
-                     setNotifications(prev => 
-                       prev.map(n => 
-                         n._id === notification._id 
-                           ? { ...n, isRead: true }
-                           : n
-                       )
-                     );
-                   } catch (error) {
-                     console.error('Error marking notification as read:', error);
-                   }
-                 }
-                 // Navigate to notification detail page
-                 navigate(`/notifications/${notification._id}`);
-               }}
+              onClick={async () => {
+                // Prevent multiple clicks
+                if (clickedNotificationId === notification._id) return;
+                
+                setClickedNotificationId(notification._id);
+                
+                // Mark notification as read if it's unread
+                if (!notification.isRead) {
+                  try {
+                    await notificationApi.markAsRead(notification._id);
+                    // Update the notification in the list to show as read
+                    setNotifications(prev => 
+                      prev.map(n => 
+                        n._id === notification._id 
+                          ? { ...n, isRead: true }
+                          : n
+                      )
+                    );
+                  } catch (error) {
+                    console.error('Error marking notification as read:', error);
+                  }
+                }
+                // Navigate to notification detail page
+                navigate(`/notifications/${notification._id}`);
+              }}
             >
-              <div className="p-4 sm:p-6">
+              {/* Unread Indicator */}
+              {!notification.isRead && (
+                <div className="absolute top-4 right-4 flex items-center gap-2">
+                  {/* Unread Dot */}
+                  <div className="w-3 h-3 bg-orange-500 rounded-full animate-pulse"></div>
+                  {/* Unread Badge */}
+                  <span className="px-2 py-1 bg-orange-100 text-orange-800 text-xs font-bold rounded-full border border-orange-200">
+                    NEW
+                  </span>
+                </div>
+              )}
+              
+              <div className={`p-4 sm:p-6 ${!notification.isRead ? 'pr-20' : ''}`}>
                 <div className="flex items-start gap-4">
-                  <div className="flex-shrink-0">
+                  <div className="flex-shrink-0 relative">
                     {getNotificationIcon(notification.type)}
+                    {/* Unread indicator on icon */}
+                    {!notification.isRead && (
+                      <div className="absolute -top-1 -right-1 w-4 h-4 bg-orange-500 rounded-full border-2 border-white flex items-center justify-center">
+                        <div className="w-1.5 h-1.5 bg-white rounded-full"></div>
+                      </div>
+                    )}
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center justify-between gap-2">
-                      <h2 className="text-lg font-semibold text-gray-900 group-hover:text-orange-600 transition-colors">
+                      <h2 className={`text-lg font-semibold group-hover:text-orange-600 transition-colors ${
+                        !notification.isRead ? 'text-gray-900 font-bold' : 'text-gray-900'
+                      }`}>
                         {notification.title}
+                        {!notification.isRead && (
+                          <span className="ml-2 inline-block w-2 h-2 bg-orange-500 rounded-full"></span>
+                        )}
                       </h2>
-                      <time className="text-sm text-gray-500 whitespace-nowrap">
+                      <time className={`text-sm whitespace-nowrap ${
+                        !notification.isRead ? 'text-orange-600 font-medium' : 'text-gray-500'
+                      }`}>
                         {formatDate(notification.createdAt)}
                       </time>
                     </div>
-                    <p className="mt-1 text-gray-600">{notification.message}</p>
+                    <p className={`mt-1 ${
+                      !notification.isRead ? 'text-gray-700 font-medium' : 'text-gray-600'
+                    }`}>
+                      {notification.message}
+                    </p>
                     {notification.vendorId && (
                       <div className="mt-2 flex items-center gap-2 text-sm text-gray-500">
                         <span className="font-medium text-gray-700">{notification.vendorId.name}</span>
@@ -166,6 +211,11 @@ const Notifications = () => {
                   </div>
                 </div>
               </div>
+              
+              {/* Unread indicator bar on the left */}
+              {!notification.isRead && (
+                <div className="absolute left-0 top-0 bottom-0 w-1 bg-orange-500"></div>
+              )}
             </div>
           ))}
         </div>
