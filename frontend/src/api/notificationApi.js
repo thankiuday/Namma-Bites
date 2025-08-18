@@ -13,6 +13,10 @@ const notificationApi = {
   markAllAsRead: () => 
     apiClient.post('/notifications/mark-all-read'),
 
+  // Mark a single notification as read
+  markAsRead: (notificationId) => 
+    apiClient.post(`/notifications/${notificationId}/mark-read`),
+
   // Get unread count
   getUnreadCount: () => 
     apiClient.get('/notifications/unread-count'),

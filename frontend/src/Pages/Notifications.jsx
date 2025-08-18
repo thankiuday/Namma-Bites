@@ -108,7 +108,23 @@ const Notifications = () => {
             <div
               key={notification._id}
               className="bg-white rounded-xl shadow-sm border border-gray-100 hover:border-orange-200 transition-all duration-200 cursor-pointer overflow-hidden group"
-                             onClick={() => {
+                             onClick={async () => {
+                 // Mark notification as read if it's unread
+                 if (!notification.isRead) {
+                   try {
+                     await notificationApi.markAsRead(notification._id);
+                     // Update the notification in the list to show as read
+                     setNotifications(prev => 
+                       prev.map(n => 
+                         n._id === notification._id 
+                           ? { ...n, isRead: true }
+                           : n
+                       )
+                     );
+                   } catch (error) {
+                     console.error('Error marking notification as read:', error);
+                   }
+                 }
                  // Navigate to notification detail page
                  navigate(`/notifications/${notification._id}`);
                }}

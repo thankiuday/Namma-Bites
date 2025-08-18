@@ -292,6 +292,33 @@ export const getNotificationById = async (req, res) => {
   }
 };
 
+// Mark a single notification as read for current user
+export const markNotificationAsRead = async (req, res) => {
+  try {
+    const { notificationId } = req.params;
+    const userId = req.user._id;
+
+    const notification = await Notification.findById(notificationId);
+    if (!notification) {
+      return res.status(404).json({
+        success: false,
+        message: 'Notification not found'
+      });
+    }
+
+    // Mark as read for this user
+    await Notification.updateOne(
+      { _id: notification._id, readBy: { $not: { $elemMatch: { user: userId } } } },
+      { $addToSet: { readBy: { user: userId, readAt: new Date() } } }
+    );
+
+    res.json({ success: true });
+  } catch (error) {
+    console.error('Error marking notification as read:', error);
+    res.status(500).json({ success: false, message: 'Failed to mark notification as read' });
+  }
+};
+
 // Mark all relevant notifications as read for current user
 export const markAllUserNotificationsRead = async (req, res) => {
   try {

@@ -24,6 +24,7 @@ const Notifications = ({ onNavigate }) => {
     if (!user) return;
     // Avoid race/flicker: skip badge updates while panel open or while marking as read
     if (showNotifications || isMarkingRead) return;
+    
     try {
       const res = await notificationApi.getUnreadCount();
       if (res.data?.success && typeof res.data.count === 'number') {
@@ -85,20 +86,30 @@ const Notifications = ({ onNavigate }) => {
   // Background polling for new notifications to keep badge in sync
   useEffect(() => {
     if (!user) return;
+    
     // hydrate from localStorage for instant UI
     try {
       const stored = localStorage.getItem(storageKey);
       if (stored != null && stored !== '') {
         const n = Number(stored);
-        if (!Number.isNaN(n)) setUnreadCount(n);
+        if (!Number.isNaN(n)) {
+          setUnreadCount(n);
+        }
       }
-    } catch {}
+    } catch (e) {
+      // ignore localStorage errors
+    }
+    
     // initial count fetch to sync counter without opening panel
     fetchUnreadCountOnly();
+    
     const interval = setInterval(() => {
       fetchUnreadCountOnly();
     }, POLL_INTERVAL_MS);
-    return () => clearInterval(interval);
+    
+    return () => {
+      clearInterval(interval);
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user]);
 
@@ -195,13 +206,7 @@ const Notifications = ({ onNavigate }) => {
       <div className="relative inline-block">
         <button
           onClick={async () => {
-            // Optimistically zero and persist, then mark all read server-side
-            if (unreadCount > 0) {
-              setUnreadCount(0);
-              try { localStorage.setItem(storageKey, '0'); } catch {}
-              try { await notificationApi.markAllAsRead(); } catch {}
-            }
-            // Always navigate to dedicated notifications page
+            // Just navigate to notifications page without marking all as read
             setShowNotifications(false);
             try { onNavigate && onNavigate(); } catch (_) {}
             navigate('/notifications');

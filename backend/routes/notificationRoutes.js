@@ -6,7 +6,8 @@ import {
   updateNotification,
   getNotificationById,
   markAllUserNotificationsRead,
-  getUnreadNotificationsCount
+  getUnreadNotificationsCount,
+  markNotificationAsRead
 } from '../controllers/notificationController.js';
 import { authenticateUser, authenticateVendor, authenticateAdmin } from '../middleware/user/authMiddleware.js';
 
@@ -16,6 +17,7 @@ const router = express.Router();
 router.get('/user', authenticateUser, getUserNotifications);
 router.get('/unread-count', authenticateUser, getUnreadNotificationsCount);
 router.post('/mark-all-read', authenticateUser, markAllUserNotificationsRead);
+router.post('/:notificationId/mark-read', authenticateUser, markNotificationAsRead);
 router.get('/:notificationId', authenticateUser, getNotificationById);
 
 // Vendor routes
