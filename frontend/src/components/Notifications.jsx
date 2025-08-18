@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import userApi from '../api/userApi';
+import notificationApi from '../api/notificationApi';
 import { FaBell, FaTimes, FaExclamationCircle, FaGift } from 'react-icons/fa';
 import { useAuth } from '../context/AuthContext';
 import { toast } from 'react-toastify';
@@ -25,7 +25,7 @@ const Notifications = ({ onNavigate }) => {
     // Avoid race/flicker: skip badge updates while panel open or while marking as read
     if (showNotifications || isMarkingRead) return;
     try {
-      const res = await userApi.get('/notifications/unread-count');
+      const res = await notificationApi.getUnreadCount();
       if (res.data?.success && typeof res.data.count === 'number') {
         setUnreadCount(res.data.count);
         try { localStorage.setItem(storageKey, String(res.data.count)); } catch {}
@@ -39,7 +39,7 @@ const Notifications = ({ onNavigate }) => {
     if (!user) return;
     
     try {
-      const response = await userApi.get(`/notifications/user?page=${pageNum}`);
+      const response = await notificationApi.getUserNotifications(pageNum);
       if (response.data.success) {
         if (pageNum === 1) {
           setNotifications(response.data.data);
@@ -65,7 +65,7 @@ const Notifications = ({ onNavigate }) => {
         try { localStorage.setItem(storageKey, '0'); } catch {}
         (async () => {
           try {
-            await userApi.post('/notifications/mark-all-read');
+            await notificationApi.markAllAsRead();
           } catch (e) {
             // ignore; polling will resync
           } finally {
@@ -199,7 +199,7 @@ const Notifications = ({ onNavigate }) => {
             if (unreadCount > 0) {
               setUnreadCount(0);
               try { localStorage.setItem(storageKey, '0'); } catch {}
-              try { await userApi.post('/notifications/mark-all-read'); } catch {}
+              try { await notificationApi.markAllAsRead(); } catch {}
             }
             // Always navigate to dedicated notifications page
             setShowNotifications(false);

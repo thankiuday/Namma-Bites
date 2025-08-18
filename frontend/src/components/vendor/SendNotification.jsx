@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import vendorApi from '../../api/vendorApi';
+import notificationApi from '../../api/notificationApi';
 
 const NotificationTypeCard = ({ type, selected, icon, title, description, onClick }) => (
   <div
@@ -81,7 +81,7 @@ const SendNotification = () => {
     }
 
     try {
-      const response = await vendorApi.post('/notifications/vendor', {
+      const response = await notificationApi.createNotification({
         ...formData,
         validUntil: formData.validUntil || new Date(Date.now() + 7 * 24 * 60 * 60 * 1000) // 7 days default
       });

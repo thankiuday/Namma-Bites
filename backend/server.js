@@ -13,6 +13,7 @@ import userRoutes from './routes/userRoutes.js';
 import adminRoutes from './routes/adminRoutes.js';
 import authRoutes from './routes/auth.js';
 import vendorRoutes from './routes/vendorRoutes.js';
+import notificationRoutes from './routes/notificationRoutes.js';
 import { fileURLToPath } from 'url';
 import fs from 'fs';
 dotenv.config();
@@ -143,6 +144,7 @@ app.use('/api/users', userRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/vendor', vendorRoutes);
+app.use('/api/notifications', notificationRoutes);
 // Basic health endpoints
 app.get('/health', (req, res) => res.json({ status: 'ok' }));
 app.get('/ready', async (req, res) => {

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { FaArrowLeft, FaBell, FaExclamationCircle, FaGift, FaCalendarAlt } from 'react-icons/fa';
-import userApi from '../api/userApi';
+import notificationApi from '../api/notificationApi';
 import LoadingSpinner from '../components/LoadingSpinner';
 
 const Notifications = () => {
@@ -14,7 +14,7 @@ const Notifications = () => {
 
   const fetchNotifications = async (pageNum = 1) => {
     try {
-      const response = await userApi.get(`/notifications/user?page=${pageNum}&limit=20`);
+      const response = await notificationApi.getUserNotifications(pageNum);
       if (response.data.success) {
         if (pageNum === 1) {
           setNotifications(response.data.data);
@@ -108,13 +108,10 @@ const Notifications = () => {
             <div
               key={notification._id}
               className="bg-white rounded-xl shadow-sm border border-gray-100 hover:border-orange-200 transition-all duration-200 cursor-pointer overflow-hidden group"
-              onClick={() => {
-                // Handle notification click - could navigate to specific content
-                if (notification.type === 'subscription_alert' && notification.vendorId) {
-                  navigate(`/vendor/${notification.vendorId._id}`);
-                }
-                // Add other navigation logic based on notification type
-              }}
+                             onClick={() => {
+                 // Navigate to notification detail page
+                 navigate(`/notifications/${notification._id}`);
+               }}
             >
               <div className="p-4 sm:p-6">
                 <div className="flex items-start gap-4">

@@ -24,7 +24,7 @@ import {
 } from '../controllers/user/userController.js';
 import { createOrder, uploadOrderPaymentProof, getUserOrders, getOrderQr, getUserOrderById, getOrderEstimate } from '../controllers/user/orderController.js';
 import { userSseHandler } from '../utils/events.js';
-import { getUserNotifications, getNotificationById, markAllUserNotificationsRead, getUnreadNotificationsCount } from '../controllers/notificationController.js';
+
 import { authenticateAdmin, authenticateUser } from '../middleware/user/authMiddleware.js';
 import { uploadPaymentProof as uploadPaymentProofMulter } from '../config/cloudinary.js';
 
@@ -66,11 +66,7 @@ router.get('/orders/:orderId/estimate', authenticateUser, getOrderEstimate);
 // SSE stream for user order events
 router.get('/orders/events', authenticateUser, userSseHandler);
 
-// --- Notification routes ---
-router.get('/notifications/user', authenticateUser, getUserNotifications);
-router.get('/notifications/:notificationId', authenticateUser, getNotificationById);
-router.post('/notifications/mark-all-read', authenticateUser, markAllUserNotificationsRead);
-router.get('/notifications/unread-count', authenticateUser, getUnreadNotificationsCount);
+
 
 // --- Admin-only routes (generic, must come last) ---
 router.get('/', authenticateAdmin, getAllUsers);
