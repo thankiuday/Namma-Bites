@@ -1,5 +1,5 @@
 import React, { useEffect, useCallback, useState } from 'react';
-import { FaTrash, FaMinus, FaPlus, FaArrowLeft, FaStore } from 'react-icons/fa';
+import { FaTrash, FaMinus, FaPlus, FaArrowLeft, FaStore, FaSpinner } from 'react-icons/fa';
 import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
@@ -10,7 +10,7 @@ import { motion } from 'framer-motion';
 
 
 const Cart = () => {
-  const { cart, updateQuantity, removeFromCart, clearCart, loading, fetchCart } = useCart();
+  const { cart, updateQuantity, removeFromCart, clearCart, loading, fetchCart, updatingItems } = useCart();
   const { user, handleAuthError } = useAuth();
   const [clearing, setClearing] = useState(false);
   const navigate = useNavigate();
@@ -173,15 +173,33 @@ const Cart = () => {
                 <div className="flex flex-col items-end gap-2 ml-auto">
                   <div className="flex items-center gap-2">
                     <button 
-                      className="p-1 sm:p-2 text-gray-600 hover:text-orange-600 rounded-full hover:bg-gray-100" 
+                      className={`p-1 sm:p-2 rounded-full transition-colors ${
+                        updatingItems.has(item._id)
+                          ? 'text-gray-400 cursor-not-allowed'
+                          : 'text-gray-600 hover:text-orange-600 hover:bg-gray-100'
+                      }`}
                       onClick={() => updateQuantity(item._id, Math.max(1, item.quantity - 1))}
+                      disabled={updatingItems.has(item._id)}
                     >
                       <FaMinus className="w-3 h-3 sm:w-4 sm:h-4" />
                     </button>
-                    <span className="w-6 sm:w-8 text-center text-black text-sm sm:text-base font-medium">{item.quantity}</span>
+                    <span className={`w-6 sm:w-8 text-center text-sm sm:text-base font-medium flex items-center justify-center transition-all duration-200 ${
+                      updatingItems.has(item._id) ? 'text-gray-400 scale-110' : 'text-black'
+                    }`}>
+                      {updatingItems.has(item._id) ? (
+                        <FaSpinner className="w-3 h-3 sm:w-4 sm:h-4 animate-spin" />
+                      ) : (
+                        <span className="transition-all duration-200">{item.quantity}</span>
+                      )}
+                    </span>
                     <button 
-                      className="p-1 sm:p-2 text-gray-600 hover:text-orange-600 rounded-full hover:bg-gray-100" 
+                      className={`p-1 sm:p-2 rounded-full transition-colors ${
+                        updatingItems.has(item._id)
+                          ? 'text-gray-400 cursor-not-allowed'
+                          : 'text-gray-600 hover:text-orange-600 hover:bg-gray-100'
+                      }`}
                       onClick={() => updateQuantity(item._id, item.quantity + 1)}
+                      disabled={updatingItems.has(item._id)}
                     >
                       <FaPlus className="w-3 h-3 sm:w-4 sm:h-4" />
                     </button>

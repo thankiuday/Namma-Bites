@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useEffect, useState, useCallback } from 'react';
+import React, { createContext, useContext, useEffect, useState, useCallback, useRef } from 'react';
 import { getCart as apiGetCart, addOrUpdateCartItem as apiAddOrUpdateCartItem, updateCartItemQuantity as apiUpdateCartItemQuantity, removeCartItem as apiRemoveCartItem, clearCart as apiClearCart } from '../api/userApi';
 import { toast } from 'react-toastify';
 
@@ -11,6 +11,8 @@ const flattenCart = (cartArr) =>
 export const CartProvider = ({ children }) => {
   const [cart, setCart] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [updatingItems, setUpdatingItems] = useState(new Set());
+  const debounceTimers = useRef({});
 
   // Fetch cart from backend
   const fetchCart = useCallback(async () => {
@@ -25,6 +27,15 @@ export const CartProvider = ({ children }) => {
     } finally {
       setLoading(false);
     }
+  }, []);
+
+  // Cleanup timers on unmount
+  useEffect(() => {
+    return () => {
+      Object.values(debounceTimers.current).forEach(timer => {
+        clearTimeout(timer);
+      });
+    };
   }, []);
 
   const addToCart = async (item, quantity = 1) => {
@@ -84,13 +95,42 @@ export const CartProvider = ({ children }) => {
   };
 
   const updateQuantity = async (itemId, quantity) => {
-    try {
-      const res = await apiUpdateCartItemQuantity(itemId, quantity);
-      setCart(flattenCart(res.data.cart));
-    } catch (err) {
-      console.error('Error updating cart quantity:', err);
-      throw err; // Let the component handle the error
+    // Clear any existing timer for this item
+    if (debounceTimers.current[itemId]) {
+      clearTimeout(debounceTimers.current[itemId]);
     }
+
+    // Set loading state for this specific item
+    setUpdatingItems(prev => new Set(prev).add(itemId));
+    
+    // Optimistic update - update UI immediately
+    const optimisticCart = cart.map(item => 
+      item._id === itemId ? { ...item, quantity } : item
+    );
+    setCart(optimisticCart);
+
+    // Debounce the API call to prevent too many rapid requests
+    debounceTimers.current[itemId] = setTimeout(async () => {
+      try {
+        const res = await apiUpdateCartItemQuantity(itemId, quantity);
+        // Update with actual server response to ensure consistency
+        setCart(flattenCart(res.data.cart));
+      } catch (err) {
+        console.error('Error updating cart quantity:', err);
+        // Revert optimistic update on error
+        setCart(cart);
+        throw err; // Let the component handle the error
+      } finally {
+        // Clear loading state for this item
+        setUpdatingItems(prev => {
+          const newSet = new Set(prev);
+          newSet.delete(itemId);
+          return newSet;
+        });
+        // Clean up timer reference
+        delete debounceTimers.current[itemId];
+      }
+    }, 500); // 500ms debounce delay
   };
 
   const removeFromCart = async (itemId) => {
@@ -130,7 +170,8 @@ export const CartProvider = ({ children }) => {
     removeFromCart, 
     clearCart, 
     loading,
-    fetchCart 
+    fetchCart,
+    updatingItems
   };
 
   return <CartContext.Provider value={value}>{children}</CartContext.Provider>;
